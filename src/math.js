@@ -91,9 +91,6 @@ zSquared.math = function( z2 )
 		out[1] = v[1] / mag;
 	};
 
-//	z2.vecCross = function( v1, v2, out )
-//	{
-//	};
 
 	// (3x3) matrix math routines
 

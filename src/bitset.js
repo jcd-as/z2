@@ -82,7 +82,6 @@ zSquared.bitset = function( z2 )
 			this.data |= bits;
 		else
 		{
-//			if( !(bits instanceof Uint32Array) )
 			if( !(bits instanceof z2.Bitset) )
 			{
 				console.error( "Non-number, non-Uint32Array passed to Bitset.setBits()" );
@@ -112,7 +111,7 @@ zSquared.bitset = function( z2 )
 		// TODO: matchAny should match different length arrays
 		else
 		{
-			if( !(bits instanceof Uint32Array) )
+			if( !(bits instanceof z2.Bitset) )
 			{
 				console.error( "Non-number, non-Uint32Array passed to Bitset.setBits()" );
 				return false;
@@ -124,7 +123,7 @@ zSquared.bitset = function( z2 )
 			}
 			for( var i = 0; i < bits.length; i++ )
 			{
-				if( this.data[i] & bits[i] )
+				if( this.data[i] & bits.data[i] )
 					return true;
 			}
 			return false;
@@ -140,13 +139,13 @@ zSquared.bitset = function( z2 )
 			return !!(this.data & bits);
 		else
 		{
-			if( !(bits instanceof Uint32Array) )
+			if( !(bits instanceof z2.Bitset) )
 				console.error( "Non-number, non-Uint32Array passed to Bitset.setBits()" );
 			if( bits.length != this.length )
 				console.error( "Array argument to Bitset.setBits of incorrect length" );
 			for( var i = 0; i < bits.length; i++ )
 			{
-				if( !!(this.data[i] & bits[i]) )
+				if( this.data[i] & bits.data[i] !== this.data[i] )
 					return false;
 			}
 			return true;

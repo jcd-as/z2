@@ -3,6 +3,9 @@
 // Entity-Component-System framework for zed-squared
 //
 // TODO:
+// - Systems collection (in manager) should be a priority queue so that higher
+// priority items can be added after lower ones (currently it runs them in
+// order, so Systems have to be added in priority order)
 // - Systems should keep lists of the Entities they are associated with and use
 // component add/remove events (from the Entities) to keep up-to-date. This will
 // allow the Systems to iterate through their list of Entities much more quickly
@@ -35,20 +38,24 @@ zSquared.ecs = function( z2 )
 			
 			var mask = new z2.Bitset( z2.DEFAULT_BITSET_LENGTH );
 			mask.setBit( next_bit++ );
-			obj.mask = mask;
 			return {
-				mask : obj.mask,
+				mask : mask,
 				create : function( overrides )
 				{
 					// TODO: set directly on a new object instead of on the 
 					// object's prototype ?
-					var o = Object.create( obj );
+					var o;
+					if( obj )
+						o = Object.create( obj );
+					else
+						o = {};
 					// apply overrides
 					for( var key in overrides )
 					{
 						if( overrides.hasOwnProperty( key ) && obj.key )
 							o[key] = overrides[key];
 					}
+					o.mask = mask;
 					return o;
 				}
 			};
@@ -74,12 +81,18 @@ zSquared.ecs = function( z2 )
 	 */
 	z2.System = function( cmps, obj )
 	{
-		// create the object
-		var o = Object.create( obj );
+		// copy properties from the object
+		for( var key in obj )
+		{
+			if( obj.hasOwnProperty( key ) )
+				this[key] = obj[key];
+		}
 		// create the mask for these Components
-		o.mask = new z2.Bitset( z2.DEFAULT_BITSET_LENGTH );
-		// return it
-		return o;
+		this.mask = new z2.Bitset( z2.DEFAULT_BITSET_LENGTH );
+		for( var i = 0; i < cmps.length; i++ )
+		{
+			this.mask.setBits( cmps[i].mask );
+		}
 	};
 	z2.System.prototype.onUpdate = function ( e )
 	{
@@ -117,7 +130,6 @@ zSquared.ecs = function( z2 )
 	 */
 	z2.Entity.prototype.reset = function()
 	{
-//		delete this.cmps;
 		this.mask.clear();
 	};
 	/** Set the Components for the Entity
@@ -136,7 +148,8 @@ zSquared.ecs = function( z2 )
 
 	/** 
 	 * @class z2#z2.manager
-	 * @classdesc manager class (singleton) for the Entity-Component-System framework
+	 * @classdesc manager class (singleton) for the Entity-Component-System 
+	 * framework
 	 * @constructor
 	 */
 	z2.manager = (function()
@@ -150,6 +163,8 @@ zSquared.ecs = function( z2 )
 			var dead = [];
 			// array of indices of dying (will be dead at end of frame) Entities
 			var dying = [];
+			// array of indices of the living/active Entities
+			var living = [];
 
 			// array of Entity ids to maps of mask-keys to Components
 			// e.g. [ {mask1 : component1, mask2 : component2}, ...]
@@ -190,8 +205,9 @@ zSquared.ecs = function( z2 )
 						{
 							entities[i] = new z2.Entity( i );
 							components[i] = {};
+							dead[i] = i;
 						}
-						slot = old_len;
+						slot = entities.length - 1;
 					}
 					// if so, get the Entity there and set its components
 					else
@@ -201,6 +217,7 @@ zSquared.ecs = function( z2 )
 					}
 
 					var e = entities[slot];
+					living.push( slot );
 
 					// add the components and create the mask for this Entity
 					if( cmps )
@@ -221,6 +238,8 @@ zSquared.ecs = function( z2 )
 				addSystem : function( sys )
 				{
 					systems.push( sys );
+					if( sys.init && typeof( sys.init ) === 'function' )
+						sys.init();
 					// TODO: find all the entities with matching masks and 
 					// assign them to the System
 				},
@@ -260,9 +279,13 @@ zSquared.ecs = function( z2 )
 							systems[i].onStart();
 					}
 					// update: call each System
+					// TODO: this is n^2. System's need to keep their own
+					// (up-to-date) list of Entities - then they can only call
+					// the necessary ones...
 					for( i = 0; i < systems.length; i++ )
 					{
-						systems[i].update();
+						for( var j = 0; j < living.length; j++ )
+							systems[i].onUpdate( entities[living[j]] );
 					}
 					// onEnd: call each System
 					for( i = 0; i < systems.length; i++ )

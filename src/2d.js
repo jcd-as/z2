@@ -13,7 +13,7 @@ zSquared['2d'] = function( z2 )
 {
 	z2.require( ["math", "ecs"] );
 
-	//
+	// TODO: impl
 
 };
 
