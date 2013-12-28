@@ -1,0 +1,17 @@
+{
+  "libs": [
+	"browser"
+  ],
+  "loadEagerly": [
+	"z2.js",
+	"math.js",
+	"bitset.js",
+	"statemachine.js",
+	"ecs.js",
+	"view.js",
+	"scene.js"
+  ],
+  "plugins": {
+  }
+}
+
