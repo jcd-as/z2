@@ -1,4 +1,9 @@
 // z2 test code
+// TODO:
+// - add a canvas
+// - load image(s)
+// - render: polygon, image, sprite
+// - input 
 //
 
 var WIDTH = 512;
@@ -8,6 +13,10 @@ var z2 = zSquared();
 
 // require all the z2 modules
 z2.require( ["bitset", "math", "scene", "view", "ecs", "loader", "statemachine"] );
+
+// load an image
+z2.loader.queueAsset( 'logo', 'logo.png' );
+z2.loader.load( function(){ console.log( "loaded logo.png" ); } );
 
 // create a scene
 var scene = new z2.Scene( 1000, 1000 );

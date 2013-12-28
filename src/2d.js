@@ -5,6 +5,8 @@
 // TODO:
 // - Render System
 // - Transform System
+// - Animated sprite System
+// - Movement system
 // - 
 
 "use strict";
