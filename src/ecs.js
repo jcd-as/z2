@@ -52,7 +52,7 @@ zSquared.ecs = function( z2 )
 					// apply overrides
 					for( var key in overrides )
 					{
-						if( overrides.hasOwnProperty( key ) && obj.key )
+						if( overrides.hasOwnProperty( key ) && obj.hasOwnProperty( key ) )
 							o[key] = overrides[key];
 					}
 					o.mask = mask;
@@ -251,7 +251,7 @@ zSquared.ecs = function( z2 )
 				 */
 				getComponent : function( id, mask )
 				{
-					return components[id][mask];
+					return components[id][mask.key];
 				},
 
 				/** Set a Component

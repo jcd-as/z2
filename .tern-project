@@ -9,7 +9,8 @@
 	"statemachine.js",
 	"ecs.js",
 	"view.js",
-	"scene.js"
+	"scene.js",
+	'2d.js"
   ],
   "plugins": {
   }

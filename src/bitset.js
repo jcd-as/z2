@@ -123,7 +123,8 @@ zSquared.bitset = function( z2 )
 			}
 			for( var i = 0; i < bits.length; i++ )
 			{
-				if( this.data[i] & bits.data[i] )
+				var match = this.data[i] & bits.data[i];
+				if( match )
 					return true;
 			}
 			return false;
@@ -145,7 +146,8 @@ zSquared.bitset = function( z2 )
 				console.error( "Array argument to Bitset.setBits of incorrect length" );
 			for( var i = 0; i < bits.length; i++ )
 			{
-				if( this.data[i] & bits.data[i] !== this.data[i] )
+				var match = this.data[i] & bits.data[i];
+				if( match !== this.data[i] )
 					return false;
 			}
 			return true;

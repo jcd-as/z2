@@ -4,6 +4,8 @@
 
 var zSquared = function( opts )
 {
+	loaded = {};
+
 	// create the main (namespace) object
 	var z2 = 
 	{
@@ -13,10 +15,16 @@ var zSquared = function( opts )
 				throw new Error( "Non-array type passed to require()" );
 			for( var i = 0; i < modules.length; i++ )
 			{
-				var m = zSquared[modules[i]] || modules[i];
-				if( !(m instanceof Function) )
-					throw new Error( "Non-function passed to require()" );
-				m( z2 );
+				// don't reload modules
+				var m = loaded[modules[i]];
+				if( !m )
+				{
+					m = zSquared[modules[i]] || modules[i];
+					if( !(m instanceof Function) )
+						throw new Error( "Non-function passed to require()" );
+					m( z2 );
+					loaded[modules[i]] = true;
+				}
 			}
 		}
 	};
