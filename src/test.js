@@ -41,7 +41,7 @@ var view = new z2.View( scene, WIDTH, HEIGHT, null, z2.VIEW_MODE_NONE, 500, 500 
 //view.x = 256;
 //view.x = 400;
 //view.y = -256;
-view.rotation = z2.d2r(-4);
+//view.rotation = z2.d2r(-4);
 view.sx = 0.5;
 view.sy = 0.5;
 
@@ -49,6 +49,7 @@ view.sy = 0.5;
 // get the ecs manager
 var mgr = z2.manager.get();
 
+// called after assets are loaded
 function start()
 {
 	// create some test components
@@ -108,24 +109,34 @@ function start()
 //	var imgp = z2.positionFactory.create( {x: 0, y: 0} );
 	var imgp = z2.positionFactory.create( {x: 500, y: 500} );
 //	var imgr = z2.rotationFactory.create( {theta: z2.d2r(45)} );
-	var imgr = z2.rotationFactory.create( {theta: 0} );
-//	var imgr = z2.rotationFactory.create( {theta: z2.d2r(-4)} );
+//	var imgr = z2.rotationFactory.create( {theta: 0} );
+	var imgr = z2.rotationFactory.create( {theta: z2.d2r(-4)} );
 	var imgs = z2.scaleFactory.create( {sx: 1, sy: 1} );
 	var imgsz = z2.sizeFactory.create( {width: 512, height: 384} );
 	var imgcc = z2.centerFactory.create( {cx: 0.25, cy: 0.5} );
-	var imge = mgr.createEntity( [z2.renderableFactory, z2.transformFactory, imgp, imgr, imgsz, imgs, imgcc, imgc] );
+	var imgv = z2.velocityFactory.create( {x: 20, y: 0} );
+	var imge = mgr.createEntity( [z2.renderableFactory, z2.transformFactory, imgp, imgr, imgsz, imgs, imgcc, imgc, imgv] );
 	console.log( "imge mask: " + imge.mask.key );
+
+	// create a movement system
+	var ms = z2.createMovementSystem();
+	mgr.addSystem( ms );
+
 	// create rendering system
 	var rs = z2.createRenderingSystem( canvas, true );
 	console.log( "Rendering sys mask: " + rs.mask.key );
 	mgr.addSystem( rs );
 
-	// TODO: requestAnimationFrame
-
-	// have the ecs manager simulate a frame
-	mgr.update();
+	// start the main loop
+	requestAnimationFrame( update );
 }
 
-// TODO: requestAnimationFrame
+function update( dt )
+{
+	// update the ecs system
+	mgr.update();
 
+	// next frame
+	requestAnimationFrame( update );
+}
 

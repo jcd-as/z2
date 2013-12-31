@@ -5,9 +5,8 @@
 // TODO:
 // . Render System
 // . Transform System
-// - Animated sprite System
 // - Movement system (velocity component)
-// - customizable rotate/scale center point
+// - Animated sprite System
 // - 
 
 "use strict";
@@ -16,7 +15,6 @@ zSquared['2d'] = function( z2 )
 {
 	z2.require( ["math", "ecs"] );
 
-	// TODO: impl
 
 	// Component factories
 	
@@ -126,8 +124,6 @@ zSquared['2d'] = function( z2 )
 			onStart: function()
 			{
 				console.log( "Transform onStart called" );
-
-				// transform to view space
 			},
 			update: function( e )
 			{
@@ -200,6 +196,43 @@ zSquared['2d'] = function( z2 )
 			onEnd: function()
 			{
 				console.log( "Transform onEnd called" );
+			},
+		} );
+	};
+
+	// MovementSystem factory function
+	// requires: position, velocity
+	// optional: ...
+	z2.createMovementSystem = function()
+	{
+		return new z2.System( [z2.positionFactory, z2.velocityFactory],
+		{
+			init: function()
+			{
+				console.log( "Movement init called" );
+			},
+			onStart: function()
+			{
+				console.log( "Movement onStart called" );
+			},
+			update: function( e )
+			{
+				console.log( "Movement update called with: " + e.id );
+
+				// get the position component
+				var pc = e.getComponent( z2.positionFactory.mask );
+
+				// get the velocity component
+				var vc = e.getComponent( z2.velocityFactory.mask );
+				
+				// TODO: account for elapsed time since last frame !
+				// (instead of assuming 60 fps)
+				pc.x += vc.x / 60;
+				pc.y += vc.y / 60;
+			},
+			onEnd: function()
+			{
+				console.log( "Movement onEnd called" );
 			},
 		} );
 	};
