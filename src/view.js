@@ -54,7 +54,37 @@ zSquared.view = function( z2 )
 	 */
 	z2.View.prototype.transform = function( mat )
 	{
-		return z2.matMul( mat, this._xform );
+		// transform to screen space
+		z2.matMul( mat, this._xform );
+		// and then translate over to view space
+		var x = this.width/2;
+		var y = this.height/2;
+		z2.matTranslate( mat, x, y );
+		return mat;
+	};
+
+	z2.View.prototype._setTransform = function()
+	{
+		z2.matSetIdentity( this._xform );
+
+		// set (local) transform 
+
+		// pivot point (in screen space)
+		var px = this.scene.width/2;
+		var py = this.scene.height/2;
+
+		// TODO: cache these & only re-compute when rotation changes
+		var c = Math.cos( this._theta );
+		var s = Math.sin( this._theta );
+		// scale & rotation
+		this._xform[0] = c * this._sx;
+		this._xform[1] = -s * this._sy;
+		this._xform[3] = s * this._sx;
+		this._xform[4] = c * this._sy;
+		// translation
+		// (& account for pivot point & screen space)
+		this._xform[2] = this._x - (this._xform[0] * px) - (this._xform[1] * py) + this.scene.width/2;
+		this._xform[5] = this._y - (this._xform[4] * py) - (this._xform[3] * px) + this.scene.height/2;
 	};
 
 	Object.defineProperty( z2.View.prototype, 'rotation',
@@ -68,7 +98,7 @@ zSquared.view = function( z2 )
 			if( val !== -this._theta )
 			{
 				this._theta = -val;
-				z2.matSetRotationAndScale( this._xform, this._theta, this._sx, this._sy );
+				this._setTransform();
 			}
 		}
 	} );
@@ -90,7 +120,7 @@ zSquared.view = function( z2 )
 
 		if( setx || sety )
 		{
-			z2.matSetRotationAndScale( this._xform, this._theta, this._sx, this._sy );
+			this._setTransform();
 		}
 	};
 
@@ -138,7 +168,7 @@ zSquared.view = function( z2 )
 
 		if( setx || sety )
 		{
-			z2.matSetTranslation( this._xform, this._x, this._y );
+			this._setTransform();
 		}
 	};
 
@@ -150,7 +180,7 @@ zSquared.view = function( z2 )
 		},
 		set: function( val )
 		{
-			this.setPosition( val, this._x );
+			this.setPosition( val, -this._x );
 		}
 	} );
 	Object.defineProperty( z2.View.prototype, 'y',
@@ -161,7 +191,7 @@ zSquared.view = function( z2 )
 		},
 		set: function( val )
 		{
-			this.setPosition( this._x, val );
+			this.setPosition( -this._x, val );
 		}
 	} );
 

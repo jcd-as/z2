@@ -1,10 +1,10 @@
 // z2 test code
 // TODO:
-// - transforms
+// x transforms
 // - render: polygon, (animated)sprite
 // - input 
 // - animated sprite
-// - collsion detection (separated axis theorem)
+// - collision detection (separated axis theorem)
 //
 
 var WIDTH = 512;
@@ -23,6 +23,9 @@ document.body.appendChild( canvas );
 
 // get a 2d context for the canvas
 var context = canvas.getContext( '2d' );
+var context = canvas.getContext( '2d' );
+if( !context )
+	throw new Error( "No 2d canvas context. Unable to continue." );
 
 
 // load an image
@@ -34,13 +37,13 @@ z2.loader.load( start );
 var scene = new z2.Scene( 1000, 1000 );
 
 // create a view
-//var view = new z2.View( scene, WIDTH, HEIGHT, null, z2.VIEW_MODE_NONE, 500, 500 );
-var view = new z2.View( scene, WIDTH, HEIGHT );
+var view = new z2.View( scene, WIDTH, HEIGHT, null, z2.VIEW_MODE_NONE, 500, 500 );
 //view.x = 256;
+//view.x = 400;
 //view.y = -256;
-//view.rotation = -45 * Math.PI/180;
-//view.sx = 2;
-//view.sy = 0.5;
+view.rotation = z2.d2r(-4);
+view.sx = 0.5;
+view.sy = 0.5;
 
 
 // get the ecs manager
@@ -98,17 +101,22 @@ function start()
 
 	// create a renderable image Entity
 	var img = z2.loader.getAsset( 'logo' );
-	var imgc = z2.imageFactory.create( {img:img, width:512, height:384} );
+	var imgc = z2.imageFactory.create( {img:img} );
 	var imgx = z2.transformFactory.create();
-//	var imgp = z2.positionFactory.create( {x: 0, y: 256} );
-//	var imgr = z2.rotationFactory.create( {theta: 45 * Math.PI/180} );
-	var imgp = z2.positionFactory.create( {x: 0, y: 0} );
+//	var imgp = z2.positionFactory.create( {x: 100, y: 0} );
+//	var imgr = z2.rotationFactory.create( {theta: z2.d2r(45)} );
+//	var imgp = z2.positionFactory.create( {x: 0, y: 0} );
+	var imgp = z2.positionFactory.create( {x: 500, y: 500} );
+//	var imgr = z2.rotationFactory.create( {theta: z2.d2r(45)} );
 	var imgr = z2.rotationFactory.create( {theta: 0} );
+//	var imgr = z2.rotationFactory.create( {theta: z2.d2r(-4)} );
 	var imgs = z2.scaleFactory.create( {sx: 1, sy: 1} );
-	var imge = mgr.createEntity( [z2.renderableFactory, z2.transformFactory, imgp, imgr, imgs, imgc] );
+	var imgsz = z2.sizeFactory.create( {width: 512, height: 384} );
+	var imgcc = z2.centerFactory.create( {cx: 0.25, cy: 0.5} );
+	var imge = mgr.createEntity( [z2.renderableFactory, z2.transformFactory, imgp, imgr, imgsz, imgs, imgcc, imgc] );
 	console.log( "imge mask: " + imge.mask.key );
 	// create rendering system
-	var rs = z2.createRenderingSystem( context, true );
+	var rs = z2.createRenderingSystem( canvas, true );
 	console.log( "Rendering sys mask: " + rs.mask.key );
 	mgr.addSystem( rs );
 

@@ -6,6 +6,23 @@
 
 zSquared.math = function( z2 )
 {
+	// helpers
+
+	/** const */
+	var D2R_CONVERSION_FACTOR = Math.PI/180;
+	var R2D_CONVERSION_FACTOR = 180/Math.PI;
+
+	z2.d2r = function( d )
+	{
+		return d * D2R_CONVERSION_FACTOR;
+	};
+
+	z2.r2d = function( r )
+	{
+		return r * R2D_CONVERSION_FACTOR;
+	};
+
+
 	// vector math routines
 
 	z2.vecAdd = function( v1, v2, out )
