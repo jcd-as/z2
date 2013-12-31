@@ -36,7 +36,10 @@ zSquared.view = function( z2 )
 		this.width = width;
 		this.height = height;
 		this.target = target;
-		this.follow_mode = follow_mode || z2.FOLLOW_MODE_TIGHT;
+		this.follow_mode = follow_mode || z2.FOLLOW_MODE_NONE;
+		this._theta = 0;
+		this._sx = 1;
+		this._sy = 1;
 		this._x = 0;
 		this._y = 0;
 		this._xform = z2.matCreateIdentity();
@@ -54,6 +57,66 @@ zSquared.view = function( z2 )
 		return z2.matMul( mat, this._xform );
 	};
 
+	Object.defineProperty( z2.View.prototype, 'rotation',
+	{
+		get: function()
+		{
+			return -this._theta;
+		},
+		set: function( val )
+		{
+			if( val !== -this._theta )
+			{
+				this._theta = -val;
+				z2.matSetRotationAndScale( this._xform, this._theta, this._sx, this._sy );
+			}
+		}
+	} );
+
+	/** Set the View scale
+	 * @method z2.View#setScale
+	 * @memberof z2.View
+	 * @arg {Number} sx The x scale factor
+	 * @arg {Number} sy The y scale factor
+	 */
+	z2.View.prototype.setScale = function( sx, sy )
+	{
+		var setx = false, sety = false;
+		if( sx !== this._sx ) setx = true;
+		if( sy !== this._sy ) sety = true;
+
+		if( setx ) this._sx = sx;
+		if( sety ) this._sy = sy;
+
+		if( setx || sety )
+		{
+			z2.matSetRotationAndScale( this._xform, this._theta, this._sx, this._sy );
+		}
+	};
+
+	Object.defineProperty( z2.View.prototype, 'sx',
+	{
+		get: function()
+		{
+			return this._sx;
+		},
+		set: function( val )
+		{
+			this.setScale( val, this._sx );
+		}
+	} );
+	Object.defineProperty( z2.View.prototype, 'sy',
+	{
+		get: function()
+		{
+			return this._y;
+		},
+		set: function( val )
+		{
+			this.setScale( this._sx, val );
+		}
+	} );
+
 	/** Set the (center of) the View position (in the Scene)
 	 * @method z2.View#setPosition
 	 * @memberof z2.View
@@ -67,11 +130,11 @@ zSquared.view = function( z2 )
 			return;
 
 		var setx = false, sety = false;
-		if( x !== this._x ) setx = true;
-		if( y !== this._y ) sety = true;
+		if( -x !== this._x ) setx = true;
+		if( -y !== this._y ) sety = true;
 
-		if( setx ) this._x = x;
-		if( sety ) this._y = y;
+		if( setx ) this._x = -x;
+		if( sety ) this._y = -y;
 
 		if( setx || sety )
 		{
@@ -83,7 +146,7 @@ zSquared.view = function( z2 )
 	{
 		get: function()
 		{
-			return this._x;
+			return -this._x;
 		},
 		set: function( val )
 		{
@@ -94,11 +157,11 @@ zSquared.view = function( z2 )
 	{
 		get: function()
 		{
-			return this._y;
+			return -this._y;
 		},
 		set: function( val )
 		{
-			this.setPosition( val, this._y );
+			this.setPosition( this._x, val );
 		}
 	} );
 

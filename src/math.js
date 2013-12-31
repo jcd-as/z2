@@ -151,12 +151,23 @@ zSquared.math = function( z2 )
 		return m;
 	};
 
+	z2.matSetRotationAndScale = function( m, theta, sx, sy )
+	{
+		var c = Math.cos( theta );
+		var s = Math.sin( theta );
+		m[0] = c * sx;
+		m[1] = -s * sy;
+		m[3] = s * sx;
+		m[4] = c * sy;
+		return m;
+	};
+
 	z2.matTranslate = function( m, dx, dy, out )
 	{
 		if( !out )
 			out = m;
 		var t = z2.matCreateIdentity();
-		t.matSetTranslation( dx, dy );
+		z2.matSetTranslation( t, dx, dy );
 		z2.matMul( m, t, out );
 		return out;
 	};
