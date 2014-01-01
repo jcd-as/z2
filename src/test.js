@@ -26,6 +26,7 @@ var context = canvas.getContext( '2d' );
 var context = canvas.getContext( '2d' );
 if( !context )
 	throw new Error( "No 2d canvas context. Unable to continue." );
+context.globalAlpha = 1;
 
 
 // load an image
@@ -52,54 +53,6 @@ var mgr = z2.manager.get();
 // called after assets are loaded
 function start()
 {
-	// create some test components
-	var pos = z2.createComponentFactory( {x: 0, y: 0} ).create( {y:1000, z:1} );
-	console.log( "pos mask: " + pos.mask.key );
-	console.log( "pos: x = " + pos.x + ", y = " + pos.y + ", z = ", pos.z );
-	var vf = z2.createComponentFactory( {x: 0, y: 0} );
-	var vel = vf.create( {y:1, x:1} );
-	console.log( "vel mask: " + vel.mask.key );
-
-	// create the transform system
-	var xf = z2.createTransformSystem( view, context );
-	mgr.addSystem( xf );
-
-	// create a test entity
-	var e = mgr.createEntity( [pos, vf] );
-	console.log( "e mask: " + e.mask.key );
-
-	// create a test system that operates on this kind of entity
-	var s = new z2.System( [pos, vel], 
-	{
-		init: function()
-		{
-			console.log( "s.init called" );
-		},
-		onStart: function()
-		{
-			console.log( "s.onStart called" );
-		},
-		update: function( e )
-		{
-			console.log( "s.update called with: " + e.id );
-		},
-		onEnd: function()
-		{
-			console.log( "s.onEnd called" );
-		},
-	} );
-	mgr.addSystem( s );
-
-	// create a test system that doesn't operate on this kind of entity
-	var unk = z2.createComponentFactory().create();
-	console.log( "unk mask: " + unk.mask.key );
-	var s2 = new z2.System( [pos, vf, unk], { update: function(e) { console.log( "s2.update called with: " + e.id ); } } );
-	mgr.addSystem( s2 );
-
-	// create another entity
-	var e2 = mgr.createEntity( [pos, vel, unk] );
-	console.log( "e2 mask: " + e2.mask.key );
-
 	// create a renderable image Entity
 	var img = z2.loader.getAsset( 'logo' );
 	var imgc = z2.imageFactory.create( {img:img} );
@@ -121,6 +74,10 @@ function start()
 	// create a movement system
 	var ms = z2.createMovementSystem();
 	mgr.addSystem( ms );
+
+	// create the transform system
+	var xf = z2.createTransformSystem( view, context );
+	mgr.addSystem( xf );
 
 	// create rendering system
 	var rs = z2.createRenderingSystem( canvas, true );

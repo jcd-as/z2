@@ -1,6 +1,9 @@
 {
 	"predef" : [
-		"console"
+		"console",
+		"document",
+		"window",
+		"zSquared"
 	]
 
 }

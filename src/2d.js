@@ -5,7 +5,6 @@
 // TODO:
 // . Render System
 // . Transform System
-// - Movement system (velocity component)
 // - Animated sprite System
 // - 
 
@@ -16,7 +15,9 @@ zSquared['2d'] = function( z2 )
 	z2.require( ["math", "ecs"] );
 
 
+	/////////////////////////////////////////////////////////////////////////
 	// Component factories
+	/////////////////////////////////////////////////////////////////////////
 	
 	// 2d renderable
 	// (empty 'dummy' components that just indicate they can be drawn)
@@ -47,10 +48,15 @@ zSquared['2d'] = function( z2 )
 	// (empty 'dummy' components that just indicate they can be transformed)
 	z2.transformFactory = z2.createComponentFactory();
 
-	// System factories
 
+	/////////////////////////////////////////////////////////////////////////
+	// System factories
+	/////////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////////
 	// RenderingSystem factory function
 	// requires: renderable
+	// optional: image, polygon, sprite
 	z2.createRenderingSystem = function( canvas, clear )
 	{
 		var context = canvas.getContext( '2d' );
@@ -62,9 +68,6 @@ zSquared['2d'] = function( z2 )
 			init: function()
 			{
 				console.log( "Renderer init called" );
-
-				// TODO: test code, remove:
-				context.fillStyle = '#ff0000';
 			},
 			onStart: function()
 			{
@@ -73,7 +76,15 @@ zSquared['2d'] = function( z2 )
 				// clear screen?
 				if( clear )
 				{
+					// set transform to identity
+					context.setTransform( 1, 0, 0, 1, 0, 0 );
+					// clear canvas
+					// TODO: test code, remove
+					////////
+					context.fillStyle = '#800000';
 					context.fillRect( 0, 0, canvas.width, canvas.height );
+					////////
+//					context.clearRect( 0, 0, canvas.width, canvas.height );
 				}
 			},
 			update: function( e )
@@ -108,6 +119,7 @@ zSquared['2d'] = function( z2 )
 		} );
 	};
 
+	/////////////////////////////////////////////////////////////////////////
 	// TransformSystem factory function
 	// requires: transform, position, size
 	// optional: rotation, scale, center
@@ -200,6 +212,7 @@ zSquared['2d'] = function( z2 )
 		} );
 	};
 
+	/////////////////////////////////////////////////////////////////////////
 	// MovementSystem factory function
 	// requires: position, velocity
 	// optional: ...
