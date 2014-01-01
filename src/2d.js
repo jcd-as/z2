@@ -65,14 +65,8 @@ zSquared['2d'] = function( z2 )
 
 		return new z2.System( [z2.renderableFactory],
 		{
-			init: function()
-			{
-				console.log( "Renderer init called" );
-			},
 			onStart: function()
 			{
-				console.log( "Renderer onStart called" );
-
 				// clear screen?
 				if( clear )
 				{
@@ -89,8 +83,6 @@ zSquared['2d'] = function( z2 )
 			},
 			update: function( e )
 			{
-				console.log( "Renderer update called with: " + e.id );
-
 				// TODO: check for different kinds of renderables
 				// (animated sprites, polygons, text)
 
@@ -111,11 +103,7 @@ zSquared['2d'] = function( z2 )
 					context.drawImage( imgc.img, 0, 0, w, h, 0, 0, w, h );
 				}
 				// TODO: other renderables
-			},
-			onEnd: function()
-			{
-				console.log( "Renderer onEnd called" );
-			},
+			}
 		} );
 	};
 
@@ -129,18 +117,8 @@ zSquared['2d'] = function( z2 )
 
 		return new z2.System( [z2.transformFactory, z2.positionFactory, z2.sizeFactory],
 		{
-			init: function()
-			{
-				console.log( "Transform init called" );
-			},
-			onStart: function()
-			{
-				console.log( "Transform onStart called" );
-			},
 			update: function( e )
 			{
-				console.log( "Transform update called with: " + e.id );
-
 				// get the transform component
 				z2.matSetIdentity( temp_xf );
 
@@ -204,11 +182,7 @@ zSquared['2d'] = function( z2 )
 
 				// set the canvas context's transform
 				context.setTransform( temp_xf[0], temp_xf[3], temp_xf[1], temp_xf[4], temp_xf[2], temp_xf[5] );
-			},
-			onEnd: function()
-			{
-				console.log( "Transform onEnd called" );
-			},
+			}
 		} );
 	};
 
@@ -220,18 +194,8 @@ zSquared['2d'] = function( z2 )
 	{
 		return new z2.System( [z2.positionFactory, z2.velocityFactory],
 		{
-			init: function()
-			{
-				console.log( "Movement init called" );
-			},
-			onStart: function()
-			{
-				console.log( "Movement onStart called" );
-			},
 			update: function( e )
 			{
-				console.log( "Movement update called with: " + e.id );
-
 				// get the position component
 				var pc = e.getComponent( z2.positionFactory.mask );
 
@@ -242,11 +206,7 @@ zSquared['2d'] = function( z2 )
 				// (instead of assuming 60 fps)
 				pc.x += vc.x / 60;
 				pc.y += vc.y / 60;
-			},
-			onEnd: function()
-			{
-				console.log( "Movement onEnd called" );
-			},
+			}
 		} );
 	};
 };

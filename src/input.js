@@ -15,13 +15,13 @@
 
 "use strict";
 
-zSquared.time = function( z2 )
+zSquared.input = function( z2 )
 {
 //	z2.require( ["math"] );
 
 	// TODO: implement
 
-	z2.keyboard = 
+	z2.kbd = 
 	{
 		captured: {},
 		pressed: {},

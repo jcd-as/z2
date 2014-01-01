@@ -13,7 +13,7 @@ var HEIGHT = 384;
 var z2 = zSquared();
 
 // require all the z2 modules
-z2.require( ["bitset", "math", "scene", "view", "ecs", "loader", "statemachine", "2d"] );
+z2.require( ["bitset", "math", "scene", "view", "ecs", "loader", "input", "statemachine", "2d"] );
 
 // create a canvas
 var canvas = document.createElement( 'canvas' );
@@ -50,6 +50,44 @@ view.sy = 0.5;
 // get the ecs manager
 var mgr = z2.manager.get();
 
+// create a "player control" component
+var player = z2.createComponentFactory();
+
+// create an input system
+var input_sys = new z2.System( [z2.velocityFactory, player],
+{
+	init: function()
+	{
+		console.log( "input: init called" );
+		z2.kbd.start();
+		z2.kbd.addKey( z2.kbd.UP );
+		z2.kbd.addKey( z2.kbd.DOWN );
+		z2.kbd.addKey( z2.kbd.LEFT );
+		z2.kbd.addKey( z2.kbd.RIGHT );
+	},
+	update: function( e )
+	{
+		console.log( "input: update called" );
+		// get the velocity component
+		var vc = e.getComponent( z2.velocityFactory.mask );
+
+		// check keys
+		if( z2.kbd.isDown( z2.kbd.UP ) )
+			vc.y = -100;
+		else if( z2.kbd.isDown( z2.kbd.DOWN ) )
+			vc.y = 100;
+		else
+			vc.y = 0;
+		if( z2.kbd.isDown( z2.kbd.LEFT ) )
+			vc.x = -100;
+		else if( z2.kbd.isDown( z2.kbd.RIGHT ) )
+			vc.x = 100;
+		else vc.x = 0;
+	}
+} );
+
+mgr.addSystem( input_sys );
+
 // called after assets are loaded
 function start()
 {
@@ -67,8 +105,8 @@ function start()
 	var imgs = z2.scaleFactory.create( {sx: 1, sy: 1} );
 	var imgsz = z2.sizeFactory.create( {width: 512, height: 384} );
 	var imgcc = z2.centerFactory.create( {cx: 0.25, cy: 0.5} );
-	var imgv = z2.velocityFactory.create( {x: 20, y: 0} );
-	var imge = mgr.createEntity( [z2.renderableFactory, z2.transformFactory, imgp, imgr, imgsz, imgs, imgcc, imgc, imgv] );
+	var imgv = z2.velocityFactory.create( {x: 0, y: 0} );
+	var imge = mgr.createEntity( [z2.renderableFactory, z2.transformFactory, imgp, imgr, imgsz, imgs, imgcc, imgc, imgv, player] );
 	console.log( "imge mask: " + imge.mask.key );
 
 	// create a movement system
