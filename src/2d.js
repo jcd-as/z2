@@ -11,9 +11,6 @@
 
 "use strict";
 
-/** 2d game Entities, Components, and Systems module
- * @namespace z2.2d
- */
 zSquared['2d'] = function( z2 )
 {
 	z2.require( ["math", "ecs", "time"] );
