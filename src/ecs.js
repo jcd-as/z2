@@ -71,8 +71,8 @@ zSquared.ecs = function( z2 )
 	 * which this System will be called
 	 * @arg {Object} obj The prototype for the System. Must contain the
 	 * following function:
-	 * update( e ) - The function which will be called each frame. Takes an
-	 * entity as an argument
+	 * update( e, dt ) - The function which will be called each frame. Takes an
+	 * entity and the time delta for the frame as arguments
 	 * and may optionally contain:
 	 * init() - An initializer that is called when the System is first created
 	 * for use
@@ -94,13 +94,13 @@ zSquared.ecs = function( z2 )
 			this.mask.setBits( cmps[i].mask );
 		}
 	};
-	z2.System.prototype.onUpdate = function ( e )
+	z2.System.prototype.onUpdate = function ( e, dt )
 	{
 		// TODO: do away with this check once the Systems maintain a list of
 		// the components they care about...
 		// call 'this.update()' IF the component masks match
 		if( this.mask.matchAll( e.mask ) )
-			this.update( e );
+			this.update( e, dt );
 	};
 
 
@@ -285,7 +285,7 @@ zSquared.ecs = function( z2 )
 					for( i = 0; i < systems.length; i++ )
 					{
 						for( var j = 0; j < living.length; j++ )
-							systems[i].onUpdate( entities[living[j]] );
+							systems[i].onUpdate( entities[living[j]], dt );
 					}
 					// onEnd: call each System
 					for( i = 0; i < systems.length; i++ )

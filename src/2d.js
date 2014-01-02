@@ -3,16 +3,17 @@
 // Components and Systems for 2d games
 //
 // TODO:
-// . Render System
+// x Render System
 // . Transform System
-// - Animated sprite System
+//	- parent (group) transforms
+// x Animated sprite System
 // - 
 
 "use strict";
 
 zSquared['2d'] = function( z2 )
 {
-	z2.require( ["math", "ecs"] );
+	z2.require( ["math", "ecs", "time"] );
 
 
 	/////////////////////////////////////////////////////////////////////////
@@ -25,6 +26,9 @@ zSquared['2d'] = function( z2 )
 
 	// 2d image
 	z2.imageFactory = z2.createComponentFactory( {img: null} );
+
+	// 2d polygon
+	z2.polygonFactory = z2.createComponentFactory( {vertices: []} );
 
 	// 2d position
 	z2.positionFactory = z2.createComponentFactory( {x: 0, y: 0} );
@@ -45,9 +49,83 @@ zSquared['2d'] = function( z2 )
 	z2.centerFactory = z2.createComponentFactory( {cx: 0.5, cy: 0.5} );
 
 	// 2d transform
-	// (empty 'dummy' components that just indicate they can be transformed)
-	z2.transformFactory = z2.createComponentFactory();
+	z2.transformFactory = z2.createComponentFactory( {xform: null} );
 
+	// 2d (animated) sprite
+	z2.spriteFactory = z2.createComponentFactory( {img: null, width: 0, animations: null } );
+
+	// helper class for sprite animations
+	// TODO: support per-frame time in animation sequences
+	z2.Animations = function()
+	{
+		this.animations = [];
+		this.cur_animation = null;
+		this._cur_frame = 0;
+		this._frame_time = 0;
+	};
+	Object.defineProperty( z2.Animations.prototype, 'currentFrame',
+	{
+		get: function()
+		{
+			return this.cur_animation[this._cur_frame][0];
+		}
+	} );
+	/** Add an aniation sequence
+	 * @method z2.Animations#add
+	 * @memberof z2.Animation
+	 * @arg {string} name Friendly name of sequence, to be used as look-up key
+	 * @arg {Array} anim An array containing the frames of the animation
+	 * sequence, with each frame being a two-element array consisting of the
+	 * frame index and the ms spent on this frame (e.g. [0, 250])
+	 */
+	z2.Animations.prototype.add = function( name, anim )
+	{
+		this.animations[name] = anim;
+	};
+	z2.Animations.prototype.play = function( name )
+	{
+		this.cur_animation = this.animations[name];
+		this._cur_frame = this.cur_animation[0][0];
+		this._frame_time = 0;
+	};
+	z2.Animations.prototype.stop = function()
+	{
+		this.cur_animation = null;
+		this._frame_time = 0;
+	};
+	z2.Animations.prototype.update = function( dt )
+	{
+		// if there is an animation playing,
+		// find the frame that should be displayed,
+		// given the elapsed time
+		if( this.cur_animation !== null )
+		{
+			this._frame_time += dt;
+			var f = this._cur_frame;
+			var next = this.cur_animation[f][1];
+			if( this._frame_time < next )
+				return;
+			// calculate the correct frame for the elapsed time
+			while( this._frame_time > next )
+			{
+				// wrap around to first frame?
+				if( f == this.cur_animation.length )
+				{
+					this._frame_time -= next;
+					next = 0;
+					f = 0;
+				}
+				next += this.cur_animation[f][1];
+				f++;
+			}
+			// wrap around to first frame?
+			if( f < this.cur_animation.length )
+				this._cur_frame = f;
+			else
+				this._cur_frame = 0;
+			this._frame_time = 0;
+		}
+	};
 
 	/////////////////////////////////////////////////////////////////////////
 	// System factories
@@ -81,20 +159,34 @@ zSquared['2d'] = function( z2 )
 //					context.clearRect( 0, 0, canvas.width, canvas.height );
 				}
 			},
-			update: function( e )
+			update: function( e, dt )
 			{
-				// TODO: check for different kinds of renderables
-				// (animated sprites, polygons, text)
+				// get the transform component...
+				var xformc = e.getComponent( z2.transformFactory.mask );
+				var xf = xformc.xform;
+				// ... & set the canvas context's transform
+				context.setTransform( xf[0], xf[3], xf[1], xf[4], xf[2], xf[5] );
 
-				// get the image Component
+				// check for different kinds of renderables
+
+				// image Component?
 				var imgc = e.getComponent( z2.imageFactory.mask );
 
+				// polygon component?
+				var polyc = e.getComponent( z2.polygonFactory.mask );
+
+				// sprite component?
+				var spritec = e.getComponent( z2.spriteFactory.mask );
+
+				var w, h, szc;
+
+				// image
 				if( imgc )
 				{
-					var w = imgc.width;
-					var h = imgc.height;
+					w = imgc.img.width;
+					h = imgc.img.height;
 					// get size component, if any
-					var szc = e.getComponent( z2.sizeFactory.mask );
+					szc = e.getComponent( z2.sizeFactory.mask );
 					if( szc )
 					{
 						w = szc.width;
@@ -102,7 +194,47 @@ zSquared['2d'] = function( z2 )
 					}
 					context.drawImage( imgc.img, 0, 0, w, h, 0, 0, w, h );
 				}
-				// TODO: other renderables
+
+				// polygon
+				if( polyc )
+				{
+					if( polyc.vertices.length >= 6 )
+					{
+						// TODO: set the correct fill style
+						context.fillStyle = '#ff0000';
+						context.beginPath();
+						context.moveTo( polyc.vertices[0], polyc.vertices[1] );
+						for( var i = 2; i < polyc.vertices.length; i += 2 )
+						{
+							context.lineTo( polyc.vertices[i], polyc.vertices[i+1] );
+						}
+						context.closePath();
+						context.fill();
+					}
+				}
+
+				// sprite
+				if( spritec )
+				{
+					w = spritec.img.width;
+					h = spritec.img.height;
+					// get size component, if any
+					szc = e.getComponent( z2.sizeFactory.mask );
+					if( szc )
+					{
+						w = szc.width;
+						h = szc.height;
+					}
+					// offset to the image in the sprite strip
+					var offs = spritec.animations.currentFrame * w;
+					
+					context.drawImage( spritec.img, offs, 0, w, h, 0, 0, w, h );
+
+					// update the current frame & image
+					spritec.animations.update( dt );
+				}
+
+				// TODO: other renderables ?
 			}
 		} );
 	};
@@ -113,14 +245,14 @@ zSquared['2d'] = function( z2 )
 	// optional: rotation, scale, center
 	z2.createTransformSystem = function( view, context )
 	{
-		var temp_xf = z2.matCreateIdentity();
-
 		return new z2.System( [z2.transformFactory, z2.positionFactory, z2.sizeFactory],
 		{
-			update: function( e )
+			update: function( e, dt )
 			{
 				// get the transform component
-				z2.matSetIdentity( temp_xf );
+				var xformc = e.getComponent( z2.transformFactory.mask );
+				var xf = xformc.xform;
+				z2.matSetIdentity( xf );
 
 				// get the position component
 				var pc = e.getComponent( z2.positionFactory.mask );
@@ -163,25 +295,22 @@ zSquared['2d'] = function( z2 )
 				var py = h * cy;
 
 				// TODO: cache these & only re-compute when rotation changes
-				var c = Math.cos( rc.theta );
-				var s = Math.sin( rc.theta );
+				var c = Math.cos( theta );
+				var s = Math.sin( theta );
 				// scale & rotation
-				temp_xf[0] = c * sx;
-				temp_xf[1] = -s * sy;
-				temp_xf[3] = s * sx;
-				temp_xf[4] = c * sy;
+				xf[0] = c * sx;
+				xf[1] = -s * sy;
+				xf[3] = s * sx;
+				xf[4] = c * sy;
 				// translation
 				// (& account for pivot point)
-				temp_xf[2] = x - (temp_xf[0] * px) - (temp_xf[1] * py);
-				temp_xf[5] = y - (temp_xf[4] * py) - (temp_xf[3] * px);
+				xf[2] = x - (xf[0] * px) - (xf[1] * py);
+				xf[5] = y - (xf[4] * py) - (xf[3] * px);
 
 				// TODO: parent transform(s)...
 
 				// transform for view-space
-				view.transform( temp_xf );
-
-				// set the canvas context's transform
-				context.setTransform( temp_xf[0], temp_xf[3], temp_xf[1], temp_xf[4], temp_xf[2], temp_xf[5] );
+				view.transform( xf );
 			}
 		} );
 	};
@@ -194,7 +323,7 @@ zSquared['2d'] = function( z2 )
 	{
 		return new z2.System( [z2.positionFactory, z2.velocityFactory],
 		{
-			update: function( e )
+			update: function( e, dt )
 			{
 				// get the position component
 				var pc = e.getComponent( z2.positionFactory.mask );

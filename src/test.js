@@ -1,9 +1,11 @@
 // z2 test code
 // TODO:
 // x transforms
-// - render: polygon, (animated)sprite
-// - input 
-// - animated sprite
+// x polygon
+// x input 
+// x animated sprite
+// - follow-mode
+// - scene bounds
 // - collision detection (separated axis theorem)
 //
 
@@ -31,6 +33,7 @@ context.globalAlpha = 1;
 
 // load an image
 z2.loader.queueAsset( 'logo', 'logo.png' );
+z2.loader.queueAsset( 'man', 'stylized.png' );
 //z2.loader.load( function(){ console.log( "loaded logo.png" ); } );
 z2.loader.load( start );
 
@@ -43,8 +46,8 @@ var view = new z2.View( scene, WIDTH, HEIGHT, null, z2.VIEW_MODE_NONE, 500, 500 
 //view.x = 400;
 //view.y = -256;
 //view.rotation = z2.d2r(-4);
-view.sx = 0.5;
-view.sy = 0.5;
+//view.sx = 0.5;
+//view.sy = 0.5;
 
 
 // get the ecs manager
@@ -65,7 +68,7 @@ var input_sys = new z2.System( [z2.velocityFactory, player],
 		z2.kbd.addKey( z2.kbd.LEFT );
 		z2.kbd.addKey( z2.kbd.RIGHT );
 	},
-	update: function( e )
+	update: function( e, dt )
 	{
 		console.log( "input: update called" );
 		// get the velocity component
@@ -96,19 +99,49 @@ function start()
 	var imgc = z2.imageFactory.create( {img:img} );
 	var imgx = z2.transformFactory.create();
 //	var imgp = z2.positionFactory.create( {x: 100, y: 0} );
-//	var imgr = z2.rotationFactory.create( {theta: z2.d2r(45)} );
-//	var imgp = z2.positionFactory.create( {x: 0, y: 0} );
 	var imgp = z2.positionFactory.create( {x: 500, y: 500} );
+	var imgr = z2.rotationFactory.create( {theta: 0} );
+//	var imgr = z2.rotationFactory.create( {theta: z2.d2r(-4)} );
 //	var imgr = z2.rotationFactory.create( {theta: z2.d2r(45)} );
-//	var imgr = z2.rotationFactory.create( {theta: 0} );
-	var imgr = z2.rotationFactory.create( {theta: z2.d2r(-4)} );
 	var imgs = z2.scaleFactory.create( {sx: 1, sy: 1} );
 	var imgsz = z2.sizeFactory.create( {width: 512, height: 384} );
-	var imgcc = z2.centerFactory.create( {cx: 0.25, cy: 0.5} );
+//	var imgcc = z2.centerFactory.create( {cx: 0.25, cy: 0.5} );
+	var imgcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
 	var imgv = z2.velocityFactory.create( {x: 0, y: 0} );
-	var imge = mgr.createEntity( [z2.renderableFactory, z2.transformFactory, imgp, imgr, imgsz, imgs, imgcc, imgc, imgv, player] );
+	var imgxf = z2.transformFactory.create( {xform: z2.matCreateIdentity()} );
+//	var imge = mgr.createEntity( [z2.renderableFactory, imgxf, imgp, imgr, imgsz, imgs, imgcc, imgc, imgv, player] );
+	var imge = mgr.createEntity( [z2.renderableFactory, imgxf, imgp, imgr, imgsz, imgs, imgcc, imgc, imgv] );
 	console.log( "imge mask: " + imge.mask.key );
 
+	// create a (random) polygon (triangle)
+	var vertices = [];
+	for( var i = 0; i < 3; i++ )
+	{
+		vertices.push( Math.random() * WIDTH - WIDTH/2, Math.random() * HEIGHT - HEIGHT/2 );
+	}
+	var polyc = z2.polygonFactory.create( {vertices: vertices} );
+	var polyp = z2.positionFactory.create( {x: 500, y: 500} );
+	var polysz = z2.sizeFactory.create( {width: 100, height: 100} );
+	var polyxf = z2.transformFactory.create( {xform: z2.matCreateIdentity()} );
+	var polye = mgr.createEntity( [z2.renderableFactory, polyxf, polyc, polyp, polysz] );
+
+	// create an (animated) sprite
+	var s_img = z2.loader.getAsset( 'man' );
+	var anims = new z2.Animations();
+	anims.add( 'walk', [[0, 250], [1, 250]] );
+	var sprc = z2.spriteFactory.create( {img:s_img, animations:anims} );
+	var sprx = z2.transformFactory.create();
+	var sprp = z2.positionFactory.create( {x: 500, y: 500} );
+	var sprr = z2.rotationFactory.create( {theta: 0} );
+//	var sprr = z2.rotationFactory.create( {theta: z2.d2r(10)} );
+	var sprs = z2.scaleFactory.create( {sx: 1, sy: 1} );
+	var sprsz = z2.sizeFactory.create( {width: 64, height: 64} );
+	var sprcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
+	var sprv = z2.velocityFactory.create( {x: 0, y: 0} );
+	var sprxf = z2.transformFactory.create( {xform: z2.matCreateIdentity()} );
+	var spre = mgr.createEntity( [z2.renderableFactory, sprxf, sprp, sprr, sprsz, sprs, sprcc, sprc, sprv, player] );
+	anims.play( 'walk' );
+	
 	// create a movement system
 	var ms = z2.createMovementSystem();
 	mgr.addSystem( ms );
@@ -126,12 +159,18 @@ function start()
 	requestAnimationFrame( update );
 }
 
+var pt = 0;
+
 function update( dt )
 {
+	if( pt === 0 )
+		pt = dt;
+	
 	// update the ecs system
-	mgr.update();
+	mgr.update( dt - pt );
 
 	// next frame
+	pt = dt;
 	requestAnimationFrame( update );
 }
 
