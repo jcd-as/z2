@@ -17,16 +17,22 @@
 
 zSquared.input = function( z2 )
 {
-//	z2.require( ["math"] );
+//	z2.require( [] );
 
 	// TODO: implement
 
+	/** Keyboard object
+	 * @namespace z2.kbd
+	 */
 	z2.kbd = 
 	{
 		captured: {},
 		pressed: {},
 
-		// start watching keyboard events
+		/** Start watching keyboard events
+		 * @function z2.kbd#start
+		 * @memberof z2.kbd
+		 */
 		start:  function()
 		{
 			// capture 'this' for closures
@@ -60,23 +66,37 @@ zSquared.input = function( z2 )
 			document.body.addEventListener( 'keyup', this._onKeyUp, false );
 		},
 		
-		// stop watching keyboard events
+		/** Stop watching keyboard events
+		 * @function z2.kbd#stop
+		 */
 		stop: function()
 		{
 			document.body.removeEventListener( 'keydown', this._onKeyDown );
 			document.body.removeEventListener( 'keyup', this._onKeyUp );
 		},
 
+		/** Add a key to watch for
+		 * @function z2.kbd#addKey
+		 * @arg {number} keycode The keycode for the key to watch
+		 */
 		addKey: function( keycode )
 		{
 			this.captured[keycode] = true;
 		},
 
+		/** Remove a watched key
+		 * @function z2.kbd#removeKey
+		 * @arg {number} keycode The keycode for the key to not watch
+		 */
 		removeKey: function( keycode )
 		{
 			delete this.captured[keycode];
 		},
 
+		/** Is a key currently down (pressed)?
+		 * @function z2.kbd#isDown
+		 * @arg {number} keycode The keycode for the key to check
+		 */
 		isDown: function( keycode )
 		{
 			if( this.pressed[keycode] )

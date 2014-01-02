@@ -11,6 +11,9 @@
 
 "use strict";
 
+/** 2d game Entities, Components, and Systems module
+ * @namespace z2.2d
+ */
 zSquared['2d'] = function( z2 )
 {
 	z2.require( ["math", "ecs", "time"] );
@@ -20,41 +23,42 @@ zSquared['2d'] = function( z2 )
 	// Component factories
 	/////////////////////////////////////////////////////////////////////////
 	
-	// 2d renderable
-	// (empty 'dummy' components that just indicate they can be drawn)
+	/** Component Factory for 2d renderable
+	 * (empty 'dummy' components that just indicate they can be drawn) */
 	z2.renderableFactory = z2.createComponentFactory();
 
-	// 2d image
+	/** Component Factory for 2d image */
 	z2.imageFactory = z2.createComponentFactory( {img: null} );
 
-	// 2d polygon
+	/** Component Factory 2d polygon */
 	z2.polygonFactory = z2.createComponentFactory( {vertices: []} );
 
-	// 2d position
+	/** Component Factory 2d position */
 	z2.positionFactory = z2.createComponentFactory( {x: 0, y: 0} );
 
-	// 2d size
+	/** Component Factory 2d size */
 	z2.sizeFactory = z2.createComponentFactory( {width:0, height:0} );
 
-	// 2d velocity
+	/** Component Factory 2d velocity */
 	z2.velocityFactory = z2.createComponentFactory( {x: 0, y: 0} );
 
-	// 2d rotation
+	/** Component Factory 2d rotation */
 	z2.rotationFactory = z2.createComponentFactory( {theta: 0} );
 
-	// 2d scale
+	/** Component Factory 2d scale */
 	z2.scaleFactory = z2.createComponentFactory( {sx: 1, sy: 1} );
 
-	// 2d center point
+	/** Component Factory 2d center point */
 	z2.centerFactory = z2.createComponentFactory( {cx: 0.5, cy: 0.5} );
 
-	// 2d transform
+	/** Component Factory 2d transform */
 	z2.transformFactory = z2.createComponentFactory( {xform: null} );
 
-	// 2d (animated) sprite
+	/** Component Factory 2d (animated) sprite */
 	z2.spriteFactory = z2.createComponentFactory( {img: null, width: 0, animations: null } );
 
-	// helper class for sprite animations
+	/** @class z2.Animations
+	  * @classdesc Helper class for sprite animations */
 	// TODO: support per-frame time in animation sequences
 	z2.Animations = function()
 	{
@@ -63,6 +67,8 @@ zSquared['2d'] = function( z2 )
 		this._cur_frame = 0;
 		this._frame_time = 0;
 	};
+	/** @property {number} currentFrame Get the index (in the sprite sheet) of
+	 * the current frame to be displayed */
 	Object.defineProperty( z2.Animations.prototype, 'currentFrame',
 	{
 		get: function()
@@ -82,17 +88,28 @@ zSquared['2d'] = function( z2 )
 	{
 		this.animations[name] = anim;
 	};
+	/** Start playing an animation sequence
+	 * @method z2.Animations#play
+	 * @arg {string} name The (friendly) name of the sequence to play
+	 */
 	z2.Animations.prototype.play = function( name )
 	{
 		this.cur_animation = this.animations[name];
 		this._cur_frame = this.cur_animation[0][0];
 		this._frame_time = 0;
 	};
+	/** Stop playing any animation sequence
+	 * @method z2.Animations#stop
+	 */
 	z2.Animations.prototype.stop = function()
 	{
 		this.cur_animation = null;
 		this._frame_time = 0;
 	};
+	/** Update the current frame given a time delta
+	 * @method z2.Animations#update
+	 * @arg {number} dt The time delta (elapsed time since last frame)
+	 */
 	z2.Animations.prototype.update = function( dt )
 	{
 		// if there is an animation playing,
@@ -132,9 +149,14 @@ zSquared['2d'] = function( z2 )
 	/////////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////////
-	// RenderingSystem factory function
-	// requires: renderable
-	// optional: image, polygon, sprite
+	/** RenderingSystem factory function
+	 * requires: renderable
+	 * optional: image, polygon, sprite
+	 * @function z2.createRenderingSystem
+	 * @arg {Canvas} canvas The HTML5 canvas object on which to render
+	 * @arg {boolean} clear Should the canvas automatically be cleared each
+	 * frame?
+	 */
 	z2.createRenderingSystem = function( canvas, clear )
 	{
 		var context = canvas.getContext( '2d' );
@@ -240,10 +262,13 @@ zSquared['2d'] = function( z2 )
 	};
 
 	/////////////////////////////////////////////////////////////////////////
-	// TransformSystem factory function
-	// requires: transform, position, size
-	// optional: rotation, scale, center
-	z2.createTransformSystem = function( view, context )
+	/** TransformSystem factory function
+	 * requires: transform, position, size
+	 * optional: rotation, scale, center
+	 * @function z2.createTransformSystem
+	 * @arg {z2.View} view The View object for this transform system
+	 */
+	z2.createTransformSystem = function( view )
 	{
 		return new z2.System( [z2.transformFactory, z2.positionFactory, z2.sizeFactory],
 		{
@@ -252,7 +277,7 @@ zSquared['2d'] = function( z2 )
 				// get the transform component
 				var xformc = e.getComponent( z2.transformFactory.mask );
 				var xf = xformc.xform;
-				z2.matSetIdentity( xf );
+				z2.math.matSetIdentity( xf );
 
 				// get the position component
 				var pc = e.getComponent( z2.positionFactory.mask );
@@ -316,9 +341,11 @@ zSquared['2d'] = function( z2 )
 	};
 
 	/////////////////////////////////////////////////////////////////////////
-	// MovementSystem factory function
-	// requires: position, velocity
-	// optional: ...
+	/** MovementSystem factory function
+	 * requires: position, velocity
+	 * optional: ...
+	 * @function z2.createMovementSystem
+	 */
 	z2.createMovementSystem = function()
 	{
 		return new z2.System( [z2.positionFactory, z2.velocityFactory],

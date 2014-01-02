@@ -55,6 +55,8 @@ zSquared.loader = function( z2 )
 
 
 	// public module interface:
+	/** Loader namespace
+	  * @namespace z2.loader */
 	z2.loader = 
 	{
 		// TODO: does this need to be public ?

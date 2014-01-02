@@ -6,9 +6,9 @@
 
 zSquared.bitset = function( z2 )
 {
-	/** const */
+	/** @constant */
 	z2.DEFAULT_BITSET_LENGTH = 2;
-	/** const */
+	/** @constant */
 	z2.MAX_BITSET_BITS = (z2.DEFAULT_BITSET_LENGTH * 32) - 1;
 
 	/** 

@@ -19,12 +19,12 @@ zSquared.ecs = function( z2 )
 {
 	z2.require( ["bitset"] );
 
-	/** const */
+	/** @constant */
 	z2.DEFAULT_NUM_ENTITIES = 64;
 
 	/** 
 	 * Decorating factory function to create Component Factories
-	 * @function z2#z2.createComponent
+	 * @function z2.createComponentFactory
 	 * @arg {Object} obj An object to turn into a Component type
 	 * (by decorating with a unique mask)
 	 */
@@ -116,7 +116,7 @@ zSquared.ecs = function( z2 )
 		this.mask = new z2.Bitset( z2.DEFAULT_BITSET_LENGTH );
 	};
 	/** Return the Entity's Component with a given mask
-	 * @method z2.Entity#reset
+	 * @method z2.Entity#getComponent
 	 * @memberof z2.Entity
 	 * @arg {z2.Bitset} mask The mask of the Component to retrieve
 	 */
@@ -135,6 +135,7 @@ zSquared.ecs = function( z2 )
 	/** Set the Components for the Entity
 	 * @method z2.Entity#setComponents
 	 * @memberof z2.Entity
+	 * @arg {Array} cmps The list of Components that comprise this Entity
 	 */
 	z2.Entity.prototype.setComponents = function( cmps )
 	{
@@ -146,15 +147,15 @@ zSquared.ecs = function( z2 )
 	};
 
 
-	/** 
-	 * @class z2#z2.manager
-	 * @classdesc manager class (singleton) for the Entity-Component-System 
-	 * framework
-	 * @constructor
+	/** Manager class (singleton) for the Entity-Component-System framework
+	 * @namespace
 	 */
 	z2.manager = (function()
 	{
 		var instance;
+		/** Manager class (singleton) for the Entity-Component-System framework
+		 * @class z2.manager
+		 */
 		function init()
 		{
 			// private data/functionality:
@@ -299,7 +300,7 @@ zSquared.ecs = function( z2 )
 		
 		return {
 			/** Return the singleton manager object
-			 * @method z2.manager#get
+			 * @function z2.manager#get
 			 */
 			get : function()
 			{

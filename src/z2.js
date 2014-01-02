@@ -6,7 +6,10 @@ var zSquared = function( opts )
 {
 	loaded = {};
 
-	// create the main (namespace) object
+	/** Main z2 namespace object
+	 * @global
+	 * @namespace
+	 */
 	var z2 = 
 	{
 		require : function( modules )

@@ -9,14 +9,21 @@
 
 zSquared.time = function( z2 )
 {
-//	z2.require( ["math"] );
+//	z2.require( [] );
 
-	z2.time = {};
-
-	z2.time.now = function()
+	/** Time namespace object
+	 * @namespace z2.time
+	 */
+	z2.time = 
 	{
-		return Date.now();
+		/** Get the current system time
+		 * @function z2.time#now
+		 */
+		now : function()
+		{
+			return Date.now();
+		}
 	};
-	
+
 };
 

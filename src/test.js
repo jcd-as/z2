@@ -108,7 +108,7 @@ function start()
 //	var imgcc = z2.centerFactory.create( {cx: 0.25, cy: 0.5} );
 	var imgcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
 	var imgv = z2.velocityFactory.create( {x: 0, y: 0} );
-	var imgxf = z2.transformFactory.create( {xform: z2.matCreateIdentity()} );
+	var imgxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
 //	var imge = mgr.createEntity( [z2.renderableFactory, imgxf, imgp, imgr, imgsz, imgs, imgcc, imgc, imgv, player] );
 	var imge = mgr.createEntity( [z2.renderableFactory, imgxf, imgp, imgr, imgsz, imgs, imgcc, imgc, imgv] );
 	console.log( "imge mask: " + imge.mask.key );
@@ -122,7 +122,7 @@ function start()
 	var polyc = z2.polygonFactory.create( {vertices: vertices} );
 	var polyp = z2.positionFactory.create( {x: 500, y: 500} );
 	var polysz = z2.sizeFactory.create( {width: 100, height: 100} );
-	var polyxf = z2.transformFactory.create( {xform: z2.matCreateIdentity()} );
+	var polyxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
 	var polye = mgr.createEntity( [z2.renderableFactory, polyxf, polyc, polyp, polysz] );
 
 	// create an (animated) sprite
@@ -138,7 +138,7 @@ function start()
 	var sprsz = z2.sizeFactory.create( {width: 64, height: 64} );
 	var sprcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
 	var sprv = z2.velocityFactory.create( {x: 0, y: 0} );
-	var sprxf = z2.transformFactory.create( {xform: z2.matCreateIdentity()} );
+	var sprxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
 	var spre = mgr.createEntity( [z2.renderableFactory, sprxf, sprp, sprr, sprsz, sprs, sprcc, sprc, sprv, player] );
 	anims.play( 'walk' );
 	
