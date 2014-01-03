@@ -41,6 +41,7 @@ zSquared.bitset = function( z2 )
 				this.data[i] = 0;
 			}
 		}
+		this.key = this._generateKey();
 	};
 
 	/**

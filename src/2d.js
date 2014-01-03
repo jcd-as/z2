@@ -58,10 +58,9 @@ zSquared['2d'] = function( z2 )
 	/** Component Factory for 2d (animated) sprite */
 	z2.spriteFactory = z2.createComponentFactory( {img: null, width: 0, animations: null } );
 
-	/** @class z2.Animations
+	/** @class z2.AnimationSet
 	 * @classdesc Helper class for sprite animations */
-	// TODO: support per-frame time in animation sequences
-	z2.Animations = function()
+	z2.AnimationSet = function()
 	{
 		this.animations = [];
 		this.cur_animation = null;
@@ -70,48 +69,48 @@ zSquared['2d'] = function( z2 )
 	};
 	/** @property {number} currentFrame Get the index (in the sprite sheet) of
 	 * the current frame to be displayed */
-	Object.defineProperty( z2.Animations.prototype, 'currentFrame',
+	Object.defineProperty( z2.AnimationSet.prototype, 'currentFrame',
 	{
 		get: function()
 		{
 			return this.cur_animation[this._cur_frame][0];
 		}
 	} );
-	/** Add an aniation sequence
-	 * @method z2.Animations#add
-	 * @memberof z2.Animation
+	/** Add an animation sequence
+	 * @method z2.AnimationSet#add
+	 * @memberof z2.AnimationSet
 	 * @arg {string} name Friendly name of sequence, to be used as look-up key
 	 * @arg {Array} anim An array containing the frames of the animation
 	 * sequence, with each frame being a two-element array consisting of the
 	 * frame index and the ms spent on this frame (e.g. [0, 250])
 	 */
-	z2.Animations.prototype.add = function( name, anim )
+	z2.AnimationSet.prototype.add = function( name, anim )
 	{
 		this.animations[name] = anim;
 	};
 	/** Start playing an animation sequence
-	 * @method z2.Animations#play
+	 * @method z2.AnimationSet#play
 	 * @arg {string} name The (friendly) name of the sequence to play
 	 */
-	z2.Animations.prototype.play = function( name )
+	z2.AnimationSet.prototype.play = function( name )
 	{
 		this.cur_animation = this.animations[name];
 		this._cur_frame = this.cur_animation[0][0];
 		this._frame_time = 0;
 	};
 	/** Stop playing any animation sequence
-	 * @method z2.Animations#stop
+	 * @method z2.AnimationSet#stop
 	 */
-	z2.Animations.prototype.stop = function()
+	z2.AnimationSet.prototype.stop = function()
 	{
 		this.cur_animation = null;
 		this._frame_time = 0;
 	};
 	/** Update the current frame given a time delta
-	 * @method z2.Animations#update
+	 * @method z2.AnimationSet#update
 	 * @arg {number} dt The time delta (elapsed time since last frame)
 	 */
-	z2.Animations.prototype.update = function( dt )
+	z2.AnimationSet.prototype.update = function( dt )
 	{
 		// if there is an animation playing,
 		// find the frame that should be displayed,

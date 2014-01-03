@@ -3,9 +3,6 @@
 // Entity-Component-System framework for zed-squared
 //
 // TODO:
-// - let Entities add & remove Components dynamically (& update Systems for
-// the new Component sets)
-// - manager.removeEntity()
 // - Systems collection (in manager) should be a priority queue so that higher
 // priority items can be added after lower ones (currently it runs them in
 // order, so Systems have to be added in priority order)
@@ -97,19 +94,33 @@ zSquared.ecs = function( z2 )
 		// list of entities currently operated on by this System
 		this.entities = [];
 	};
+	// remove an Entity
+	z2.System.prototype.removeEntity = function( e )
+	{
+		var i = this.entities.indexOf( e );
+		if( i !== -1 )
+			this.entities.splice( i );
+	};
 	// check to see if an entity should be operated on by this System, and add
 	// it to our collection if so
 	z2.System.prototype.addEntityIfMatch = function( e )
 	{
 		if( this.mask.matchAll( e.mask ) )
-			this.entities.push( e );
+		{
+			// don't add duplicates
+			var i = this.entities.indexOf( e );
+			if( i === -1 )
+				this.entities.push( e );
+		}
 	};
-	z2.System.prototype.removeEntityIfMatch = function( e )
+	// remove an Entity if it doesn't match this system
+	z2.System.prototype.removeEntityIfNotMatch = function( e )
 	{
 		if( !this.mask.matchAll( e.mask ) )
 		{
 			var i = this.entities.indexOf( e );
-			this.entities.splice( i );
+			if( i !== -1 )
+				this.entities.splice( i );
 		}
 	};
 	z2.System.prototype.onUpdate = function ( dt )
@@ -142,6 +153,14 @@ zSquared.ecs = function( z2 )
 	{
 		return z2.manager.get().getComponent( this.id, mask );
 	};
+	/** Clear mask
+	 * @method z2.Entity#clearMask
+	 * @memberof z2.Entity
+	 */
+	z2.Entity.prototype.clearMask = function()
+	{
+		this.mask.clear();
+	};
 	/** Reset mask
 	 * @method z2.Entity#resetMask
 	 * @memberof z2.Entity
@@ -149,6 +168,13 @@ zSquared.ecs = function( z2 )
 	z2.Entity.prototype.resetMask = function()
 	{
 		this.mask.clear();
+		var cmps = z2.manager.get().getComponents( this.id );
+		for( var key in cmps )
+		{
+			if( !cmps.hasOwnProperty( key ) )
+				continue;
+			this.mask.setBits( cmps[key].mask );
+		}
 	};
 	/** Set the Components for the Entity
 	 * @method z2.Entity#setComponents
@@ -163,7 +189,40 @@ zSquared.ecs = function( z2 )
 			this.mask.setBits( cmps[i].mask );
 		}
 	};
+	/** Add a Component to the Entity
+	 * @method z2.Entity#addComponent
+	 * @memberof z2.Entity
+	 * @arg {Component} c The Component to add
+	 */
+	z2.Entity.prototype.addComponent = function( c )
+	{
+		// add the Component to the list
+		z2.manager.get().setComponent( this.id, c );
+		// reset our mask
+		this.resetMask();
+		// update Systems
+		z2.manager.get().updateSystems( this );
+	};
 
+	/** Remove a Component from the Entity
+	 * @method z2.Entity#removeComponent
+	 * @memberof z2.Entity
+	 * @arg {Component} c The Component to remove, or its mask (Bitset)
+	 */
+	z2.Entity.prototype.removeComponent = function( c )
+	{
+		var mask;
+		if( c instanceof z2.Bitset )
+			mask = c;
+		else
+			mask = c.mask;
+		// remove the Component to the list
+		z2.manager.get().unsetComponent( this.id, mask );
+		// reset our mask
+		this.resetMask();
+		// update Systems
+		z2.manager.get().updateSystems( this );
+	};
 
 	/** Manager class (singleton) for the Entity-Component-System framework
 	 * @namespace
@@ -264,7 +323,7 @@ zSquared.ecs = function( z2 )
 					// update the systems
 					for( var i = 0; i < systems.length; i++ )
 					{
-						systems[i].removeEntityIfMatch( e );
+						systems[i].removeEntity( e );
 					}
 
 					var idx = entities.indexOf( e );
@@ -275,8 +334,8 @@ zSquared.ecs = function( z2 )
 					// and add it to the dying list
 					dying.push( idx );
 
-					// reset the Entity slot
-					entities[idx].resetMask();
+					// clear the Entity slot
+					entities[idx].clearMask();
 					delete components[idx];
 				},
 
@@ -294,6 +353,21 @@ zSquared.ecs = function( z2 )
 					for( var i = 0; i < living.length; i++ )
 					{
 						sys.addEntityIfMatch( entities[living[i]] );
+					}
+				},
+
+				/** Update all Systems for an Entities current Component set
+				 * @method z2.manager#updateSystems
+				 * @arg {z2.Entity} e The Entity to update the Systems against
+				 */
+				updateSystems : function( e )
+				{
+					for( var i = 0; i < systems.length; i++ )
+					{
+						// if the Entity no longer matches the system, remove it
+						systems[i].removeEntityIfNotMatch( e );
+						// if the Entity does match the system, add it
+						systems[i].addEntityIfMatch( e );
 					}
 				},
 
@@ -317,6 +391,25 @@ zSquared.ecs = function( z2 )
 					components[id][cmp.mask.key] = cmp;
 				},
 
+				/** Unset (remove) a Component
+				 * @method z2.manager#unsetComponent
+				 * @arg {number} id Id of the Entity whose Component we're un-setting
+				 * @arg {z2.Bitset} mask The mask of the Component we're un-setting
+				 */
+				unsetComponent : function( id, mask )
+				{
+					delete components[id][mask.key];
+				},
+
+				/** Get the Components for a given Entity
+				 * @method z2.manager#getComponents
+				 * @arg {number} id The id for the Entity whose Component set to get
+				 */
+				getComponents : function( id )
+				{
+					return components[id];
+				},
+
 				/** Update the ECS engine for this frame
 				 * @method z2.manager#update
 				 * @arg {number} dt Time delta (in milliseconds) since the last 
@@ -332,9 +425,6 @@ zSquared.ecs = function( z2 )
 							systems[i].onStart();
 					}
 					// update: call each System
-					// TODO: this is n^2. System's need to keep their own
-					// (up-to-date) list of Entities - then they can only call
-					// the necessary ones...
 					for( i = 0; i < systems.length; i++ )
 					{
 						systems[i].onUpdate( dt );

@@ -50,9 +50,13 @@ var mgr = z2.manager.get();
 
 // create a "player control" component
 var player = z2.createComponentFactory();
-
+// placeholder for sprite entity
+var spre;
 // create an input system
-var input_sys = new z2.System( [z2.velocityFactory, player],
+var vel_sw_time = 0;
+var sprv = z2.velocityFactory.create( {x: 0, y: 0} );
+//var input_sys = new z2.System( [z2.velocityFactory, player],
+var input_sys = new z2.System( [player],
 {
 	init: function()
 	{
@@ -62,25 +66,52 @@ var input_sys = new z2.System( [z2.velocityFactory, player],
 		z2.kbd.addKey( z2.kbd.DOWN );
 		z2.kbd.addKey( z2.kbd.LEFT );
 		z2.kbd.addKey( z2.kbd.RIGHT );
+		z2.kbd.addKey( z2.kbd.SPACEBAR );
 	},
 	update: function( e, dt )
 	{
 		console.log( "input: update called" );
+
 		// get the velocity component
 		var vc = e.getComponent( z2.velocityFactory.mask );
 
-		// check keys
-		if( z2.kbd.isDown( z2.kbd.UP ) )
-			vc.y = -100;
-		else if( z2.kbd.isDown( z2.kbd.DOWN ) )
-			vc.y = 100;
-		else
-			vc.y = 0;
-		if( z2.kbd.isDown( z2.kbd.LEFT ) )
-			vc.x = -100;
-		else if( z2.kbd.isDown( z2.kbd.RIGHT ) )
-			vc.x = 100;
-		else vc.x = 0;
+		if( z2.kbd.isDown( z2.kbd.SPACEBAR ) )
+		{
+			// only allow turning velocity off once every 500 ms
+			var t = z2.time.now();
+			if( t - vel_sw_time > 500 )
+			{
+				vel_sw_time = t;
+				if( vc )
+				{
+					// turn vel off
+					vel_on = false;
+					spre.removeComponent( z2.velocityFactory.mask );
+				}
+				else
+				{
+					// turn vel on
+					vel_on = true;
+					spre.addComponent( sprv );
+				}
+			}
+		}
+
+		if( vc )
+		{
+			// check keys
+			if( z2.kbd.isDown( z2.kbd.UP ) )
+				vc.y = -100;
+			else if( z2.kbd.isDown( z2.kbd.DOWN ) )
+				vc.y = 100;
+			else
+				vc.y = 0;
+			if( z2.kbd.isDown( z2.kbd.LEFT ) )
+				vc.x = -100;
+			else if( z2.kbd.isDown( z2.kbd.RIGHT ) )
+				vc.x = 100;
+			else vc.x = 0;
+		}
 	}
 } );
 
@@ -123,7 +154,7 @@ function start()
 
 	// create an (animated) sprite
 	var s_img = z2.loader.getAsset( 'man' );
-	var anims = new z2.Animations();
+	var anims = new z2.AnimationSet();
 	anims.add( 'walk', [[0, 250], [1, 250]] );
 	var sprc = z2.spriteFactory.create( {img:s_img, animations:anims} );
 	var sprx = z2.transformFactory.create();
@@ -134,9 +165,9 @@ function start()
 	var sprs = z2.scaleFactory.create( {sx: 1, sy: 1} );
 	var sprsz = z2.sizeFactory.create( {width: 64, height: 64} );
 	var sprcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
-	var sprv = z2.velocityFactory.create( {x: 0, y: 0} );
+//	var sprv = z2.velocityFactory.create( {x: 0, y: 0} );
 	var sprxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
-	var spre = mgr.createEntity( [z2.renderableFactory, sprxf, sprp, sprpc, sprr, sprsz, sprs, sprcc, sprc, sprv, player] );
+	spre = mgr.createEntity( [z2.renderableFactory, sprxf, sprp, sprpc, sprr, sprsz, sprs, sprcc, sprc, sprv, player] );
 	anims.play( 'walk' );
 
 	// follow this sprite
