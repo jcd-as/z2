@@ -3,10 +3,8 @@
 // Components and Systems for 2d games
 //
 // TODO:
-// x Render System
 // . Transform System
 //	- parent (group) transforms
-// x Animated sprite System
 // - 
 
 "use strict";
@@ -27,35 +25,41 @@ zSquared['2d'] = function( z2 )
 	/** Component Factory for 2d image */
 	z2.imageFactory = z2.createComponentFactory( {img: null} );
 
-	/** Component Factory 2d polygon */
+	/** Component Factory for 2d polygon */
 	z2.polygonFactory = z2.createComponentFactory( {vertices: []} );
 
-	/** Component Factory 2d position */
+	/** Component Factory for 2d fill type */
+	z2.fillFactory = z2.createComponentFactory( {fill: '#ffffff'} );
+
+	/** Component Factory for 2d position */
 	z2.positionFactory = z2.createComponentFactory( {x: 0, y: 0} );
 
-	/** Component Factory 2d size */
+	/** Component Factory for 2d position constraints */
+	z2.positionConstraintsFactory = z2.createComponentFactory( {minx: 0, maxx:0, miny:0, maxy:0} );
+
+	/** Component Factory for 2d size */
 	z2.sizeFactory = z2.createComponentFactory( {width:0, height:0} );
 
-	/** Component Factory 2d velocity */
+	/** Component Factory for 2d velocity */
 	z2.velocityFactory = z2.createComponentFactory( {x: 0, y: 0} );
 
-	/** Component Factory 2d rotation */
+	/** Component Factory for 2d rotation */
 	z2.rotationFactory = z2.createComponentFactory( {theta: 0} );
 
-	/** Component Factory 2d scale */
+	/** Component Factory for 2d scale */
 	z2.scaleFactory = z2.createComponentFactory( {sx: 1, sy: 1} );
 
-	/** Component Factory 2d center point */
+	/** Component Factory for 2d center point */
 	z2.centerFactory = z2.createComponentFactory( {cx: 0.5, cy: 0.5} );
 
-	/** Component Factory 2d transform */
+	/** Component Factory for 2d transform */
 	z2.transformFactory = z2.createComponentFactory( {xform: null} );
 
-	/** Component Factory 2d (animated) sprite */
+	/** Component Factory for 2d (animated) sprite */
 	z2.spriteFactory = z2.createComponentFactory( {img: null, width: 0, animations: null } );
 
 	/** @class z2.Animations
-	  * @classdesc Helper class for sprite animations */
+	 * @classdesc Helper class for sprite animations */
 	// TODO: support per-frame time in animation sequences
 	z2.Animations = function()
 	{
@@ -219,8 +223,12 @@ zSquared['2d'] = function( z2 )
 				{
 					if( polyc.vertices.length >= 6 )
 					{
-						// TODO: set the correct fill style
-						context.fillStyle = '#ff0000';
+						var fill = 'rgba( 255, 255, 255, 1 )';
+						// get fill component
+						var fc = e.getComponent( z2.fillFactory.mask );
+						if( fc )
+							fill = fc.fill;
+						context.fillStyle = fill;
 						context.beginPath();
 						context.moveTo( polyc.vertices[0], polyc.vertices[1] );
 						for( var i = 2; i < polyc.vertices.length; i += 2 )
@@ -340,7 +348,7 @@ zSquared['2d'] = function( z2 )
 	/////////////////////////////////////////////////////////////////////////
 	/** MovementSystem factory function
 	 * requires: position, velocity
-	 * optional: ...
+	 * optional: positionConstraints
 	 * @function z2.createMovementSystem
 	 */
 	z2.createMovementSystem = function()
@@ -354,11 +362,28 @@ zSquared['2d'] = function( z2 )
 
 				// get the velocity component
 				var vc = e.getComponent( z2.velocityFactory.mask );
-				
-				// TODO: account for elapsed time since last frame !
-				// (instead of assuming 60 fps)
-				pc.x += vc.x / 60;
-				pc.y += vc.y / 60;
+
+				// get the pos constraints component
+				var pcc = e.getComponent( z2.positionConstraintsFactory.mask );
+
+				var minx = 0, maxx = Number.MAX_VALUE;
+				var miny = 0, maxy = Number.MAX_VALUE;
+				if( pcc )
+				{
+					minx = pcc.minx;
+					maxx = pcc.maxx;
+					miny = pcc.miny;
+					maxy = pcc.maxy;
+				}
+
+				// account for elapsed time since last frame
+				var idt = dt / 1000;
+				var x = pc.x + vc.x * idt;
+				var y = pc.y + vc.y * idt;
+				if( x < maxx && x > minx )
+					pc.x = x;
+				if( y < maxy && y > miny )
+					pc.y = y;
 			}
 		} );
 	};

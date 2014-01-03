@@ -3,7 +3,6 @@
 // Canvas view class/module for zed-squared
 //
 // TODO:
-// - implement follow-mode
 // -
 
 "use strict";
@@ -36,16 +35,66 @@ zSquared.view = function( z2 )
 		this.width = width;
 		this.height = height;
 		this.target = target;
+
+		// follow-mode data
+		this._hbuf = 0;
+		this._vbuf = 0;
+		this._hoffs = 0;
+		this._voffs = 0;
 		this.follow_mode = follow_mode || z2.FOLLOW_MODE_NONE;
+
+		// rotation
 		this._theta = 0;
+		// scale
 		this._sx = 1;
 		this._sy = 1;
+		// position
 		this._x = 0;
 		this._y = 0;
+		// transform
 		this._xform = z2.math.matCreateIdentity();
 
 		this.setPosition( x || 0, y || 0 );
 	};
+
+    /**
+    * @property {string} follow_mode The angle of rotation of the view (in
+    */
+	Object.defineProperty( z2.View.prototype, 'follow_mode',
+	{
+		get: function()
+		{
+			return this._follow_mode;
+		},
+		set: function( val )
+		{
+			this._follow_mode = val;
+			// TODO: move these calcs to 'follow_mode' property setter
+			// horizontal and vertical "buffer spaces"
+			switch( this.follow_mode )
+			{
+			case z2.FOLLOW_MODE_TIGHT:
+				this.hbuf = this.width/2;
+				this.vbuf = this.height/2;
+				break;
+			case z2.FOLLOW_MODE_PLATFORMER:
+				// TODO: better values? different 'top' value than 'bottom'
+				// (instead of same 'vbuf' for top & bottom)
+				this.hbuf = this.width/3;
+				this.vbuf = this.height/4;
+				break;
+			case z2.FOLLOW_MODE_OVERHEAD_SCROLLER:
+				this.hbuf = this.width/3;
+				this.vbuf = this.height/3;
+				break;
+			}
+
+			// horizontal and vertical offset from center
+			// (ie distance from center of view to target)
+			this.hoffs = this.width/2 - this.hbuf;
+			this.voffs = this.height/2 - this.vbuf;
+		}
+	} );
 
 	/** Transform to view-space
 	 * @method z2.View#transform
@@ -54,6 +103,10 @@ zSquared.view = function( z2 )
 	 */
 	z2.View.prototype.transform = function( mat )
 	{
+		// TODO: adjust for follow-mode
+		if( this.follow_mode !== z2.FOLLOW_MODE_NONE )
+			this._follow();
+
 		// transform to screen space
 		z2.math.matMul( mat, this._xform );
 		// and then translate over to view space
@@ -61,6 +114,77 @@ zSquared.view = function( z2 )
 		var y = this.height/2;
 		z2.math.matTranslate( mat, x, y );
 		return mat;
+	};
+
+	z2.View.prototype._follow = function()
+	{
+		var l = -this._x - this.hoffs;
+		var r = -this._x + this.hoffs;
+		var t = -this._y - this.voffs;
+		var b = -this._y + this.voffs;
+
+		var x = this.target.x;
+		var y = this.target.y;
+
+		var xstop = false, ystop = false;
+
+		// account for scene size
+		if( x > this.scene.width - this.hbuf || x < this.hbuf )
+		{
+			// x can't change
+			xstop = true;
+		}
+		if( y > this.scene.height - this.vbuf || y < this.vbuf )
+		{
+			// y can't change
+			ystop = true;
+		}
+
+		var setx = false;
+		var sety = false;
+
+		// account for buffer space
+		if( !xstop )
+		{
+			if( x < l )
+			{
+				x += this.hoffs;
+				setx = true;
+			}
+			else if( x > r )
+			{
+				x -= this.hoffs;
+				setx = true;
+			}
+		}
+		if( !ystop )
+		{
+			if( y < t )
+			{
+				y += this.voffs;
+				sety = true;
+			}
+			else if( y > b )
+			{
+				y -= this.voffs;
+				sety = true;
+			}
+		}
+
+		if( setx )
+			this._x = -x;
+		if( sety )
+			this._y = -y;
+
+		if( setx || sety )
+		{
+			// update the transform (translation only)
+			// pivot point (in screen space)
+			var px = this.scene.width/2;
+			var py = this.scene.height/2;
+			this._xform[2] = this._x - (this._xform[0] * px) - (this._xform[1] * py) + this.scene.width/2;
+			this._xform[5] = this._y - (this._xform[4] * py) - (this._xform[3] * px) + this.scene.height/2;
+		}
 	};
 
 	z2.View.prototype._setTransform = function()

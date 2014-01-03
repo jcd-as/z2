@@ -1,11 +1,5 @@
 // z2 test code
 // TODO:
-// x transforms
-// x polygon
-// x input 
-// x animated sprite
-// - follow-mode
-// - scene bounds
 // - collision detection (separated axis theorem)
 //
 
@@ -41,7 +35,8 @@ z2.loader.load( start );
 var scene = new z2.Scene( 1000, 1000 );
 
 // create a view
-var view = new z2.View( scene, WIDTH, HEIGHT, null, z2.VIEW_MODE_NONE, 500, 500 );
+var view = new z2.View( scene, WIDTH, HEIGHT, null, z2.FOLLOW_MODE_NONE, 500, 500 );
+//var view = new z2.View( scene, WIDTH, HEIGHT, null, z2.FOLLOW_MODE_TIGHT, 500, 500 );
 //view.x = 256;
 //view.x = 400;
 //view.y = -256;
@@ -123,7 +118,8 @@ function start()
 	var polyp = z2.positionFactory.create( {x: 500, y: 500} );
 	var polysz = z2.sizeFactory.create( {width: 100, height: 100} );
 	var polyxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
-	var polye = mgr.createEntity( [z2.renderableFactory, polyxf, polyc, polyp, polysz] );
+	var polyf = z2.fillFactory.create( {fill:'rgba( 255, 0, 0, 0.5 )'} );
+	var polye = mgr.createEntity( [z2.renderableFactory, polyf, polyxf, polyc, polyp, polysz] );
 
 	// create an (animated) sprite
 	var s_img = z2.loader.getAsset( 'man' );
@@ -132,6 +128,7 @@ function start()
 	var sprc = z2.spriteFactory.create( {img:s_img, animations:anims} );
 	var sprx = z2.transformFactory.create();
 	var sprp = z2.positionFactory.create( {x: 500, y: 500} );
+	var sprpc = z2.positionConstraintsFactory.create( {minx: 0, maxx: scene.width, miny: 0, maxy: scene.height} );
 	var sprr = z2.rotationFactory.create( {theta: 0} );
 //	var sprr = z2.rotationFactory.create( {theta: z2.d2r(10)} );
 	var sprs = z2.scaleFactory.create( {sx: 1, sy: 1} );
@@ -139,8 +136,12 @@ function start()
 	var sprcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
 	var sprv = z2.velocityFactory.create( {x: 0, y: 0} );
 	var sprxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
-	var spre = mgr.createEntity( [z2.renderableFactory, sprxf, sprp, sprr, sprsz, sprs, sprcc, sprc, sprv, player] );
+	var spre = mgr.createEntity( [z2.renderableFactory, sprxf, sprp, sprpc, sprr, sprsz, sprs, sprcc, sprc, sprv, player] );
 	anims.play( 'walk' );
+
+	// follow this sprite
+	view.target = sprp;
+	view.follow_mode = z2.FOLLOW_MODE_TIGHT;
 	
 	// create a movement system
 	var ms = z2.createMovementSystem();
