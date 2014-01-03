@@ -3,14 +3,13 @@
 // Entity-Component-System framework for zed-squared
 //
 // TODO:
+// - let Entities add & remove Components dynamically (& update Systems for
+// the new Component sets)
+// - manager.removeEntity()
 // - Systems collection (in manager) should be a priority queue so that higher
 // priority items can be added after lower ones (currently it runs them in
 // order, so Systems have to be added in priority order)
-// - Systems should keep lists of the Entities they are associated with and use
-// component add/remove events (from the Entities) to keep up-to-date. This will
-// allow the Systems to iterate through their list of Entities much more quickly
-// (don't have to check the masks of every single Entity for every single
-// System: n^2 behavior)
+// - test dead/dying lists & removing/adding Entities during main loop
 // - 
 
 "use strict";
@@ -87,20 +86,39 @@ zSquared.ecs = function( z2 )
 			if( obj.hasOwnProperty( key ) )
 				this[key] = obj[key];
 		}
+
 		// create the mask for these Components
 		this.mask = new z2.Bitset( z2.DEFAULT_BITSET_LENGTH );
 		for( var i = 0; i < cmps.length; i++ )
 		{
 			this.mask.setBits( cmps[i].mask );
 		}
+
+		// list of entities currently operated on by this System
+		this.entities = [];
 	};
-	z2.System.prototype.onUpdate = function ( e, dt )
+	// check to see if an entity should be operated on by this System, and add
+	// it to our collection if so
+	z2.System.prototype.addEntityIfMatch = function( e )
 	{
-		// TODO: do away with this check once the Systems maintain a list of
-		// the components they care about...
-		// call 'this.update()' IF the component masks match
 		if( this.mask.matchAll( e.mask ) )
-			this.update( e, dt );
+			this.entities.push( e );
+	};
+	z2.System.prototype.removeEntityIfMatch = function( e )
+	{
+		if( !this.mask.matchAll( e.mask ) )
+		{
+			var i = this.entities.indexOf( e );
+			this.entities.splice( i );
+		}
+	};
+	z2.System.prototype.onUpdate = function ( dt )
+	{
+		// update all our entities
+		for( var i = 0; i < this.entities.length; i++ )
+		{
+			this.update( this.entities[i], dt );
+		}
 	};
 
 
@@ -124,11 +142,11 @@ zSquared.ecs = function( z2 )
 	{
 		return z2.manager.get().getComponent( this.id, mask );
 	};
-	/** Reset mask and components
-	 * @method z2.Entity#reset
+	/** Reset mask
+	 * @method z2.Entity#resetMask
 	 * @memberof z2.Entity
 	 */
-	z2.Entity.prototype.reset = function()
+	z2.Entity.prototype.resetMask = function()
 	{
 		this.mask.clear();
 	};
@@ -226,10 +244,40 @@ zSquared.ecs = function( z2 )
 						e.setComponents( cmps );
 					}
 
-					// TODO: find all the Systems with matching masks and add 
+					// find all the Systems with matching masks and add 
 					// this Entity to them
+					for( i = 0; i < systems.length; i++ )
+					{
+						systems[i].addEntityIfMatch( e );
+					}
 
 					return e;
+				},
+
+				/** Remove an Entity
+				 * @method z2.manager#removeEntity
+				 * @memberof z2.manager
+				 * @arg {Entity} e The Entity to remove
+				 */
+				removeEntity : function( e )
+				{
+					// update the systems
+					for( var i = 0; i < systems.length; i++ )
+					{
+						systems[i].removeEntityIfMatch( e );
+					}
+
+					var idx = entities.indexOf( e );
+
+					// remove the Entity from the living list
+					var li = living.indexOf( idx );
+					living.slice( li );
+					// and add it to the dying list
+					dying.push( idx );
+
+					// reset the Entity slot
+					entities[idx].resetMask();
+					delete components[idx];
 				},
 
 				/** Add a System
@@ -243,6 +291,10 @@ zSquared.ecs = function( z2 )
 						sys.init();
 					// TODO: find all the entities with matching masks and 
 					// assign them to the System
+					for( var i = 0; i < living.length; i++ )
+					{
+						sys.addEntityIfMatch( entities[living[i]] );
+					}
 				},
 
 				/** Get a Component
@@ -285,14 +337,21 @@ zSquared.ecs = function( z2 )
 					// the necessary ones...
 					for( i = 0; i < systems.length; i++ )
 					{
-						for( var j = 0; j < living.length; j++ )
-							systems[i].onUpdate( entities[living[j]], dt );
+						systems[i].onUpdate( dt );
 					}
 					// onEnd: call each System
 					for( i = 0; i < systems.length; i++ )
 					{
 						if( systems[i].onEnd )
 							systems[i].onEnd();
+					}
+
+					// move dying Entities to dead list, 
+					// so they can be reclaimed/recycled
+					var idx;
+					for( i = dying.length-1; i >= 0; i-- )
+					{
+						dead.push( dying.pop() );
 					}
 				}
 			};

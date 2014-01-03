@@ -128,7 +128,7 @@ function start()
 	var sprc = z2.spriteFactory.create( {img:s_img, animations:anims} );
 	var sprx = z2.transformFactory.create();
 	var sprp = z2.positionFactory.create( {x: 500, y: 500} );
-	var sprpc = z2.positionConstraintsFactory.create( {minx: 0, maxx: scene.width, miny: 0, maxy: scene.height} );
+	var sprpc = z2.positionConstraintsFactory.create( {minx: 16, maxx: scene.width-16, miny: 32, maxy: scene.height-32} );
 	var sprr = z2.rotationFactory.create( {theta: 0} );
 //	var sprr = z2.rotationFactory.create( {theta: z2.d2r(10)} );
 	var sprs = z2.scaleFactory.create( {sx: 1, sy: 1} );
