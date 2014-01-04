@@ -19,6 +19,15 @@ zSquared.view = function( z2 )
 	/** 
 	 * @class z2#z2.View
 	 * @classdesc View class. Represents a view into a Scene
+    * @property {string} follow_mode The angle of rotation of the view (in
+    * @property {number} rotation The angle of rotation of the view (in
+	* radians). (Note that the View is, like a camera, 'looking at' the scene,
+	* so if you rotate the view clockwise, the displayed scene will appear to
+	* rotate CCW, and vice-versa)
+    * @property {number} sx The scale factor for the view in the X dimension
+    * @property {number} sy The scale factor for the view in the Y dimension
+    * @property {number} x The X coordinate of the center of the View
+    * @property {number} y The Y coordinate of the center of the View
 	 * @constructor
 	 * @arg {z2.Scene} scene The Scene object on which this View looks
 	 * @arg {number} width The width of the View, in pixels
@@ -57,9 +66,6 @@ zSquared.view = function( z2 )
 		this.setPosition( x || 0, y || 0 );
 	};
 
-    /**
-    * @property {string} follow_mode The angle of rotation of the view (in
-    */
 	Object.defineProperty( z2.View.prototype, 'follow_mode',
 	{
 		get: function()
@@ -211,12 +217,6 @@ zSquared.view = function( z2 )
 		this._xform[5] = this._y - (this._xform[4] * py) - (this._xform[3] * px) + this.scene.height/2;
 	};
 
-    /**
-    * @property {number} rotation The angle of rotation of the view (in
-	* radians). (Note that the View is, like a camera, 'looking at' the scene,
-	* so if you rotate the view clockwise, the displayed scene will appear to
-	* rotate CCW, and vice-versa)
-    */
 	Object.defineProperty( z2.View.prototype, 'rotation',
 	{
 		get: function()
@@ -254,9 +254,6 @@ zSquared.view = function( z2 )
 		}
 	};
 
-    /**
-    * @property {number} sx The scale factor for the view in the X dimension
-    */
 	Object.defineProperty( z2.View.prototype, 'sx',
 	{
 		get: function()
@@ -268,9 +265,6 @@ zSquared.view = function( z2 )
 			this.setScale( val, this._sx );
 		}
 	} );
-    /**
-    * @property {number} sy The scale factor for the view in the Y dimension
-    */
 	Object.defineProperty( z2.View.prototype, 'sy',
 	{
 		get: function()
@@ -308,9 +302,6 @@ zSquared.view = function( z2 )
 		}
 	};
 
-    /**
-    * @property {number} x The X coordinate of the center of the View
-    */
 	Object.defineProperty( z2.View.prototype, 'x',
 	{
 		get: function()
@@ -322,9 +313,6 @@ zSquared.view = function( z2 )
 			this.setPosition( val, -this._x );
 		}
 	} );
-    /**
-    * @property {number} y The Y coordinate of the center of the View
-    */
 	Object.defineProperty( z2.View.prototype, 'y',
 	{
 		get: function()

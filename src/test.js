@@ -9,7 +9,7 @@ var HEIGHT = 384;
 var z2 = zSquared();
 
 // require all the z2 modules
-z2.require( ["bitset", "math", "scene", "view", "ecs", "loader", "input", "statemachine", "2d"] );
+z2.require( ["bitset", "math", "scene", "view", "ecs", "loader", "input", "statemachine", "2d", "collision"] );
 
 // create a canvas
 var canvas = document.createElement( 'canvas' );
@@ -139,18 +139,43 @@ function start()
 	var imge = mgr.createEntity( [z2.renderableFactory, imgxf, imgp, imgr, imgsz, imgs, imgcc, imgc, imgv] );
 	console.log( "imge mask: " + imge.mask.key );
 
+	// vertices for second triangle
+	var vertices2 = [0, 0, WIDTH, HEIGHT, 0, HEIGHT];
+
 	// create a (random) polygon (triangle)
 	var vertices = [];
 	for( var i = 0; i < 3; i++ )
 	{
 		vertices.push( Math.random() * WIDTH - WIDTH/2, Math.random() * HEIGHT - HEIGHT/2 );
 	}
+	// ensure the vertices are in CW order
+	z2.sortVertices( vertices );
+
+	var fill;
+	var pv = [0,0];
+	var pen = z2.collidePolyVsPoly( vertices2, vertices, pv );
+	console.log( "collision penetration: " + pen );
+	console.log( "collision penetration vector, x: " + pv[0] + ", y: " + pv[1] );
+	if( pen > 0 )
+		fill = 'rgba( 255, 0, 0, 0.5 )';
+	else
+		fill = 'rgba( 0, 255, 0, 0.5 )';
+
+	// poly (tri) 1
 	var polyc = z2.polygonFactory.create( {vertices: vertices} );
 	var polyp = z2.positionFactory.create( {x: 500, y: 500} );
 	var polysz = z2.sizeFactory.create( {width: 100, height: 100} );
 	var polyxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
-	var polyf = z2.fillFactory.create( {fill:'rgba( 255, 0, 0, 0.5 )'} );
+	var polyf = z2.fillFactory.create( {fill: fill} );
 	var polye = mgr.createEntity( [z2.renderableFactory, polyf, polyxf, polyc, polyp, polysz] );
+
+	// create a (non-random) triangle to test collision with tri 1
+	var tric = z2.polygonFactory.create( {vertices: vertices2} );
+	var trip = z2.positionFactory.create( {x: 500, y: 500} );
+	var trisz = z2.sizeFactory.create( {width: 100, height: 100} );
+	var trixf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
+	var trif = z2.fillFactory.create( {fill: fill} );
+	var trie = mgr.createEntity( [z2.renderableFactory, trif, trixf, tric, trip, trisz] );
 
 	// create an (animated) sprite
 	var s_img = z2.loader.getAsset( 'man' );
@@ -205,4 +230,5 @@ function update( dt )
 	pt = dt;
 	requestAnimationFrame( update );
 }
+
 

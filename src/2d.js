@@ -4,6 +4,7 @@
 //
 // TODO:
 // . Transform System
+//  - polygons aren't transformed into view/screen space
 //	- parent (group) transforms
 // - 
 
@@ -222,6 +223,7 @@ zSquared['2d'] = function( z2 )
 				{
 					if( polyc.vertices.length >= 6 )
 					{
+						// TODO: vertices need to be transformed into view space
 						var fill = 'rgba( 255, 255, 255, 1 )';
 						// get fill component
 						var fc = e.getComponent( z2.fillFactory.mask );
