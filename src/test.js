@@ -140,20 +140,73 @@ function start()
 	console.log( "imge mask: " + imge.mask.key );
 
 	// vertices for second triangle
-	var vertices2 = [0, 0, WIDTH, HEIGHT, 0, HEIGHT];
+//	var vertices2 = [0, 0, WIDTH, HEIGHT, 0, HEIGHT];
+//
+//	// create a (random) polygon (triangle)
+//	var vertices = [];
+//	for( var i = 0; i < 3; i++ )
+//	{
+//		vertices.push( Math.random() * WIDTH - WIDTH/2, Math.random() * HEIGHT - HEIGHT/2 );
+//	}
+//	// ensure the vertices are in CW order
+//	z2.sortVertices( vertices );
 
-	// create a (random) polygon (triangle)
-	var vertices = [];
-	for( var i = 0; i < 3; i++ )
+
+	// vertices for AABB bounding boxes
+	function swap( i, a, b )
 	{
-		vertices.push( Math.random() * WIDTH - WIDTH/2, Math.random() * HEIGHT - HEIGHT/2 );
+		var tmp = i[a];
+		i[a] = i[b];
+		i[b] = tmp;
 	}
-	// ensure the vertices are in CW order
-	z2.sortVertices( vertices );
+	var LEFT = 0, TOP = 1, RIGHT = 2, BOTTOM = 3;
+	var aabb1 = [];
+	var aabb2 = [];
+	for( var i = 0; i < 2; i++ )
+	{
+		aabb1.push( Math.random() * WIDTH/2 );
+		aabb1.push( Math.random() * HEIGHT/2 );
+	}
+	for( i = 0; i < 2; i++ )
+	{
+		aabb2.push( Math.random() * WIDTH/2 );
+		aabb2.push( Math.random() * HEIGHT/2 );
+	}
+	if( aabb1[LEFT] > aabb1[RIGHT] )
+		swap( aabb1, LEFT, RIGHT );
+	if( aabb1[TOP] > aabb1[BOTTOM] )
+		swap( aabb1, TOP, BOTTOM );
+	if( aabb2[LEFT] > aabb2[RIGHT] )
+		swap( aabb2, LEFT, RIGHT );
+	if( aabb2[TOP] > aabb2[BOTTOM] )
+		swap( aabb2, TOP, BOTTOM );
 
+	var vertices = [
+		// top left
+		aabb1[LEFT], aabb1[TOP],
+		// top right
+		aabb1[RIGHT], aabb1[TOP],
+		// bottom right
+		aabb1[RIGHT], aabb1[BOTTOM],
+		// bottom left
+		aabb1[LEFT], aabb1[BOTTOM]
+	];
+	var vertices2 = [
+		// top left
+		aabb2[LEFT], aabb2[TOP],
+		// top right
+		aabb2[RIGHT], aabb2[TOP],
+		// bottom right
+		aabb2[RIGHT], aabb2[BOTTOM],
+		// bottom left
+		aabb2[LEFT], aabb2[BOTTOM]
+	];
+
+	// collide polys
 	var fill;
 	var pv = [0,0];
-	var pen = z2.collidePolyVsPoly( vertices2, vertices, pv );
+//	var pen = z2.collidePolyVsPoly( vertices2, vertices, pv );
+	var pen = z2.collideAabbVsAabb( aabb2, aabb1, pv );
 	console.log( "collision penetration: " + pen );
 	console.log( "collision penetration vector, x: " + pv[0] + ", y: " + pv[1] );
 	if( pen > 0 )

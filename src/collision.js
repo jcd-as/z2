@@ -3,8 +3,10 @@
 // Collision detection for zed-squared
 //
 // TODO:
-// - calculate penetration vector
-// - 
+// - AABB vs AABB
+// - AABB vs poly
+// - AABB vs AA right triangles
+// -
 
 "use strict";
 
@@ -157,190 +159,61 @@ zSquared.collision = function( z2 )
 		}
 	};
 
+	/** Collide two Axis-Aligned Bounding Boxes
+	 * @function z2.collideAabbVsAabb
+	 * @arg {Array} p1 (flat) Array of values for aabb 1: top, left, bottom, right
+	 * @arg {Array} p2 (flat) Array of values for aabb 2: top, left, bottom, right
+	 * @arg {Array} pv (optional) Vector (2 element array) for returning penetration direction
+	 * @returns {Number} magnitude of penetration, or boolean false if no
+	 * collision
+	 */
+	z2.collideAabbVsAabb = function( p1, p2, pv )
+	{
+		var pen1, pen2;
 
-	// old routines with vectors as objects e.g. {x:n, y:n}
-//	function mag( v )
-//	{
-//		return Math.sqrt( v.x * v.x + v.y * v.y );
-//	}
-//
-//	function normalize( v )
-//	{
-//		var m = mag( v );
-//		v.x /= m;
-//		v.y /= m;
-//		return v;
-//	}
-//
-//	function dot( v1, v2 )
-//	{
-//		return v1.x * v2.x + v1.y * v2.y;
-//	}
-//
-//	function projectMinMax( poly, vec, minmax )
-//	{
-//		var min, max, cur;
-//		min = max = dot( poly[0], vec );
-//		for( var i = 1; i < poly.length; i++ )
-//		{
-//			cur = dot( poly[i], vec );
-//			if( cur < min )
-//				min = cur;
-//			if( cur > max )
-//				max = cur;
-//		}
-//		minmax.min = min;
-//		minmax.max = max;
-//	}
-//
-//	/** Collide two polygons
-//	 * @function z2.collidePolyVsPoly
-//	 * @arg {Array} p1 Array of vertices defining polygon 1
-//	 * @arg {Array} p2 Array of vertices defining polygon 2
-//	 * @arg {Object} pv (optional) Vector for returning penetration direction
-//	 * @returns {Number} magnitude of penetration, or boolean false if no
-//	 * collision
-//	 */
-//	z2.collidePolyVsPoly = function( p1, p2, pv )
-//	{
-//		var i;
-//
-//		// convert args from straight arrays
-//		var poly1 = [];
-//		var poly2 = [];
-//		for( i = 0; i < p1.length-1; i += 2 )
-//		{
-//			poly1.push( {x:p1[i], y:p1[i+1]} );
-//		}
-//		for( i = 0; i < p2.length-1; i += 2 )
-//		{
-//			poly2.push( {x:p2[i], y:p2[i+1]} );
-//		}
-//
-//		var p1minmax = {min:null, max:null};
-//		var p2minmax = {min:null, max:null};
-//
-//		var pt1, pt2, vec = {};
-//
-//		var pen1 = Number.MAX_VALUE, pen2 = Number.MAX_VALUE;
-//		var pv1 = {}, pv2 = {};
-//		var temp1, temp2, temp3;
-//
-//		// for each normal, poly1
-//		for( i = 0; i < poly1.length; i++ )
-//		{
-//			// get the normal for this side
-//			pt1 = poly1[i];
-//			if( i === poly1.length-1 )
-//				pt2 = poly1[0];
-//			else
-//				pt2 = poly1[i+1];
-//			vec.x = pt2.x - pt1.x;
-//			vec.y = pt2.y - pt1.y;
-//			normalize( vec );
-//			// left-hand normal
-//			temp1 = vec.x;
-//			vec.x = -vec.y;
-//			vec.y = temp1;
-//
-//			// project the min/max pts onto the normal/axis, poly1
-//			projectMinMax( poly1, vec, p1minmax );
-//
-//			// project the min/max pts onto the normal/axis, poly2
-//			projectMinMax( poly2, vec, p2minmax );
-//
-//			// penetration is poly1.max < poly2.min || poly2.max < poly1.min
-//			if( p1minmax.max < p2minmax.min )
-//				return false;
-//			else if( p2minmax.max < p1minmax.min )
-//				return false;
-//			// possible collision, save penetration vector
-//			else
-//			{
-//				temp1 = p1minmax.max - p2minmax.min;
-//				temp2 = p2minmax.max - p1minmax.min;
-//				temp3 = temp1 < temp2 ? temp1 : temp2;
-//				if( temp3 < pen1 )
-//				{
-//					pen1 = temp3;
-//					pv1.x = vec.x;
-//					pv1.y = vec.y;
-//				}
-//			}
-//		}
-//		
-//		// for each normal, poly2
-//		for( i = 0; i < poly2.length; i++ )
-//		{
-//			// get the normal
-//			pt1 = poly2[i];
-//			if( i === poly2.length-1 )
-//				pt2 = poly2[0];
-//			else
-//				pt2 = poly2[i+1];
-//			vec.x = pt2.x - pt1.x;
-//			vec.y = pt2.y - pt1.y;
-//			normalize( vec );
-//			// left-hand normal
-//			temp1 = vec.x;
-//			vec.x = -vec.y;
-//			vec.y = temp1;
-//
-//			// project the min/max pts onto the normal/axis, poly1
-//			projectMinMax( poly1, vec, p1minmax );
-//
-//			// project the min/max pts onto the normal/axis, poly2
-//			projectMinMax( poly2, vec, p2minmax );
-//
-//			// penetration is poly1.max < poly2.min || poly2.max < poly1.min
-//			if( p1minmax.max < p2minmax.min )
-//				return false;
-//			else if( p2minmax.max < p1minmax.min )
-//				return false;
-//			// possible collision, save penetration vector
-//			else
-//			{
-//				temp1 = p1minmax.max - p2minmax.min;
-//				temp2 = p2minmax.max - p1minmax.min;
-//				temp3 = temp1 < temp2 ? temp1 : temp2;
-//				if( temp3 < pen2 )
-//				{
-//					pen2 = temp3;
-//					pv2.x = vec.x;
-//					pv2.y = vec.y;
-//				}
-//			}
-//		}
-//
-//		if( pen1 < pen2 )
-//		{
-//			if( pv )
-//			{
-//				pv.x = pv1.x;
-//				pv.y = pv1.y;
-//			}
-//			return pen1;
-//		}
-//		else
-//		{
-//			if( pv )
-//			{
-//				pv.x = pv2.x;
-//				pv.y = pv2.y;
-//			}
-//			return pen2;
-//		}
-//	};
+		// horizontal axis:
+		var t1 = p1[3] - p2[1];
+		var t2 = p2[3] - p1[1];
+		if( t1 < 0 || t2 < 0 )
+			return false;
+		else
+			pen1 = Math.min( t1, t2 );
+
+		// vertical axis:
+		t1 = p1[2] - p2[0];
+		t2 = p2[2] - p1[0];
+		if( t1 < 0 || t2 < 0 )
+			return false;
+		else
+			pen2 = Math.min( t1, t2 );
+
+		if( pen1 < pen2 )
+		{
+			if( pv )
+			{
+				pv[0] = 0;
+				pv[1] = 1;
+			}
+			return pen1;
+		}
+		else
+		{
+			if( pv )
+			{
+				pv[0] = 1;
+				pv[1] = 0;
+			}
+			return pen2;
+		}
+	};
+
+
+	// helper routines for testing:
 
 	// angle between two vectors
 	function getAngle( a, b )
 	{
 		// cos(theta) = a.b / |a| |b|
-//		var maga = mag( a );
-//		var magb = mag( b );
-//		var ct = dot( a, b ) / (maga * magb);
-//		return Math.acos( ct );
-
 //		return Math.acos( z2.math.vecDot( a, b ) / (z2.math.vecMag( a ) * z2.math.vecMag( b )) );
 		var maga = z2.math.vecMag( a );
 		var magb = z2.math.vecMag( b );
