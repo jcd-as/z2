@@ -21,15 +21,16 @@ zSquared.collision = function( z2 )
 	// (so we use left-hand normals)
 
 	// get the normal for a polygon side
-	function getNormal( pt1, pt2 )
+	function getNormal( pt1, pt2, out )
 	{
-		var vec = [pt2[0] - pt1[0], pt2[1] - pt1[1]];
-		z2.math.vecNormalize( vec );
+		out[0] = pt2[0] - pt1[0];
+		out[1] = pt2[1] - pt1[1];
+		z2.math.vecNormalize( out );
 		// left-hand normal (-y,x)
-		var temp = vec[0];
-		vec[0] = -vec[1];
-		vec[1] = temp;
-		return vec;
+		var temp = out[0];
+		out[0] = -out[1];
+		out[1] = temp;
+		return out;
 	}
 
 	// get the min & max of poly projected onto vec
@@ -50,6 +51,11 @@ zSquared.collision = function( z2 )
 		out[1] = max;
 	}
 
+	// module scope vars, to avoid (re)allocations & frees
+	var axis = [Number.NaN, Number.NaN];
+	var p1minmax = [Number.NaN, Number.NaN];
+	var p2minmax = [Number.NaN, Number.NaN];
+
 	/** Collide two polygons
 	 * @function z2.collidePolyVsPoly
 	 * @arg {Array} p1 (flat) Array of vertices defining polygon 1
@@ -62,14 +68,9 @@ zSquared.collision = function( z2 )
 	{
 		var i, j;
 
-		var p1minmax = [null, null];
-		var p2minmax = [null, null];
-
-		var axis;
-
 		var pen1 = Number.MAX_VALUE, pen2 = Number.MAX_VALUE;
-		var pv1 = {}, pv2 = {};
 		var temp1, temp2, temp3;
+		var pv1x, pv1y, pv2x, pv2y;
 
 		// for each side, poly 1
 		for( i = 0; i < p1.length; i += 2 )
@@ -78,7 +79,7 @@ zSquared.collision = function( z2 )
 			if( j === p1.length )
 				j = 0;
 			// get the normal for this side
-			axis = getNormal( [p1[i], p1[i+1]], [p1[j], p1[j+1]] );
+			getNormal( [p1[i], p1[i+1]], [p1[j], p1[j+1]], axis );
 
 			// project the min/max pts onto the normal/axis, poly1
 			projectMinMax( p1, axis, p1minmax );
@@ -100,8 +101,8 @@ zSquared.collision = function( z2 )
 				if( temp3 < pen1 )
 				{
 					pen1 = temp3;
-					pv1[0] = axis[0];
-					pv1[1]= axis[1];
+					pv1x = axis[0];
+					pv1y= axis[1];
 				}
 			}
 		}
@@ -113,7 +114,7 @@ zSquared.collision = function( z2 )
 			if( j === p1.length )
 				j = 0;
 			// get the normal
-			axis = getNormal( [p2[i], p2[i+1]], [p2[j], p2[j+1]] );
+			getNormal( [p2[i], p2[i+1]], [p2[j], p2[j+1]], axis );
 
 			// project the min/max pts onto the normal/axis, poly1
 			projectMinMax( p1, axis, p1minmax );
@@ -135,18 +136,19 @@ zSquared.collision = function( z2 )
 				if( temp3 < pen2 )
 				{
 					pen2 = temp3;
-					pv2[0] = axis[0];
-					pv2[1] = axis[1];
+					pv2x = axis[0];
+					pv2y = axis[1];
 				}
 			}
 		}
 
+		// return least penetration & vector
 		if( pen1 < pen2 )
 		{
 			if( pv )
 			{
-				pv[0] = pv1[0];
-				pv[1] = pv1[1];
+				pv[0] = pv1x;
+				pv[1] = pv1y;
 			}
 			return pen1;
 		}
@@ -154,8 +156,8 @@ zSquared.collision = function( z2 )
 		{
 			if( pv )
 			{
-				pv[0] = pv2[0];
-				pv[1] = pv2[1];
+				pv[0] = pv2x;
+				pv[1] = pv2y;
 			}
 			return pen2;
 		}
@@ -165,7 +167,7 @@ zSquared.collision = function( z2 )
 	 * @function z2.collideAabbVsAabb
 	 * @arg {Array} p1 (flat) Array of values for aabb 1: top, left, bottom, right
 	 * @arg {Array} p2 (flat) Array of values for aabb 2: top, left, bottom, right
-	 * @arg {Array} pv (optional) Vector (2 element array) for returning penetration direction
+	 * @arg {Array} pv (optional, out) Vector (2 element array) for returning penetration direction
 	 * @returns {Number} magnitude of penetration, or boolean false if no
 	 * collision
 	 */
