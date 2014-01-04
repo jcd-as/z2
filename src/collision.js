@@ -3,9 +3,11 @@
 // Collision detection for zed-squared
 //
 // TODO:
-// - AABB vs AABB
 // - AABB vs poly
-// - AABB vs AA right triangles
+// - AABB vs circle
+// - circle vs circle
+// - AABB vs AA right triangles 
+// - optimize
 // -
 
 "use strict";
@@ -69,7 +71,7 @@ zSquared.collision = function( z2 )
 		var pv1 = {}, pv2 = {};
 		var temp1, temp2, temp3;
 
-		// for each normal, poly1
+		// for each side, poly 1
 		for( i = 0; i < p1.length; i += 2 )
 		{
 			j = i+2;
@@ -104,7 +106,7 @@ zSquared.collision = function( z2 )
 			}
 		}
 		
-		// for each normal, poly2
+		// for each side, poly 2
 		for( i = 0; i < p2.length; i +=2 )
 		{
 			j = i+2;
@@ -174,36 +176,34 @@ zSquared.collision = function( z2 )
 		// horizontal axis:
 		var t1 = p1[3] - p2[1];
 		var t2 = p2[3] - p1[1];
-		if( t1 < 0 || t2 < 0 )
-			return false;
-		else
-			pen1 = Math.min( t1, t2 );
-
 		// vertical axis:
-		t1 = p1[2] - p2[0];
-		t2 = p2[2] - p1[0];
-		if( t1 < 0 || t2 < 0 )
+		var t3 = p1[2] - p2[0];
+		var t4 = p2[2] - p1[0];
+
+		if( t1 < 0 || t2 < 0 || t3 < 0 || t4 < 0 )
 			return false;
 		else
-			pen2 = Math.min( t1, t2 );
-
-		if( pen1 < pen2 )
 		{
-			if( pv )
+			pen1 = Math.min( t1, t2 );
+			pen2 = Math.min( t3, t4 );
+			if( pen1 < pen2 )
 			{
-				pv[0] = 0;
-				pv[1] = 1;
+				if( pv )
+				{
+					pv[0] = 0;
+					pv[1] = 1;
+				}
+				return pen1;
 			}
-			return pen1;
-		}
-		else
-		{
-			if( pv )
+			else
 			{
-				pv[0] = 1;
-				pv[1] = 0;
+				if( pv )
+				{
+					pv[0] = 1;
+					pv[1] = 0;
+				}
+				return pen2;
 			}
-			return pen2;
 		}
 	};
 
