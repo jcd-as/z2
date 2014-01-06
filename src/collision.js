@@ -5,10 +5,10 @@
 // TODO:
 // - AABB vs poly
 // - AABB vs circle
-// - circle vs circle
 // - AABB vs AA right triangles 
 // - optimize
-// -
+// - (optimized) routines to just detect intersection, not resolve collision
+// - 
 
 "use strict";
 
@@ -224,6 +224,33 @@ zSquared.collision = function( z2 )
 			else
 				return Math.min( pen1, pen2 );
 		}
+	};
+
+	/** Collide two circles
+	 * @function z2.collideAabbVsAabb
+	 * @arg {Array} p1 Center of circle 1
+	 * @arg {Number} r1 Radius of circle 1
+	 * @arg {Array} p2 Center of circle 2
+	 * @arg {Number} r2 Radius of circle 2
+	 * @arg {Array} pv (optional, out) Vector (2 element array) for returning penetration direction
+	 * @returns {Number} magnitude of penetration, or boolean false if no
+	 * collision
+	 */
+	z2.collideCircleVsCircle = function( p1, r1, p2, r2, pv )
+	{
+		var dx = p2[0] - p1[0];
+		var dy = p2[1] - p1[1];
+		var dist = Math.sqrt( dx * dx + dy * dy );
+		var pen = r1 + r2 - dist;
+		if( pen <= 0 )
+			return false;
+		if( pv )
+		{
+			pv[0] = dx;
+			pv[1] = dy;
+			z2.math.vecNormalize( pv );
+		}
+		return pen;
 	};
 
 
