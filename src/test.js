@@ -162,15 +162,16 @@ function start()
 	var LEFT = 0, TOP = 1, RIGHT = 2, BOTTOM = 3;
 	var aabb1 = [];
 	var aabb2 = [];
-	for( var i = 0; i < 2; i++ )
-	{
-		aabb1.push( Math.random() * WIDTH/2 );
-		aabb1.push( Math.random() * HEIGHT/2 );
-	}
+//	for( var i = 0; i < 2; i++ )
+//	{
+//		aabb1.push( Math.random() * WIDTH/2 );
+//		aabb1.push( Math.random() * HEIGHT/2 );
+//	}
+	aabb1 = [-100, -100, 200, 200];
 	for( i = 0; i < 2; i++ )
 	{
-		aabb2.push( Math.random() * WIDTH/2 );
-		aabb2.push( Math.random() * HEIGHT/2 );
+		aabb2.push( Math.random() * WIDTH/2 - 100 );
+		aabb2.push( Math.random() * HEIGHT/2 - 100 );
 	}
 	if( aabb1[LEFT] > aabb1[RIGHT] )
 		swap( aabb1, LEFT, RIGHT );

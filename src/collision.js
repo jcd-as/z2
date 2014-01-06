@@ -176,36 +176,53 @@ zSquared.collision = function( z2 )
 		var pen1, pen2;
 
 		// horizontal axis:
+		// y overlaps:
 		var t1 = p1[3] - p2[1];
 		var t2 = p2[3] - p1[1];
+
 		// vertical axis:
+		// x overlaps:
 		var t3 = p1[2] - p2[0];
 		var t4 = p2[2] - p1[0];
 
+		// no overlap?
 		if( t1 < 0 || t2 < 0 || t3 < 0 || t4 < 0 )
 			return false;
 		else
 		{
 			pen1 = Math.min( t1, t2 );
 			pen2 = Math.min( t3, t4 );
-			if( pen1 < pen2 )
+
+			// if we need the penetration vector
+			if( pv )
 			{
-				if( pv )
+				// penetration direction
+				var nx = (p2[0] + p2[2]) - (p1[0] + p1[2]);
+				var ny = (p2[1] + p2[3]) - (p1[1] + p1[3]);
+
+				// least penetration is vertical
+				if( pen1 < pen2 )
 				{
 					pv[0] = 0;
-					pv[1] = 1;
+					if( ny > 0 )
+						pv[1] = -1;
+					else
+						pv[1] = 1;
+					return pen1;
 				}
-				return pen1;
+				// least penetration is horizontal
+				else
+				{
+					if( nx > 0 )
+						pv[0] = -1;
+					else
+						pv[0] = 1;
+					pv[1] = 0;
+					return pen2;
+				}
 			}
 			else
-			{
-				if( pv )
-				{
-					pv[0] = 1;
-					pv[1] = 0;
-				}
-				return pen2;
-			}
+				return Math.min( pen1, pen2 );
 		}
 	};
 
