@@ -241,6 +241,17 @@ zSquared.collision = function( z2 )
 		var dx = p2[0] - p1[0];
 		var dy = p2[1] - p1[1];
 		var dist = Math.sqrt( dx * dx + dy * dy );
+		if( dist === 0 )
+		{
+			// same center, 
+			// choose some consistant return value(s)
+			if( pv )
+			{
+				pv[0] = 0;
+				pv[1] = 1;
+				return r1;
+			}
+		}
 		var pen = r1 + r2 - dist;
 		if( pen <= 0 )
 			return false;
