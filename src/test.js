@@ -173,6 +173,11 @@ function start()
 //		200,
 //		180
 	//
+//		96.31799376010895,
+//		17.876899302005768,
+//		148.96559083461761,
+//		175.86477649211884
+		//
 //		80.77150797843933,
 //		140.9154455512762,
 //		159.0162754058838,
@@ -236,9 +241,12 @@ function start()
 //	c1[0] = 122.15190207958221;
 //	c1[1] = 143.43632671236992;
 //	r1 = 43.06532689370215;
-	c2[0] = Math.random() * WIDTH/2;
-	c2[1] = Math.random() * HEIGHT/2;
-	r2 = Math.random() * 200;
+//	c1[0] = 131.15571069717407;
+//	c1[1] = 147.69304387271404;
+//	r1 = 18.20829943753779;
+//	c2[0] = Math.random() * WIDTH/2;
+//	c2[1] = Math.random() * HEIGHT/2;
+//	r2 = Math.random() * 200;
 	// collide circles
 //	var pen2 = z2.collideCircleVsCircle( c1, r1, c2, r2, pv );
 	var pen2 = z2.collideAabbVsCircle( aabb1, c1, r1, pv );
