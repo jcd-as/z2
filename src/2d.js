@@ -52,6 +52,9 @@ zSquared['2d'] = function( z2 )
 
 	/** Component Factory for 2d center point */
 	z2.centerFactory = z2.createComponentFactory( {cx: 0.5, cy: 0.5} );
+	
+	/** Component Factory for 2d radius */
+	z2.radiusFactory = z2.createComponentFactory( {radius:0} );
 
 	/** Component Factory for 2d transform */
 	z2.transformFactory = z2.createComponentFactory( {xform: null} );
@@ -201,7 +204,12 @@ zSquared['2d'] = function( z2 )
 				// sprite component?
 				var spritec = e.getComponent( z2.spriteFactory.mask );
 
+				// center and radius components?
+				var ctrc = e.getComponent( z2.centerFactory.mask );
+				var radc = e.getComponent( z2.radiusFactory.mask );
+
 				var w, h, szc;
+				var fill, fc;
 
 				// image
 				if( imgc )
@@ -224,9 +232,9 @@ zSquared['2d'] = function( z2 )
 					if( polyc.vertices.length >= 6 )
 					{
 						// TODO: vertices need to be transformed into view space
-						var fill = 'rgba( 255, 255, 255, 1 )';
+						fill = 'rgba( 255, 255, 255, 1 )';
 						// get fill component
-						var fc = e.getComponent( z2.fillFactory.mask );
+						fc = e.getComponent( z2.fillFactory.mask );
 						if( fc )
 							fill = fc.fill;
 						context.fillStyle = fill;
@@ -239,6 +247,21 @@ zSquared['2d'] = function( z2 )
 						context.closePath();
 						context.fill();
 					}
+				}
+
+				// circle
+				if( ctrc && radc )
+				{
+					// TODO: center needs to be transformed into view space
+					fill = 'rgba( 255, 255, 255, 1 )';
+					fc = e.getComponent( z2.fillFactory.mask );
+					if( fc )
+						fill = fc.fill;
+					context.fillStyle = fill;
+					context.beginPath();
+					context.arc( ctrc.cx, ctrc.cy, radc.radius, 0, Math.PI * 1.99 );
+					context.closePath();
+					context.fill();
 				}
 
 				// sprite

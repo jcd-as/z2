@@ -1,6 +1,6 @@
 // z2 test code
 // TODO:
-// - collision detection (separated axis theorem)
+// - 
 //
 
 var WIDTH = 512;
@@ -162,12 +162,22 @@ function start()
 	var LEFT = 0, TOP = 1, RIGHT = 2, BOTTOM = 3;
 	var aabb1 = [];
 	var aabb2 = [];
-//	for( var i = 0; i < 2; i++ )
-//	{
-//		aabb1.push( Math.random() * WIDTH/2 );
-//		aabb1.push( Math.random() * HEIGHT/2 );
-//	}
-	aabb1 = [-100, -100, 200, 200];
+	for( var i = 0; i < 2; i++ )
+	{
+		aabb1.push( Math.random() * WIDTH/2 );
+		aabb1.push( Math.random() * HEIGHT/2 );
+	}
+//	aabb1 = [
+//		120,
+//		20,
+//		200,
+//		180
+	//
+//		80.77150797843933,
+//		140.9154455512762,
+//		159.0162754058838,
+//		164.52973902225494
+//	];
 	for( i = 0; i < 2; i++ )
 	{
 		aabb2.push( Math.random() * WIDTH/2 - 100 );
@@ -207,29 +217,65 @@ function start()
 	var fill;
 	var pv = [0,0];
 //	var pen = z2.collidePolyVsPoly( vertices2, vertices, pv );
-	var pen = z2.collideAabbVsAabb( aabb2, aabb1, pv );
-	console.log( "collision penetration: " + pen );
-	console.log( "collision penetration vector, x: " + pv[0] + ", y: " + pv[1] );
-	if( pen > 0 )
-		fill = 'rgba( 255, 0, 0, 0.5 )';
+//	var pen = z2.collideAabbVsAabb( aabb2, aabb1, pv );
+//	console.log( "collision penetration: " + pen );
+//	console.log( "collision penetration vector, x: " + pv[0] + ", y: " + pv[1] );
+//	if( pen > 0 )
+//		fill = 'rgba( 255, 0, 0, 0.5 )';
+//	else
+//		fill = 'rgba( 0, 255, 0, 0.5 )';
+
+	// circles
+	var c1 = [], c2 = [], r1, r2;
+	c1[0] = Math.random() * WIDTH/2;
+	c1[1] = Math.random() * HEIGHT/2;
+	r1 = Math.random() * 100;
+//	c1[0] = 30;
+//	c1[1] = 80;
+//	r1 = 89;
+//	c1[0] = 122.15190207958221;
+//	c1[1] = 143.43632671236992;
+//	r1 = 43.06532689370215;
+	c2[0] = Math.random() * WIDTH/2;
+	c2[1] = Math.random() * HEIGHT/2;
+	r2 = Math.random() * 200;
+	// collide circles
+//	var pen2 = z2.collideCircleVsCircle( c1, r1, c2, r2, pv );
+	var pen2 = z2.collideAabbVsCircle( aabb1, c1, r1, pv );
+	var fill2;
+	console.log( "circle collision penetration: " + pen2 );
+	console.log( "circle collision penetration vector, x: " + pv[0] + ", y: " + pv[1] );
+	if( pen2 > 0 )
+		fill2 = 'rgba( 255, 0, 0, 0.5 )';
 	else
-		fill = 'rgba( 0, 255, 0, 0.5 )';
+		fill2 = 'rgba( 0, 255, 0, 0.5 )';
+
+	// circle 1
+	var c1c = z2.centerFactory.create( {cx: c1[0], cy: c1[1]} );
+	var c1r = z2.radiusFactory.create( {radius: r1} );
+	var circlef = z2.fillFactory.create( {fill: fill2} );
+	var circlexf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
+	var c1e = mgr.createEntity( [z2.renderableFactory, circlexf, c1c, c1r, circlef] );
+	// circle 2
+//	var c2c = z2.centerFactory.create( {cx: c2[0], cy: c2[1]} );
+//	var c2r = z2.radiusFactory.create( {radius: r2} );
+//	var c2e = mgr.createEntity( [z2.renderableFactory, circlexf, c2c, c2r, circlef] );
 
 	// poly (tri) 1
 	var polyc = z2.polygonFactory.create( {vertices: vertices} );
-	var polyp = z2.positionFactory.create( {x: 500, y: 500} );
+//	var polyp = z2.positionFactory.create( {x: 500, y: 500} );
 	var polysz = z2.sizeFactory.create( {width: 100, height: 100} );
 	var polyxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
 	var polyf = z2.fillFactory.create( {fill: fill} );
-	var polye = mgr.createEntity( [z2.renderableFactory, polyf, polyxf, polyc, polyp, polysz] );
+	var polye = mgr.createEntity( [z2.renderableFactory, polyf, polyxf, polyc, /*polyp,*/ polysz] );
 
 	// create a (non-random) triangle to test collision with tri 1
-	var tric = z2.polygonFactory.create( {vertices: vertices2} );
-	var trip = z2.positionFactory.create( {x: 500, y: 500} );
-	var trisz = z2.sizeFactory.create( {width: 100, height: 100} );
-	var trixf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
-	var trif = z2.fillFactory.create( {fill: fill} );
-	var trie = mgr.createEntity( [z2.renderableFactory, trif, trixf, tric, trip, trisz] );
+//	var tric = z2.polygonFactory.create( {vertices: vertices2} );
+//	var trip = z2.positionFactory.create( {x: 500, y: 500} );
+//	var trisz = z2.sizeFactory.create( {width: 100, height: 100} );
+//	var trixf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
+//	var trif = z2.fillFactory.create( {fill: fill} );
+//	var trie = mgr.createEntity( [z2.renderableFactory, trif, trixf, tric, trip, trisz] );
 
 	// create an (animated) sprite
 	var s_img = z2.loader.getAsset( 'man' );

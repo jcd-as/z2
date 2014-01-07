@@ -16,7 +16,9 @@ zSquared.collision = function( z2 )
 {
 	z2.require( ["math"] );
 
+	/////////////////////////////////////////////////////////////////////////
 	// collision detection routines
+	/////////////////////////////////////////////////////////////////////////
 	// polygons should be defined with vertices in clockwise order
 	// (so we use left-hand normals)
 
@@ -52,7 +54,7 @@ zSquared.collision = function( z2 )
 	}
 
 	// module scope vars, to avoid (re)allocations & frees
-	var axis = [Number.NaN, Number.NaN];
+	var vec = [Number.NaN, Number.NaN];
 	var p1minmax = [Number.NaN, Number.NaN];
 	var p2minmax = [Number.NaN, Number.NaN];
 
@@ -79,13 +81,13 @@ zSquared.collision = function( z2 )
 			if( j === p1.length )
 				j = 0;
 			// get the normal for this side
-			getNormal( [p1[i], p1[i+1]], [p1[j], p1[j+1]], axis );
+			getNormal( [p1[i], p1[i+1]], [p1[j], p1[j+1]], vec );
 
 			// project the min/max pts onto the normal/axis, poly1
-			projectMinMax( p1, axis, p1minmax );
+			projectMinMax( p1, vec, p1minmax );
 
 			// project the min/max pts onto the normal/axis, poly2
-			projectMinMax( p2, axis, p2minmax );
+			projectMinMax( p2, vec, p2minmax );
 
 			// penetration is poly1.max < poly2.min || poly2.max < poly1.min
 			if( p1minmax[1] < p2minmax[0] )
@@ -101,8 +103,8 @@ zSquared.collision = function( z2 )
 				if( temp3 < pen1 )
 				{
 					pen1 = temp3;
-					pv1x = axis[0];
-					pv1y= axis[1];
+					pv1x = vec[0];
+					pv1y= vec[1];
 				}
 			}
 		}
@@ -114,13 +116,13 @@ zSquared.collision = function( z2 )
 			if( j === p1.length )
 				j = 0;
 			// get the normal
-			getNormal( [p2[i], p2[i+1]], [p2[j], p2[j+1]], axis );
+			getNormal( [p2[i], p2[i+1]], [p2[j], p2[j+1]], vec );
 
 			// project the min/max pts onto the normal/axis, poly1
-			projectMinMax( p1, axis, p1minmax );
+			projectMinMax( p1, vec, p1minmax );
 
 			// project the min/max pts onto the normal/axis, poly2
-			projectMinMax( p2, axis, p2minmax );
+			projectMinMax( p2, vec, p2minmax );
 
 			// penetration is poly1.max < poly2.min || poly2.max < poly1.min
 			if( p1minmax[1] < p2minmax[0] )
@@ -136,8 +138,8 @@ zSquared.collision = function( z2 )
 				if( temp3 < pen2 )
 				{
 					pen2 = temp3;
-					pv2x = axis[0];
-					pv2y = axis[1];
+					pv2x = vec[0];
+					pv2y = vec[1];
 				}
 			}
 		}
@@ -227,7 +229,7 @@ zSquared.collision = function( z2 )
 	};
 
 	/** Collide two circles
-	 * @function z2.collideAabbVsAabb
+	 * @function z2.collideCircleVsCircle
 	 * @arg {Array} p1 Center of circle 1
 	 * @arg {Number} r1 Radius of circle 1
 	 * @arg {Array} p2 Center of circle 2
@@ -265,7 +267,288 @@ zSquared.collision = function( z2 )
 	};
 
 
+	var bc = [];
+	var b2c = [];
+	var b2cn = [];
+
+	/** const */
+	var LEFT = 0, TOP = 1, RIGHT = 2, BOTTOM = 3;
+	/** const */
+	var X = 0, Y = 1;
+	/** Collide an AABB and a circle
+	 * @function z2.collideAabbVsCircle
+	 * @arg {Array} p (flat) Array of values for aabb 1: top, left, bottom, right
+	 * @arg {Array} c Center of circle 2
+	 * @arg {Number} r Radius of circle 2
+	 * @arg {Array} pv (optional, out) Vector (2 element array) for returning penetration direction
+	 * @returns {Number} magnitude of penetration, or boolean false if no
+	 * collision
+	 */
+	z2.collideAabbVsCircle = function( p, c, r, pv )
+	{
+		var dx, dy, dist, overlap;
+
+		// is the center of the circle inside the AABB? 
+		if( c[X] >= p[LEFT] && c[X] <= p[RIGHT] &&
+			c[Y] >= p[TOP] && c[Y] <= p[BOTTOM] )
+		{
+			// TODO: penetration & vector
+			// x distance center circle to center AABB
+			dx = c[X] - (p[RIGHT] + p[LEFT])/2;
+			dy = c[Y] - (p[BOTTOM] + p[TOP])/2;
+			if( Math.abs(dx) > Math.abs(dy) )
+			{
+				if( dx < 0 )
+				{
+					pv[X] = -1;
+					overlap = c[X] + r - p[LEFT];
+				}
+				else
+				{
+					pv[X] = 1;
+					overlap = p[RIGHT] - c[X] - r;
+				}
+				pv[Y] = 0;
+			}
+			else
+			{
+				pv[X] = 0;
+				if( dy < 0 )
+				{
+					pv[Y] = -1;
+					overlap = c[Y] + r - p[TOP];
+				}
+				else
+				{
+					pv[Y] = 1;
+					overlap = p[BOTTOM] - c[Y] - r;
+				}
+			}
+			return overlap;
+		}
+
+		// test against the AABBs Voronoi regions
+		// left
+		if( c[X] < p[LEFT] )
+		{
+			// top left
+			if( c[Y] < p[TOP] )
+			{
+				// collision if distance from center of circle to corner is less
+				// than the circle's radius
+				dx = c[X] - p[LEFT];
+				dy = c[Y] - p[TOP];
+				dist = Math.sqrt( dx * dx + dy * dy );
+				overlap = r - dist;
+				if( overlap <= 0 )
+					return false;
+				// collision vector is from corner to circle's center
+				if( pv )
+				{
+					pv[X] = dx;
+					pv[Y] = dy;
+				}
+				return overlap;
+			}
+			// bottom left
+			else if( c[Y] > p[BOTTOM] )
+			{
+				// collision if distance from center of circle to corner is less
+				// than the circle's radius
+				dx = c[X] - p[LEFT];
+				dy = c[Y] - p[BOTTOM];
+				dist = Math.sqrt( dx * dx + dy * dy );
+				overlap = r - dist;
+				if( overlap <= 0 )
+					return false;
+				// collision vector is from corner to circle's center
+				if( pv )
+					{
+						pv[X] = dx;
+						pv[Y] = dy;
+					}
+					return overlap;
+			}
+			// left side
+			else
+			{
+				var dl = p[LEFT] - c[X];
+				overlap = r - dl;
+				if( overlap <= 0 )
+					return false;
+				// collision vector is directly left
+				if( pv )
+				{
+					pv[X] = -1;
+					pv[Y] = 0;
+				}
+				return overlap;
+			}
+		}
+		// right
+		else if( c[X] > p[RIGHT] )
+		{
+			// top right
+			if( c[Y] < p[TOP] )
+			{
+				// collision if distance from center of circle to corner is less
+				// than the circle's radius
+				dx = c[X] - p[RIGHT];
+				dy = c[Y] - p[TOP];
+				dist = Math.sqrt( dx * dx + dy * dy );
+				overlap = r - dist;
+				if( overlap <= 0 )
+					return false;
+				// collision vector is from corner to circle's center
+				if( pv )
+				{
+					pv[X] = dx;
+					pv[Y] = dy;
+				}
+				return overlap;
+			}
+			else if( c[Y] > p[BOTTOM] )
+			{
+				// collision if distance from center of circle to corner is less
+				// than the circle's radius
+				dx = c[X] - p[RIGHT];
+				dy = c[Y] - p[BOTTOM];
+				dist = Math.sqrt( dx * dx + dy * dy );
+				overlap = r - dist;
+				if( overlap <= 0 )
+					return false;
+				// collision vector is from corner to circle's center
+				if( pv )
+				{
+					pv[X] = dx;
+					pv[Y] = dy;
+				}
+				return overlap;
+			}
+			// right side
+			else
+			{
+				var dr = c[X] - p[RIGHT];
+				overlap = r - dr;
+				if( overlap <= 0 )
+					return false;
+				// collision vector is directly right
+				if( pv )
+				{
+					pv[X] = 1;
+					pv[Y] = 0;
+				}
+				return overlap;
+			}
+		}
+		// top
+		else if( c[Y] < p[TOP] )
+		{
+			var dt = p[TOP] - c[Y];
+			overlap = r - dt;
+			if( overlap <= 0 )
+				return false;
+			// collision vector is directly up
+			if( pv )
+			{
+				pv[X] = 0;
+				pv[Y] = -1;
+			}
+			return overlap;
+		}
+		// bottom
+		else if( c[Y] > p[BOTTOM] )
+		{
+			var db = c[Y] - p[BOTTOM];
+			overlap = r - db;
+			if( overlap <= 0 )
+				return false;
+			// collision vector is directly down
+			if( pv )
+			{
+				pv[X] = 0;
+				pv[Y] = 1;
+			}
+			return overlap;
+		}
+
+		// shouldn't get here...
+		console.error( "something went wrong in AABBvsCircle collision - reached end of procedure without position detection..." );
+		return false;
+	};
+//	z2.collideAabbVsCircle = function( p, c, r, pv )
+//	{
+//		// center of AABB
+//		bc[0] = (p[2] + p[0]) / 2;
+//		bc[1] = (p[3] + p[1]) / 2;
+//
+//		// get the vector for the AABB (box) center to the circle center
+////		z2.math.vecSub( bc, c, b2c );
+////		z2.math.vecSub( c, bc, b2c );
+//		b2c[0] = c[0] - bc[0];
+//		b2c[1] = c[1] - bc[1];
+//		// normalized
+//		b2cn[0] = b2c[0];
+//		b2cn[1] = b2c[1];
+////		z2.math.vecNormalize( b2cn );
+//		var mag = Math.sqrt( b2cn[0] * b2cn[0] + b2cn[1] * b2cn[1] );
+//		b2cn[0] /= mag;
+//		b2cn[1] /= mag;
+//
+//		// find the closest corner
+//		var max = Number.MIN_VALUE;
+//		var x, y;
+//		// upper left
+//		vec[0] = p[0] - bc[0];
+//		vec[1] = p[1] - bc[1];
+//		var n = z2.math.vecDot( vec, b2cn );
+//		if( n > max ) max = n;
+//		// upper right
+//		vec[0] = p[2] - bc[0];
+//		vec[1] = p[1] - bc[1];
+//		n = z2.math.vecDot( vec, b2cn );
+//		if( n > max ) max = n;
+//		// lower left
+//		vec[0] = p[0] - bc[0];
+//		vec[1] = p[3] - bc[1];
+//		n = z2.math.vecDot( vec, b2cn );
+//		if( n > max ) max = n;
+//		// lower right
+//		vec[0] = p[2] - bc[0];
+//		vec[1] = p[3] - bc[1];
+//		n = z2.math.vecDot( vec, b2cn );
+//		if( n > max ) max = n;
+//
+//		// distance from center to center, minus the closest corner 'leg' and
+//		// the circle's radius
+//		var b2c_mag = z2.math.vecMag( b2c );
+////		var dist = (max + r) - b2c_mag;
+//		var dist = b2c_mag - max - r;
+////		if( dist <= 0 && b2c_mag > 0 )
+//		if( dist > 0 && b2c_mag > 0 )
+//			return false;
+//		else
+//		{
+//			if( pv )
+//			{
+//				// TODO: this is not correct
+//				// to properly calculate this we need to know if the circle was
+//				// in a voronoi region for a side or a corner of the aabb 
+//				// - if for a side then pv is normal to that side, 
+//				// if for a corner then pv is along the line from corner to
+//				// center of the circle
+//				pv[0] = b2cn[0];
+//				pv[1] = b2cn[1];
+//			}
+//			return -dist;
+//		}
+//	};
+
+
+
+	/////////////////////////////////////////////////////////////////////////
 	// helper routines for testing:
+	/////////////////////////////////////////////////////////////////////////
 
 	// angle between two vectors
 	function getAngle( a, b )
