@@ -3,7 +3,6 @@
 // Collision detection for zed-squared
 //
 // TODO:
-// - AABB vs poly
 // - AABB vs AA right triangles 
 // - optimize
 // - (optimized) routines to just detect intersection, not resolve collision
@@ -54,7 +53,7 @@ zSquared.collision = function( z2 )
 
 	// get the min & max of AABB projected onto vec
 	// (return min & max in 2-element array out)
-	var temp = [[0, 0], [0, 0], [0, 0], [0, 0]];
+	var temp = [0, 0, 0, 0, 0, 0, 0, 0];
 	function projectAabbMinMax( aabb, vec, out )
 	{
 		// top left
@@ -282,9 +281,6 @@ zSquared.collision = function( z2 )
 					p1minmax[0] = b[0];
 					p1minmax[1] = b[2];
 				}
-
-				// project the min/max pts onto the normal/axis, poly2
-				projectMinMax( p, vec, p2minmax );
 			}
 			// left / horizontal axis
 			else
@@ -302,10 +298,10 @@ zSquared.collision = function( z2 )
 					p1minmax[0] = b[1];
 					p1minmax[1] = b[3];
 				}
-
-				// project the min/max pts onto the normal/axis, poly2
-				projectMinMax( p, vec, p2minmax );
 			}
+
+			// project the min/max pts onto the normal/axis, poly2
+			projectMinMax( p, vec, p2minmax );
 
 			// penetration is poly1.max < poly2.min || poly2.max < poly1.min
 			if( p1minmax[1] < p2minmax[0] )
@@ -402,9 +398,10 @@ zSquared.collision = function( z2 )
 		var pen = r1 + r2 - dist;
 		if( pen <= 0 )
 			return 0;
-		pv[0] = dx;
-		pv[1] = dy;
-		z2.math.vecNormalize( pv );
+//		pv[0] = dx;
+//		pv[1] = dy;
+		pv[0] = dx / dist;
+		pv[1] = dy / dist;
 		return pen;
 	};
 
@@ -439,8 +436,6 @@ zSquared.collision = function( z2 )
 				if( overlap <= 0 )
 					return 0;
 				// collision vector is from corner to circle's center
-//				dx /= overlap;
-//				dy /= overlap;
 				dx /= dist;
 				dy /= dist;
 			}
@@ -456,8 +451,6 @@ zSquared.collision = function( z2 )
 				if( overlap <= 0 )
 					return 0;
 				// collision vector is from corner to circle's center
-//				dx /= overlap;
-//				dy /= overlap;
 				dx /= dist;
 				dy /= dist;
 			}
@@ -488,8 +481,6 @@ zSquared.collision = function( z2 )
 				if( overlap <= 0 )
 					return 0;
 				// collision vector is from corner to circle's center
-//				dx /= overlap;
-//				dy /= overlap;
 				dx /= dist;
 				dy /= dist;
 			}
@@ -504,8 +495,6 @@ zSquared.collision = function( z2 )
 				if( overlap <= 0 )
 					return 0;
 				// collision vector is from corner to circle's center
-//				dx /= overlap;
-//				dy /= overlap;
 				dx /= dist;
 				dy /= dist;
 			}

@@ -166,7 +166,7 @@ function start()
 	var cvc = 'circle vs circle';
 	var bvc = 'AABB vs circle';
 	var bvp = 'AABB vs poly';
-	var test = bvp;
+	var test = cvc;
 	if( test == pvp )
 	{
 		vertices = [];
