@@ -52,6 +52,38 @@ zSquared.collision = function( z2 )
 		out[1] = max;
 	}
 
+	// get the min & max of AABB projected onto vec
+	// (return min & max in 2-element array out)
+	var temp = [[0, 0], [0, 0], [0, 0], [0, 0]];
+	function projectAabbMinMax( aabb, vec, out )
+	{
+		// top left
+		temp[0] = aabb[0];
+		temp[1] = aabb[1];
+		// top right
+		temp[2] = aabb[2];
+		temp[3] = aabb[1];
+		// bottom right
+		temp[4] = aabb[2];
+		temp[5] = aabb[3];
+		// bottom left
+		temp[6] = aabb[0];
+		temp[7] = aabb[3];
+
+		var min, max, cur;
+		min = max = z2.math.vecDot( [temp[0], temp[1]], vec );
+		for( var i = 2; i < temp.length; i += 2 )
+		{
+			cur = z2.math.vecDot( [temp[i], temp[i+1]], vec );
+			if( cur < min )
+				min = cur;
+			if( cur > max )
+				max = cur;
+		}
+		out[0] = min;
+		out[1] = max;
+	}
+
 	// module scope vars, to avoid (re)allocations & frees
 	var vec = [Number.NaN, Number.NaN];
 	var p1minmax = [Number.NaN, Number.NaN];
@@ -62,8 +94,7 @@ zSquared.collision = function( z2 )
 	 * @arg {Array} p1 (flat) Array of vertices defining polygon 1
 	 * @arg {Array} p2 (flat) Array of vertices defining polygon 2
 	 * @arg {Array} pv (out) Vector (2 element array) for returning penetration direction vector (normal)
-	 * @returns {Number} magnitude of penetration, or 0 if no
-	 * collision
+	 * @returns {Number} magnitude of penetration, or 0 if no collision
 	 */
 	z2.collidePolyVsPoly = function( p1, p2, pv )
 	{
@@ -112,7 +143,7 @@ zSquared.collision = function( z2 )
 		for( i = 0; i < p2.length; i +=2 )
 		{
 			j = i+2;
-			if( j === p1.length )
+			if( j === p2.length )
 				j = 0;
 			// get the normal
 			getNormal( [p2[i], p2[i+1]], [p2[j], p2[j+1]], vec );
@@ -163,8 +194,7 @@ zSquared.collision = function( z2 )
 	 * @arg {Array} p1 (flat) Array of values for aabb 1: top, left, bottom, right
 	 * @arg {Array} p2 (flat) Array of values for aabb 2: top, left, bottom, right
 	 * @arg {Array} pv (out) Vector (2 element array) for returning penetration direction (normal)
-	 * @returns {Number} magnitude of penetration, or 0 if no
-	 * collision
+	 * @returns {Number} magnitude of penetration, or 0 if no collision
 	 */
 	z2.collideAabbVsAabb = function( p1, p2, pv )
 	{
@@ -215,6 +245,138 @@ zSquared.collision = function( z2 )
 		}
 	};
 
+	/** Collide AABB vs a polygon
+	 * @function z2.collideAabbVsPoly
+	 * @arg {Array} b (flat) Array of values for aabb 1: top, left, bottom, right
+	 * @arg {Array} p (flat) Array of vertices defining polygon 2
+	 * @arg {Array} pv (out) Vector (2 element array) for returning penetration direction vector (normal)
+	 * @returns {Number} magnitude of penetration, or 0 if no collision
+	 */
+	z2.collideAabbVsPoly = function( b, p, pv )
+	{
+		var i, j;
+
+		var pen1 = Number.MAX_VALUE, pen2 = Number.MAX_VALUE;
+		var temp1, temp2, temp3;
+		var pv1x, pv1y, pv2x, pv2y;
+
+		// for top and left sides, AABB
+		// (since we know that sides are parallel we don't need to calc 
+		// for both sides)
+		for( i = 0; i < 2; i++ )
+		{
+			// top / vertical axis
+			if( i === 0 )
+			{
+				vec[0] = 1;
+				vec[1] = 0;
+
+				// project the min/max pts onto the normal/axis, AABB
+				if( b[0] > b[2] )
+				{
+					p1minmax[0] = b[2];
+					p1minmax[1] = b[0];
+				}
+				else
+				{
+					p1minmax[0] = b[0];
+					p1minmax[1] = b[2];
+				}
+
+				// project the min/max pts onto the normal/axis, poly2
+				projectMinMax( p, vec, p2minmax );
+			}
+			// left / horizontal axis
+			else
+			{
+				vec[0] = 0;
+				vec[1] = 1;
+				// project the min/max pts onto the normal/axis, AABB
+				if( b[1] > b[3] )
+				{
+					p1minmax[0] = b[3];
+					p1minmax[1] = b[1];
+				}
+				else
+				{
+					p1minmax[0] = b[1];
+					p1minmax[1] = b[3];
+				}
+
+				// project the min/max pts onto the normal/axis, poly2
+				projectMinMax( p, vec, p2minmax );
+			}
+
+			// penetration is poly1.max < poly2.min || poly2.max < poly1.min
+			if( p1minmax[1] < p2minmax[0] )
+				return 0;
+			else if( p2minmax[1] < p1minmax[0] )
+				return 0;
+			// possible collision, save penetration vector
+			else
+			{
+				temp1 = p1minmax[1] - p2minmax[0];
+				temp2 = p2minmax[1] - p1minmax[0];
+				temp3 = temp1 < temp2 ? temp1 : temp2;
+				if( temp3 < pen1 )
+				{
+					pen1 = temp3;
+					pv1x = vec[0];
+					pv1y= vec[1];
+				}
+			}
+		}
+		
+		// for each side, poly 2
+		for( i = 0; i < p.length; i +=2 )
+		{
+			j = i+2;
+			if( j === p.length )
+				j = 0;
+			// get the normal
+			getNormal( [p[i], p[i+1]], [p[j], p[j+1]], vec );
+
+			// project the min/max pts onto the normal/axis, AABB
+			projectAabbMinMax( b, vec, p1minmax );
+
+			// project the min/max pts onto the normal/axis, poly2
+			projectMinMax( p, vec, p2minmax );
+
+			// penetration is poly1.max < poly2.min || poly2.max < poly1.min
+			if( p1minmax[1] < p2minmax[0] )
+				return 0;
+			else if( p2minmax[1] < p1minmax[0] )
+				return 0;
+			// possible collision, save penetration vector
+			else
+			{
+				temp1 = p1minmax[1] - p2minmax[0];
+				temp2 = p2minmax[1] - p1minmax[0];
+				temp3 = temp1 < temp2 ? temp1 : temp2;
+				if( temp3 < pen2 )
+				{
+					pen2 = temp3;
+					pv2x = vec[0];
+					pv2y = vec[1];
+				}
+			}
+		}
+
+		// return least penetration & vector
+		if( pen1 < pen2 )
+		{
+			pv[0] = pv1x;
+			pv[1] = pv1y;
+			return pen1;
+		}
+		else
+		{
+			pv[0] = pv2x;
+			pv[1] = pv2y;
+			return pen2;
+		}
+	};
+
 	/** Collide two circles
 	 * @function z2.collideCircleVsCircle
 	 * @arg {Array} p1 Center of circle 1
@@ -222,8 +384,7 @@ zSquared.collision = function( z2 )
 	 * @arg {Array} p2 Center of circle 2
 	 * @arg {Number} r2 Radius of circle 2
 	 * @arg {Array} pv (out) Vector (2 element array) for returning penetration direction (normal)
-	 * @returns {Number} magnitude of penetration, or 0 if no
-	 * collision
+	 * @returns {Number} magnitude of penetration, or 0 if no collision
 	 */
 	z2.collideCircleVsCircle = function( p1, r1, p2, r2, pv )
 	{
@@ -253,8 +414,7 @@ zSquared.collision = function( z2 )
 	 * @arg {Array} c Center of circle 2
 	 * @arg {Number} r Radius of circle 2
 	 * @arg {Array} pv (optional, out) Vector (2 element array) for returning penetration direction
-	 * @returns {Number} magnitude of penetration, or 0 if no
-	 * collision
+	 * @returns {Number} magnitude of penetration, or 0 if no collision
 	 */
 	z2.collideAabbVsCircle = function( p, c, r, pv )
 	{
@@ -279,8 +439,10 @@ zSquared.collision = function( z2 )
 				if( overlap <= 0 )
 					return 0;
 				// collision vector is from corner to circle's center
-				dx /= overlap;
-				dy /= overlap;
+//				dx /= overlap;
+//				dy /= overlap;
+				dx /= dist;
+				dy /= dist;
 			}
 			// bottom left
 			else if( c[1] > p[3] )
@@ -294,8 +456,10 @@ zSquared.collision = function( z2 )
 				if( overlap <= 0 )
 					return 0;
 				// collision vector is from corner to circle's center
-				dx /= overlap;
-				dy /= overlap;
+//				dx /= overlap;
+//				dy /= overlap;
+				dx /= dist;
+				dy /= dist;
 			}
 			// left side
 			else
@@ -324,8 +488,10 @@ zSquared.collision = function( z2 )
 				if( overlap <= 0 )
 					return 0;
 				// collision vector is from corner to circle's center
-				dx /= overlap;
-				dy /= overlap;
+//				dx /= overlap;
+//				dy /= overlap;
+				dx /= dist;
+				dy /= dist;
 			}
 			else if( c[1] > p[3] )
 			{
@@ -338,8 +504,10 @@ zSquared.collision = function( z2 )
 				if( overlap <= 0 )
 					return 0;
 				// collision vector is from corner to circle's center
-				dx /= overlap;
-				dy /= overlap;
+//				dx /= overlap;
+//				dy /= overlap;
+				dx /= dist;
+				dy /= dist;
 			}
 			// right side
 			else

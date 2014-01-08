@@ -117,6 +117,14 @@ var input_sys = new z2.System( [player],
 
 mgr.addSystem( input_sys );
 
+// helper fcn to help sort sides of (random) AABBs
+function swap( i, a, b )
+{
+	var tmp = i[a];
+	i[a] = i[b];
+	i[b] = tmp;
+}
+
 // called after assets are loaded
 function start()
 {
@@ -139,151 +147,307 @@ function start()
 	var imge = mgr.createEntity( [z2.renderableFactory, imgxf, imgp, imgr, imgsz, imgs, imgcc, imgc, imgv] );
 	console.log( "imge mask: " + imge.mask.key );
 
-	// vertices for second triangle
-//	var vertices2 = [0, 0, WIDTH, HEIGHT, 0, HEIGHT];
-//
-//	// create a (random) polygon (triangle)
-//	var vertices = [];
-//	for( var i = 0; i < 3; i++ )
-//	{
-//		vertices.push( Math.random() * WIDTH - WIDTH/2, Math.random() * HEIGHT - HEIGHT/2 );
-//	}
-//	// ensure the vertices are in CW order
-//	z2.sortVertices( vertices );
-
-
-	// vertices for AABB bounding boxes
-	function swap( i, a, b )
-	{
-		var tmp = i[a];
-		i[a] = i[b];
-		i[b] = tmp;
-	}
 	var LEFT = 0, TOP = 1, RIGHT = 2, BOTTOM = 3;
-	var aabb1 = [];
-	var aabb2 = [];
-	for( var i = 0; i < 2; i++ )
-	{
-		aabb1.push( Math.random() * WIDTH/2 );
-		aabb1.push( Math.random() * HEIGHT/2 );
-	}
-//	aabb1 = [
-//		120,
-//		20,
-//		200,
-//		180
-	//
-//		96.31799376010895,
-//		17.876899302005768,
-//		148.96559083461761,
-//		175.86477649211884
-		//
-//		80.77150797843933,
-//		140.9154455512762,
-//		159.0162754058838,
-//		164.52973902225494
-//	];
-	for( i = 0; i < 2; i++ )
-	{
-		aabb2.push( Math.random() * WIDTH/2 - 100 );
-		aabb2.push( Math.random() * HEIGHT/2 - 100 );
-	}
-	if( aabb1[LEFT] > aabb1[RIGHT] )
-		swap( aabb1, LEFT, RIGHT );
-	if( aabb1[TOP] > aabb1[BOTTOM] )
-		swap( aabb1, TOP, BOTTOM );
-	if( aabb2[LEFT] > aabb2[RIGHT] )
-		swap( aabb2, LEFT, RIGHT );
-	if( aabb2[TOP] > aabb2[BOTTOM] )
-		swap( aabb2, TOP, BOTTOM );
-
-	var vertices = [
-		// top left
-		aabb1[LEFT], aabb1[TOP],
-		// top right
-		aabb1[RIGHT], aabb1[TOP],
-		// bottom right
-		aabb1[RIGHT], aabb1[BOTTOM],
-		// bottom left
-		aabb1[LEFT], aabb1[BOTTOM]
-	];
-	var vertices2 = [
-		// top left
-		aabb2[LEFT], aabb2[TOP],
-		// top right
-		aabb2[RIGHT], aabb2[TOP],
-		// bottom right
-		aabb2[RIGHT], aabb2[BOTTOM],
-		// bottom left
-		aabb2[LEFT], aabb2[BOTTOM]
-	];
-
-	// collide polys
+	var vertices, vertices2;
+	var i;
 	var fill;
 	var pv = [0,0];
-//	var pen = z2.collidePolyVsPoly( vertices2, vertices, pv );
-//	var pen = z2.collideAabbVsAabb( aabb2, aabb1, pv );
-//	console.log( "collision penetration: " + pen );
-//	console.log( "collision penetration vector, x: " + pv[0] + ", y: " + pv[1] );
-//	if( pen > 0 )
-//		fill = 'rgba( 255, 0, 0, 0.5 )';
-//	else
-//		fill = 'rgba( 0, 255, 0, 0.5 )';
-
-	// circles
+	var pen;
+	var polyc, polyp, polysz, polyxf, polyf, polye;
+	var tric, trip, trisz, trixf, trif, trie;
+	var aabb1 = [];
+	var aabb2 = [];
 	var c1 = [], c2 = [], r1, r2;
-	c1[0] = Math.random() * WIDTH/2;
-	c1[1] = Math.random() * HEIGHT/2;
-	r1 = Math.random() * 100;
-//	c1[0] = 30;
-//	c1[1] = 80;
-//	r1 = 89;
-//	c1[0] = 122.15190207958221;
-//	c1[1] = 143.43632671236992;
-//	r1 = 43.06532689370215;
-//	c1[0] = 131.15571069717407;
-//	c1[1] = 147.69304387271404;
-//	r1 = 18.20829943753779;
-//	c2[0] = Math.random() * WIDTH/2;
-//	c2[1] = Math.random() * HEIGHT/2;
-//	r2 = Math.random() * 200;
-	// collide circles
-//	var pen2 = z2.collideCircleVsCircle( c1, r1, c2, r2, pv );
-	var pen2 = z2.collideAabbVsCircle( aabb1, c1, r1, pv );
-	var fill2;
-	console.log( "circle collision penetration: " + pen2 );
-	console.log( "circle collision penetration vector, x: " + pv[0] + ", y: " + pv[1] );
-	if( pen2 > 0 )
-		fill2 = 'rgba( 255, 0, 0, 0.5 )';
-	else
-		fill2 = 'rgba( 0, 255, 0, 0.5 )';
+	var c1c, c1p, c1r, circlef, circlexf, c1e;
 
-	// circle 1
-	var c1c = z2.centerFactory.create( {cx: c1[0], cy: c1[1]} );
-	var c1r = z2.radiusFactory.create( {radius: r1} );
-	var circlef = z2.fillFactory.create( {fill: fill2} );
-	var circlexf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
-	var c1e = mgr.createEntity( [z2.renderableFactory, circlexf, c1c, c1r, circlef] );
-	// circle 2
-//	var c2c = z2.centerFactory.create( {cx: c2[0], cy: c2[1]} );
-//	var c2r = z2.radiusFactory.create( {radius: r2} );
-//	var c2e = mgr.createEntity( [z2.renderableFactory, circlexf, c2c, c2r, circlef] );
+	// test types
+	var pvp = 'poly vs poly';
+	var bvb = 'AABB vs AABB';
+	var cvc = 'circle vs circle';
+	var bvc = 'AABB vs circle';
+	var bvp = 'AABB vs poly';
+	var test = bvp;
+	if( test == pvp )
+	{
+		vertices = [];
+		// vertices for second triangle
+		vertices2 = [0, 0, WIDTH, HEIGHT, 0, HEIGHT];
 
-	// poly (tri) 1
-	var polyc = z2.polygonFactory.create( {vertices: vertices} );
-//	var polyp = z2.positionFactory.create( {x: 500, y: 500} );
-	var polysz = z2.sizeFactory.create( {width: 100, height: 100} );
-	var polyxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
-	var polyf = z2.fillFactory.create( {fill: fill} );
-	var polye = mgr.createEntity( [z2.renderableFactory, polyf, polyxf, polyc, /*polyp,*/ polysz] );
+		// create a (random) polygon (triangle)
+		for( i = 0; i < 3; i++ )
+		{
+			vertices.push( Math.random() * WIDTH - WIDTH/2, Math.random() * HEIGHT - HEIGHT/2 );
+		}
+		// ensure the vertices are in CW order
+		z2.sortVertices( vertices );
 
-	// create a (non-random) triangle to test collision with tri 1
-//	var tric = z2.polygonFactory.create( {vertices: vertices2} );
-//	var trip = z2.positionFactory.create( {x: 500, y: 500} );
-//	var trisz = z2.sizeFactory.create( {width: 100, height: 100} );
-//	var trixf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
-//	var trif = z2.fillFactory.create( {fill: fill} );
-//	var trie = mgr.createEntity( [z2.renderableFactory, trif, trixf, tric, trip, trisz] );
+		// collide polys
+		pen = z2.collidePolyVsPoly( vertices2, vertices, pv );
+		console.log( "collision penetration: " + pen );
+		console.log( "collision penetration vector, x: " + pv[0] + ", y: " + pv[1] );
+		if( pen > 0 )
+			fill = 'rgba( 255, 0, 0, 0.5 )';
+		else
+			fill = 'rgba( 0, 255, 0, 0.5 )';
+
+		// poly (tri) 1
+		polyc = z2.polygonFactory.create( {vertices: vertices} );
+		polyp = z2.positionFactory.create( {x: 500, y: 500} );
+		polysz = z2.sizeFactory.create( {width: 100, height: 100} );
+		polyxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
+		polyf = z2.fillFactory.create( {fill: fill} );
+		polye = mgr.createEntity( [z2.renderableFactory, polyf, polyxf, polyc, polyp, polysz] );
+
+		// create a (non-random) triangle to test collision with tri 1
+		tric = z2.polygonFactory.create( {vertices: vertices2} );
+		trip = z2.positionFactory.create( {x: 500, y: 500} );
+		trisz = z2.sizeFactory.create( {width: 100, height: 100} );
+		trixf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
+		trif = z2.fillFactory.create( {fill: fill} );
+		trie = mgr.createEntity( [z2.renderableFactory, trif, trixf, tric, trip, trisz] );
+	}
+	else if( test == bvb )
+	{
+		// vertices for AABB bounding boxes
+		for( i = 0; i < 2; i++ )
+		{
+			aabb1.push( Math.random() * WIDTH/2 );
+			aabb1.push( Math.random() * HEIGHT/2 );
+		}
+//		aabb1 = [
+//			120,
+//			20,
+//			200,
+//			180
+//	//
+//			96.31799376010895,
+//			17.876899302005768,
+//			148.96559083461761,
+//			175.86477649211884
+//	//
+//			80.77150797843933,
+//			140.9154455512762,
+//			159.0162754058838,
+//			164.52973902225494
+//		];
+		for( i = 0; i < 2; i++ )
+		{
+			aabb2.push( Math.random() * WIDTH/2 - 100 );
+			aabb2.push( Math.random() * HEIGHT/2 - 100 );
+		}
+		if( aabb1[LEFT] > aabb1[RIGHT] )
+			swap( aabb1, LEFT, RIGHT );
+		if( aabb1[TOP] > aabb1[BOTTOM] )
+			swap( aabb1, TOP, BOTTOM );
+		if( aabb2[LEFT] > aabb2[RIGHT] )
+			swap( aabb2, LEFT, RIGHT );
+		if( aabb2[TOP] > aabb2[BOTTOM] )
+			swap( aabb2, TOP, BOTTOM );
+
+		vertices = [
+			// top left
+			aabb1[LEFT], aabb1[TOP],
+			// top right
+			aabb1[RIGHT], aabb1[TOP],
+			// bottom right
+			aabb1[RIGHT], aabb1[BOTTOM],
+			// bottom left
+			aabb1[LEFT], aabb1[BOTTOM]
+		];
+		vertices2 = [
+			// top left
+			aabb2[LEFT], aabb2[TOP],
+			// top right
+			aabb2[RIGHT], aabb2[TOP],
+			// bottom right
+			aabb2[RIGHT], aabb2[BOTTOM],
+			// bottom left
+			aabb2[LEFT], aabb2[BOTTOM]
+		];
+
+		// collide
+		pen = z2.collideAabbVsAabb( aabb2, aabb1, pv );
+		console.log( "collision penetration: " + pen );
+		console.log( "collision penetration vector, x: " + pv[0] + ", y: " + pv[1] );
+		if( pen > 0 )
+			fill = 'rgba( 255, 0, 0, 0.5 )';
+		else
+			fill = 'rgba( 0, 255, 0, 0.5 )';
+
+		// poly (tri) 1
+		polyc = z2.polygonFactory.create( {vertices: vertices} );
+		polyp = z2.positionFactory.create( {x: 500, y: 500} );
+		polysz = z2.sizeFactory.create( {width: 100, height: 100} );
+		polyxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
+		polyf = z2.fillFactory.create( {fill: fill} );
+		polye = mgr.createEntity( [z2.renderableFactory, polyf, polyxf, polyc, polyp, polysz] );
+
+		// create a (non-random) triangle to test collision with tri 1
+		tric = z2.polygonFactory.create( {vertices: vertices2} );
+		trip = z2.positionFactory.create( {x: 500, y: 500} );
+		trisz = z2.sizeFactory.create( {width: 100, height: 100} );
+		trixf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
+		trif = z2.fillFactory.create( {fill: fill} );
+		trie = mgr.createEntity( [z2.renderableFactory, trif, trixf, tric, trip, trisz] );
+	}
+	else if( test == cvc )
+	{
+		// circles
+		c1[0] = Math.random() * WIDTH/2;
+		c1[1] = Math.random() * HEIGHT/2;
+		r1 = Math.random() * 100;
+//		c1[0] = 30;
+//		c1[1] = 80;
+//		r1 = 89;
+//		c1[0] = 122.15190207958221;
+//		c1[1] = 143.43632671236992;
+//		r1 = 43.06532689370215;
+//		c1[0] = 131.15571069717407;
+//		c1[1] = 147.69304387271404;
+//		r1 = 18.20829943753779;
+		c2[0] = Math.random() * WIDTH/2;
+		c2[1] = Math.random() * HEIGHT/2;
+		r2 = Math.random() * 200;
+		// collide circles
+		pen = z2.collideCircleVsCircle( c1, r1, c2, r2, pv );
+		console.log( "circle collision penetration: " + pen );
+		console.log( "circle collision penetration vector, x: " + pv[0] + ", y: " + pv[1] );
+		if( pen > 0 )
+			fill = 'rgba( 255, 0, 0, 0.5 )';
+		else
+			fill = 'rgba( 0, 255, 0, 0.5 )';
+
+		// circle 1
+		c1p = z2.positionFactory.create( {x: 500, y: 500} );
+		cxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
+		csz = z2.sizeFactory.create( {width: 0, height: 0} );
+		c1c = z2.centerFactory.create( {cx: c1[0], cy: c1[1]} );
+		c1r = z2.radiusFactory.create( {radius: r1} );
+		circlef = z2.fillFactory.create( {fill: fill} );
+		circlexf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
+		c1e = mgr.createEntity( [z2.renderableFactory, circlexf, csz, cxf, c1p, c1c, c1r, circlef] );
+		// circle 2
+		var c2p = z2.positionFactory.create( {x: 500, y: 500} );
+		var c2c = z2.centerFactory.create( {cx: c2[0], cy: c2[1]} );
+		var c2r = z2.radiusFactory.create( {radius: r2} );
+		var c2e = mgr.createEntity( [z2.renderableFactory, circlexf, csz, cxf, c2p, c2c, c2r, circlef] );
+	}
+	else if( test == bvc )
+	{
+		// vertices for AABB bounding boxes
+		for( i = 0; i < 2; i++ )
+		{
+			aabb1.push( Math.random() * WIDTH/2 );
+			aabb1.push( Math.random() * HEIGHT/2 );
+		}
+		if( aabb1[LEFT] > aabb1[RIGHT] )
+			swap( aabb1, LEFT, RIGHT );
+		if( aabb1[TOP] > aabb1[BOTTOM] )
+			swap( aabb1, TOP, BOTTOM );
+//		aabb1 = [
+//			68.9423161149025,
+//			92.06795163452625,
+//			226.27551406621933,
+//			140.27565014362335
+//		];
+		vertices = [
+			// top left
+			aabb1[LEFT], aabb1[TOP],
+			// top right
+			aabb1[RIGHT], aabb1[TOP],
+			// bottom right
+			aabb1[RIGHT], aabb1[BOTTOM],
+			// bottom left
+			aabb1[LEFT], aabb1[BOTTOM]
+		];
+		c1[0] = Math.random() * WIDTH/2;
+		c1[1] = Math.random() * HEIGHT/2;
+		r1 = Math.random() * 100;
+//		c1[0] = 44.339279770851135;
+//		c1[1] = 137.29280045628548;
+//		r1 = 95.52356873173267;
+
+		pen = z2.collideAabbVsCircle( aabb1, c1, r1, pv );
+		console.log( "collision penetration: " + pen );
+		console.log( "collision penetration vector, x: " + pv[0] + ", y: " + pv[1] );
+		if( pen > 0 )
+			fill = 'rgba( 255, 0, 0, 0.5 )';
+		else
+			fill = 'rgba( 0, 255, 0, 0.5 )';
+
+		// poly (tri) 1
+		polyc = z2.polygonFactory.create( {vertices: vertices} );
+		polyp = z2.positionFactory.create( {x: 500, y: 500} );
+		polysz = z2.sizeFactory.create( {width: 0, height: 0} );
+		polyxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
+		polyf = z2.fillFactory.create( {fill: fill} );
+		polye = mgr.createEntity( [z2.renderableFactory, polyf, polyxf, polyc, polyp, polysz] );
+
+		// circle 1
+		c1p = z2.positionFactory.create( {x: 500, y: 500} );
+		cxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
+		csz = z2.sizeFactory.create( {width: 0, height: 0} );
+		c1c = z2.centerFactory.create( {cx: c1[0], cy: c1[1]} );
+		c1r = z2.radiusFactory.create( {radius: r1} );
+		circlef = z2.fillFactory.create( {fill: fill} );
+		c1e = mgr.createEntity( [z2.renderableFactory, cxf, c1p, csz, c1c, c1r, circlef] );
+	}
+	else if( test == bvp )
+	{
+		// vertices for AABB bounding boxes
+		for( i = 0; i < 2; i++ )
+		{
+			aabb1.push( Math.random() * WIDTH/2 );
+			aabb1.push( Math.random() * HEIGHT/2 );
+		}
+		if( aabb1[LEFT] > aabb1[RIGHT] )
+			swap( aabb1, LEFT, RIGHT );
+		if( aabb1[TOP] > aabb1[BOTTOM] )
+			swap( aabb1, TOP, BOTTOM );
+		vertices = [
+			// top left
+			aabb1[LEFT], aabb1[TOP],
+			// top right
+			aabb1[RIGHT], aabb1[TOP],
+			// bottom right
+			aabb1[RIGHT], aabb1[BOTTOM],
+			// bottom left
+			aabb1[LEFT], aabb1[BOTTOM]
+		];
+		// create a (random) polygon (triangle)
+		vertices2 = [];
+		for( i = 0; i < 3; i++ )
+		{
+			vertices2.push( Math.random() * WIDTH - WIDTH/2, Math.random() * HEIGHT - HEIGHT/2 );
+		}
+		// ensure the vertices are in CW order
+		z2.sortVertices( vertices2 );
+
+		pen = z2.collideAabbVsPoly( aabb1, vertices2, pv );
+		console.log( "collision penetration: " + pen );
+		console.log( "collision penetration vector, x: " + pv[0] + ", y: " + pv[1] );
+		if( pen > 0 )
+			fill = 'rgba( 255, 0, 0, 0.5 )';
+		else
+			fill = 'rgba( 0, 255, 0, 0.5 )';
+
+		// AABB poly
+		polyc = z2.polygonFactory.create( {vertices: vertices} );
+		polyp = z2.positionFactory.create( {x: 500, y: 500} );
+		polysz = z2.sizeFactory.create( {width: 0, height: 0} );
+		polyxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
+		polyf = z2.fillFactory.create( {fill: fill} );
+		polye = mgr.createEntity( [z2.renderableFactory, polyf, polyxf, polyc, polyp, polysz] );
+
+		// random poly (tri)
+		tric = z2.polygonFactory.create( {vertices: vertices2} );
+		trip = z2.positionFactory.create( {x: 500, y: 500} );
+		trisz = z2.sizeFactory.create( {width: 0, height: 0} );
+		trixf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
+		trif = z2.fillFactory.create( {fill: fill} );
+		trie = mgr.createEntity( [z2.renderableFactory, trif, trixf, tric, trip, trisz] );
+	}
+
 
 	// create an (animated) sprite
 	var s_img = z2.loader.getAsset( 'man' );
