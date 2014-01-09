@@ -2,10 +2,10 @@
 // Copyright 2013 Joshua C Shepard
 // rudimentary bit-set for zed-squared
 
-"use strict";
-
 zSquared.bitset = function( z2 )
 {
+	"use strict";
+
 	/** @constant */
 	z2.DEFAULT_BITSET_LENGTH = 2;
 	/** @constant */

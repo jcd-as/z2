@@ -2,10 +2,10 @@
 // Copyright 2013 Joshua C Shepard
 // math, incl vector & matrix, routines for zed-squared
 
-"use strict";
-
 zSquared.math = function( z2 )
 {
+	"use strict";
+
 	// helpers
 
 	/** @constant */

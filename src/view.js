@@ -5,10 +5,10 @@
 // TODO:
 // -
 
-"use strict";
-
 zSquared.view = function( z2 )
 {
+	"use strict";
+
 	z2.require( ["math", "scene"] );
 
 	z2.FOLLOW_MODE_NONE = 'follow-mode-none';

@@ -4,14 +4,13 @@
 //
 // TODO:
 // . Transform System
-//  - polygons aren't transformed into view/screen space
 //	- parent (group) transforms
 // - 
 
-"use strict";
-
 zSquared['2d'] = function( z2 )
 {
+	"use strict";
+
 	z2.require( ["math", "ecs", "time"] );
 
 

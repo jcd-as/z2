@@ -21,10 +21,10 @@
 // THE SOFTWARE.
 
 
-"use strict";
-
 zSquared.statemachine = function( z2 )
 {
+	"use strict";
+
 	/** 
 	 * @class z2#z2.StateMachine
 	 * @classdesc Class providing a state machine for the zed-squared.

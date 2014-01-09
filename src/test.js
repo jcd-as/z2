@@ -3,6 +3,8 @@
 // - 
 //
 
+"use strict";
+
 var WIDTH = 512;
 var HEIGHT = 384;
 

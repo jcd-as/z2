@@ -5,10 +5,10 @@
 // TODO:
 // - 
 
-"use strict";
-
 zSquared.time = function( z2 )
 {
+	"use strict";
+
 //	z2.require( [] );
 
 	/** Time namespace object

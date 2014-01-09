@@ -4,6 +4,8 @@
 
 var zSquared = function( opts )
 {
+	"use strict";
+
 	loaded = {};
 
 	/** Main z2 namespace object

@@ -5,10 +5,10 @@
 // TODO:
 // - 
 
-"use strict";
-
 zSquared.scene = function( z2 )
 {
+	"use strict";
+
 	/** 
 	 * @class z2#z2.Scene
 	 * @classdesc Scene class. Represents a game scene/level/area

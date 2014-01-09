@@ -3,7 +3,8 @@
 		"console",
 		"document",
 		"window",
-		"zSquared"
+		"zSquared",
+		"Float64Array"
 	]
 
 }

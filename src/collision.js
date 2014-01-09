@@ -8,10 +8,10 @@
 // - (optimized) routines to just detect intersection, not resolve collision
 // - 
 
-"use strict";
-
 zSquared.collision = function( z2 )
 {
+	"use strict";
+
 	z2.require( ["math"] );
 
 	/////////////////////////////////////////////////////////////////////////

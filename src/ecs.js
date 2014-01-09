@@ -9,10 +9,10 @@
 // - test dead/dying lists & removing/adding Entities during main loop
 // - 
 
-"use strict";
-
 zSquared.ecs = function( z2 )
 {
+	"use strict";
+
 	z2.require( ["bitset"] );
 
 	/** @constant */

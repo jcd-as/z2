@@ -8,10 +8,10 @@
 // - support pre-loads
 // - 
 
-"use strict";
-
 zSquared.loader = function( z2 )
 {
+	"use strict";
+
 //	z2.require( [""] );
 
 	// private module data/functionality:
@@ -128,7 +128,7 @@ zSquared.loader = function( z2 )
 			{
 				var data = assetQueue.pop();
 				var key = data[0];
-				var url = data[1]
+				var url = data[1];
 				var type = z2.loader.getAssetType( url );
 				// don't reload assets
 				if( assets[key] )
