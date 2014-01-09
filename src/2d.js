@@ -292,14 +292,14 @@ zSquared['2d'] = function( z2 )
 
 	/////////////////////////////////////////////////////////////////////////
 	/** TransformSystem factory function
-	 * requires: transform, position, size
-	 * optional: rotation, scale, center
+	 * requires: transform, position
+	 * optional: size, rotation, scale, center
 	 * @function z2.createTransformSystem
 	 * @arg {z2.View} view The View object for this transform system
 	 */
 	z2.createTransformSystem = function( view )
 	{
-		return new z2.System( [z2.transformFactory, z2.positionFactory, z2.sizeFactory],
+		return new z2.System( [z2.transformFactory, z2.positionFactory],
 		{
 			update: function( e, dt )
 			{
@@ -315,8 +315,12 @@ zSquared['2d'] = function( z2 )
 
 				// get the size component
 				var szc = e.getComponent( z2.sizeFactory.mask );
-				var w = szc.width;
-				var h = szc.height;
+				var w = 0, h = 0;
+				if( szc )
+				{
+					w = szc.width;
+					h = szc.height;
+				}
 
 				// get the rotation component
 				var rc = e.getComponent( z2.rotationFactory.mask );

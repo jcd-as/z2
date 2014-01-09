@@ -398,8 +398,6 @@ zSquared.collision = function( z2 )
 		var pen = r1 + r2 - dist;
 		if( pen <= 0 )
 			return 0;
-//		pv[0] = dx;
-//		pv[1] = dy;
 		pv[0] = dx / dist;
 		pv[1] = dy / dist;
 		return pen;
@@ -537,6 +535,7 @@ zSquared.collision = function( z2 )
 		{
 			// x distance center circle to center AABB
 			dx = c[0] - (p[2] + p[0])/2;
+			// y distance center circle to center AABB
 			dy = c[1] - (p[3] + p[1])/2;
 			if( Math.abs(dx) > Math.abs(dy) )
 			{

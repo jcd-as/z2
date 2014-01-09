@@ -166,12 +166,12 @@ function start()
 	var cvc = 'circle vs circle';
 	var bvc = 'AABB vs circle';
 	var bvp = 'AABB vs poly';
-	var test = cvc;
+	var test = pvp;
 	if( test == pvp )
 	{
 		vertices = [];
 		// vertices for second triangle
-		vertices2 = [0, 0, WIDTH, HEIGHT, 0, HEIGHT];
+		vertices2 = [0, 0, WIDTH/2, HEIGHT/2, 0, HEIGHT/2];
 
 		// create a (random) polygon (triangle)
 		for( i = 0; i < 3; i++ )
@@ -193,18 +193,16 @@ function start()
 		// poly (tri) 1
 		polyc = z2.polygonFactory.create( {vertices: vertices} );
 		polyp = z2.positionFactory.create( {x: 500, y: 500} );
-		polysz = z2.sizeFactory.create( {width: 100, height: 100} );
 		polyxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
 		polyf = z2.fillFactory.create( {fill: fill} );
-		polye = mgr.createEntity( [z2.renderableFactory, polyf, polyxf, polyc, polyp, polysz] );
+		polye = mgr.createEntity( [z2.renderableFactory, polyf, polyxf, polyc, polyp] );
 
 		// create a (non-random) triangle to test collision with tri 1
 		tric = z2.polygonFactory.create( {vertices: vertices2} );
 		trip = z2.positionFactory.create( {x: 500, y: 500} );
-		trisz = z2.sizeFactory.create( {width: 100, height: 100} );
 		trixf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
 		trif = z2.fillFactory.create( {fill: fill} );
-		trie = mgr.createEntity( [z2.renderableFactory, trif, trixf, tric, trip, trisz] );
+		trie = mgr.createEntity( [z2.renderableFactory, trif, trixf, tric, trip] );
 	}
 	else if( test == bvb )
 	{
@@ -277,18 +275,16 @@ function start()
 		// poly (tri) 1
 		polyc = z2.polygonFactory.create( {vertices: vertices} );
 		polyp = z2.positionFactory.create( {x: 500, y: 500} );
-		polysz = z2.sizeFactory.create( {width: 100, height: 100} );
 		polyxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
 		polyf = z2.fillFactory.create( {fill: fill} );
-		polye = mgr.createEntity( [z2.renderableFactory, polyf, polyxf, polyc, polyp, polysz] );
+		polye = mgr.createEntity( [z2.renderableFactory, polyf, polyxf, polyc, polyp] );
 
 		// create a (non-random) triangle to test collision with tri 1
 		tric = z2.polygonFactory.create( {vertices: vertices2} );
 		trip = z2.positionFactory.create( {x: 500, y: 500} );
-		trisz = z2.sizeFactory.create( {width: 100, height: 100} );
 		trixf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
 		trif = z2.fillFactory.create( {fill: fill} );
-		trie = mgr.createEntity( [z2.renderableFactory, trif, trixf, tric, trip, trisz] );
+		trie = mgr.createEntity( [z2.renderableFactory, trif, trixf, tric, trip] );
 	}
 	else if( test == cvc )
 	{
@@ -320,17 +316,16 @@ function start()
 		// circle 1
 		c1p = z2.positionFactory.create( {x: 500, y: 500} );
 		cxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
-		csz = z2.sizeFactory.create( {width: 0, height: 0} );
 		c1c = z2.centerFactory.create( {cx: c1[0], cy: c1[1]} );
 		c1r = z2.radiusFactory.create( {radius: r1} );
 		circlef = z2.fillFactory.create( {fill: fill} );
 		circlexf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
-		c1e = mgr.createEntity( [z2.renderableFactory, circlexf, csz, cxf, c1p, c1c, c1r, circlef] );
+		c1e = mgr.createEntity( [z2.renderableFactory, circlexf, cxf, c1p, c1c, c1r, circlef] );
 		// circle 2
 		var c2p = z2.positionFactory.create( {x: 500, y: 500} );
 		var c2c = z2.centerFactory.create( {cx: c2[0], cy: c2[1]} );
 		var c2r = z2.radiusFactory.create( {radius: r2} );
-		var c2e = mgr.createEntity( [z2.renderableFactory, circlexf, csz, cxf, c2p, c2c, c2r, circlef] );
+		var c2e = mgr.createEntity( [z2.renderableFactory, circlexf, cxf, c2p, c2c, c2r, circlef] );
 	}
 	else if( test == bvc )
 	{
@@ -378,19 +373,17 @@ function start()
 		// poly (tri) 1
 		polyc = z2.polygonFactory.create( {vertices: vertices} );
 		polyp = z2.positionFactory.create( {x: 500, y: 500} );
-		polysz = z2.sizeFactory.create( {width: 0, height: 0} );
 		polyxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
 		polyf = z2.fillFactory.create( {fill: fill} );
-		polye = mgr.createEntity( [z2.renderableFactory, polyf, polyxf, polyc, polyp, polysz] );
+		polye = mgr.createEntity( [z2.renderableFactory, polyf, polyxf, polyc, polyp] );
 
 		// circle 1
 		c1p = z2.positionFactory.create( {x: 500, y: 500} );
 		cxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
-		csz = z2.sizeFactory.create( {width: 0, height: 0} );
 		c1c = z2.centerFactory.create( {cx: c1[0], cy: c1[1]} );
 		c1r = z2.radiusFactory.create( {radius: r1} );
 		circlef = z2.fillFactory.create( {fill: fill} );
-		c1e = mgr.createEntity( [z2.renderableFactory, cxf, c1p, csz, c1c, c1r, circlef] );
+		c1e = mgr.createEntity( [z2.renderableFactory, cxf, c1p, c1c, c1r, circlef] );
 	}
 	else if( test == bvp )
 	{
@@ -434,18 +427,16 @@ function start()
 		// AABB poly
 		polyc = z2.polygonFactory.create( {vertices: vertices} );
 		polyp = z2.positionFactory.create( {x: 500, y: 500} );
-		polysz = z2.sizeFactory.create( {width: 0, height: 0} );
 		polyxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
 		polyf = z2.fillFactory.create( {fill: fill} );
-		polye = mgr.createEntity( [z2.renderableFactory, polyf, polyxf, polyc, polyp, polysz] );
+		polye = mgr.createEntity( [z2.renderableFactory, polyf, polyxf, polyc, polyp] );
 
 		// random poly (tri)
 		tric = z2.polygonFactory.create( {vertices: vertices2} );
 		trip = z2.positionFactory.create( {x: 500, y: 500} );
-		trisz = z2.sizeFactory.create( {width: 0, height: 0} );
 		trixf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
 		trif = z2.fillFactory.create( {fill: fill} );
-		trie = mgr.createEntity( [z2.renderableFactory, trif, trixf, tric, trip, trisz] );
+		trie = mgr.createEntity( [z2.renderableFactory, trif, trixf, tric, trip] );
 	}
 
 
