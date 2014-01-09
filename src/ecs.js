@@ -459,5 +459,25 @@ zSquared.ecs = function( z2 )
 			}
 		};
 	})();
+
+	/** Main loop for Entity-Component-System based games
+	 * @function z2.ecsUpdate
+	 * @arg {Number} et The elapsed time passed to requestAnimationFrame
+	 */
+	z2.ecsUpdate = (function()
+	{
+		var pt = 0;
+		return function( et )
+		{
+			if( pt === 0 )
+				pt = et;
+			
+			// update the ecs system
+			z2.manager.get().update( et - pt );
+
+			// next frame
+			pt = et;
+		};
+	} )();
 };
 

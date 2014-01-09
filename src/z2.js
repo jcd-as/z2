@@ -6,7 +6,7 @@ var zSquared = function( opts )
 {
 	"use strict";
 
-	loaded = {};
+	var loaded = {};
 
 	/** Main z2 namespace object
 	 * @global
@@ -31,6 +31,23 @@ var zSquared = function( opts )
 					loaded[modules[i]] = true;
 				}
 			}
+		},
+
+		/** Main game loop helper. Starts main loop with given fcn.
+		 * @function z2.main
+		 * @arg {Function} update Function to be called each frame. Takes a
+		 * single parameter: the elapsed time since the loop was first started
+		 * (the same param that requestAnimationFrame passes)
+		 */
+		main : function( update )
+		{
+			// start the main loop
+			var f = function( et )
+			{
+				update( et );
+				requestAnimationFrame( f );
+			};
+			requestAnimationFrame( f );
 		}
 	};
 

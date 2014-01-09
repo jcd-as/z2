@@ -62,7 +62,7 @@ var input_sys = new z2.System( [player],
 {
 	init: function()
 	{
-		console.log( "input: init called" );
+//		console.log( "input: init called" );
 		z2.kbd.start();
 		z2.kbd.addKey( z2.kbd.UP );
 		z2.kbd.addKey( z2.kbd.DOWN );
@@ -72,7 +72,7 @@ var input_sys = new z2.System( [player],
 	},
 	update: function( e, dt )
 	{
-		console.log( "input: update called" );
+//		console.log( "input: update called" );
 
 		// get the velocity component
 		var vc = e.getComponent( z2.velocityFactory.mask );
@@ -147,7 +147,7 @@ function start()
 	var imgxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
 //	var imge = mgr.createEntity( [z2.renderableFactory, imgxf, imgp, imgr, imgsz, imgs, imgcc, imgc, imgv, player] );
 	var imge = mgr.createEntity( [z2.renderableFactory, imgxf, imgp, imgr, imgsz, imgs, imgcc, imgc, imgv] );
-	console.log( "imge mask: " + imge.mask.key );
+//	console.log( "imge mask: " + imge.mask.key );
 
 	var LEFT = 0, TOP = 1, RIGHT = 2, BOTTOM = 3;
 	var vertices, vertices2;
@@ -308,8 +308,8 @@ function start()
 		r2 = Math.random() * 200;
 		// collide circles
 		pen = z2.collideCircleVsCircle( c1, r1, c2, r2, pv );
-		console.log( "circle collision penetration: " + pen );
-		console.log( "circle collision penetration vector, x: " + pv[0] + ", y: " + pv[1] );
+		console.log( "collision penetration: " + pen );
+		console.log( "collision penetration vector, x: " + pv[0] + ", y: " + pv[1] );
 		if( pen > 0 )
 			fill = 'rgba( 255, 0, 0, 0.5 )';
 		else
@@ -474,26 +474,10 @@ function start()
 
 	// create rendering system
 	var rs = z2.createRenderingSystem( canvas, true );
-	console.log( "Rendering sys mask: " + rs.mask.key );
+//	console.log( "Rendering sys mask: " + rs.mask.key );
 	mgr.addSystem( rs );
 
-	// start the main loop
-	requestAnimationFrame( update );
+	// start the main ecs loop
+	z2.main( z2.ecsUpdate );
 }
-
-var pt = 0;
-
-function update( dt )
-{
-	if( pt === 0 )
-		pt = dt;
-	
-	// update the ecs system
-	mgr.update( dt - pt );
-
-	// next frame
-	pt = dt;
-	requestAnimationFrame( update );
-}
-
 
