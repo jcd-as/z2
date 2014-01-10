@@ -42,7 +42,7 @@ var view = new z2.View( scene, WIDTH, HEIGHT, null, z2.FOLLOW_MODE_NONE, 500, 50
 //view.x = 256;
 //view.x = 400;
 //view.y = -256;
-//view.rotation = z2.d2r(-4);
+//view.rotation = z2.math.d2r(-10);
 //view.sx = 0.5;
 //view.sy = 0.5;
 
@@ -133,8 +133,6 @@ function start()
 	// create a renderable image Entity
 	var img = z2.loader.getAsset( 'logo' );
 	var imgc = z2.imageFactory.create( {img:img} );
-	var imgx = z2.transformFactory.create();
-//	var imgp = z2.positionFactory.create( {x: 100, y: 0} );
 	var imgp = z2.positionFactory.create( {x: 500, y: 500} );
 	var imgr = z2.rotationFactory.create( {theta: 0} );
 //	var imgr = z2.rotationFactory.create( {theta: z2.d2r(-4)} );
@@ -145,9 +143,7 @@ function start()
 	var imgcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
 	var imgv = z2.velocityFactory.create( {x: 0, y: 0} );
 	var imgxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
-//	var imge = mgr.createEntity( [z2.renderableFactory, imgxf, imgp, imgr, imgsz, imgs, imgcc, imgc, imgv, player] );
-	var imge = mgr.createEntity( [z2.renderableFactory, imgxf, imgp, imgr, imgsz, imgs, imgcc, imgc, imgv] );
-//	console.log( "imge mask: " + imge.mask.key );
+	var imge = mgr.createEntity( [z2.rootTransformFactory, imgxf, imgp, imgr, imgsz, imgs, imgcc, imgc, imgv] );
 
 	var LEFT = 0, TOP = 1, RIGHT = 2, BOTTOM = 3;
 	var vertices, vertices2;
@@ -160,7 +156,7 @@ function start()
 	var aabb1 = [];
 	var aabb2 = [];
 	var c1 = [], c2 = [], r1, r2;
-	var c1c, c1p, c1r, circlef, circlexf, c1e;
+	var c1c, c1p, c1r, circlef, cxf, c1e;
 
 	// test types
 	var pvp = 'poly vs poly';
@@ -197,14 +193,14 @@ function start()
 		polyp = z2.positionFactory.create( {x: 500, y: 500} );
 		polyxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
 		polyf = z2.fillFactory.create( {fill: fill} );
-		polye = mgr.createEntity( [z2.renderableFactory, polyf, polyxf, polyc, polyp] );
+		polye = mgr.createEntity( [z2.rootTransformFactory, z2.renderableFactory, polyf, polyxf, polyc, polyp] );
 
 		// create a (non-random) triangle to test collision with tri 1
 		tric = z2.polygonFactory.create( {vertices: vertices2} );
 		trip = z2.positionFactory.create( {x: 500, y: 500} );
 		trixf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
 		trif = z2.fillFactory.create( {fill: fill} );
-		trie = mgr.createEntity( [z2.renderableFactory, trif, trixf, tric, trip] );
+		trie = mgr.createEntity( [z2.rootTransformFactory, z2.renderableFactory, trif, trixf, tric, trip] );
 	}
 	else if( test == bvb )
 	{
@@ -279,14 +275,14 @@ function start()
 		polyp = z2.positionFactory.create( {x: 500, y: 500} );
 		polyxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
 		polyf = z2.fillFactory.create( {fill: fill} );
-		polye = mgr.createEntity( [z2.renderableFactory, polyf, polyxf, polyc, polyp] );
+		polye = mgr.createEntity( [z2.rootTransformFactory, z2.renderableFactory, polyf, polyxf, polyc, polyp] );
 
 		// create a (non-random) triangle to test collision with tri 1
 		tric = z2.polygonFactory.create( {vertices: vertices2} );
 		trip = z2.positionFactory.create( {x: 500, y: 500} );
 		trixf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
 		trif = z2.fillFactory.create( {fill: fill} );
-		trie = mgr.createEntity( [z2.renderableFactory, trif, trixf, tric, trip] );
+		trie = mgr.createEntity( [z2.rootTransformFactory, z2.renderableFactory, trif, trixf, tric, trip] );
 	}
 	else if( test == cvc )
 	{
@@ -321,13 +317,12 @@ function start()
 		c1c = z2.centerFactory.create( {cx: c1[0], cy: c1[1]} );
 		c1r = z2.radiusFactory.create( {radius: r1} );
 		circlef = z2.fillFactory.create( {fill: fill} );
-		circlexf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
-		c1e = mgr.createEntity( [z2.renderableFactory, circlexf, cxf, c1p, c1c, c1r, circlef] );
+		c1e = mgr.createEntity( [z2.rootTransformFactory, z2.renderableFactory, cxf, c1p, c1c, c1r, circlef] );
 		// circle 2
 		var c2p = z2.positionFactory.create( {x: 500, y: 500} );
 		var c2c = z2.centerFactory.create( {cx: c2[0], cy: c2[1]} );
 		var c2r = z2.radiusFactory.create( {radius: r2} );
-		var c2e = mgr.createEntity( [z2.renderableFactory, circlexf, cxf, c2p, c2c, c2r, circlef] );
+		var c2e = mgr.createEntity( [z2.rootTransformFactory, z2.renderableFactory, cxf, c2p, c2c, c2r, circlef] );
 	}
 	else if( test == bvc )
 	{
@@ -377,7 +372,7 @@ function start()
 		polyp = z2.positionFactory.create( {x: 500, y: 500} );
 		polyxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
 		polyf = z2.fillFactory.create( {fill: fill} );
-		polye = mgr.createEntity( [z2.renderableFactory, polyf, polyxf, polyc, polyp] );
+		polye = mgr.createEntity( [z2.rootTransformFactory, z2.renderableFactory, polyf, polyxf, polyc, polyp] );
 
 		// circle 1
 		c1p = z2.positionFactory.create( {x: 500, y: 500} );
@@ -385,7 +380,7 @@ function start()
 		c1c = z2.centerFactory.create( {cx: c1[0], cy: c1[1]} );
 		c1r = z2.radiusFactory.create( {radius: r1} );
 		circlef = z2.fillFactory.create( {fill: fill} );
-		c1e = mgr.createEntity( [z2.renderableFactory, cxf, c1p, c1c, c1r, circlef] );
+		c1e = mgr.createEntity( [z2.rootTransformFactory, z2.renderableFactory, cxf, c1p, c1c, c1r, circlef] );
 	}
 	else if( test == bvp )
 	{
@@ -431,14 +426,14 @@ function start()
 		polyp = z2.positionFactory.create( {x: 500, y: 500} );
 		polyxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
 		polyf = z2.fillFactory.create( {fill: fill} );
-		polye = mgr.createEntity( [z2.renderableFactory, polyf, polyxf, polyc, polyp] );
+		polye = mgr.createEntity( [z2.rootTransformFactory, z2.renderableFactory, polyf, polyxf, polyc, polyp] );
 
 		// random poly (tri)
 		tric = z2.polygonFactory.create( {vertices: vertices2} );
 		trip = z2.positionFactory.create( {x: 500, y: 500} );
 		trixf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
 		trif = z2.fillFactory.create( {fill: fill} );
-		trie = mgr.createEntity( [z2.renderableFactory, trif, trixf, tric, trip] );
+		trie = mgr.createEntity( [z2.rootTransformFactory, z2.renderableFactory, trif, trixf, tric, trip] );
 	}
 
 
@@ -448,22 +443,23 @@ function start()
 	anims.add( 'walk', [[0, 250], [1, 250]] );
 	var sprc = z2.spriteFactory.create( {img:s_img, animations:anims} );
 	var sprx = z2.transformFactory.create();
-	var sprp = z2.positionFactory.create( {x: 500, y: 500} );
-	var sprpc = z2.positionConstraintsFactory.create( {minx: 16, maxx: scene.width-16, miny: 32, maxy: scene.height-32} );
-	var sprr = z2.rotationFactory.create( {theta: 0} );
-//	var sprr = z2.rotationFactory.create( {theta: z2.d2r(10)} );
+	// local position is (0, 0) - the group will be positioned at (500, 500),
+	// centering us in scene (world) space
+	var sprp = z2.positionFactory.create( {x: 0, y: 0} );
+//	var sprr = z2.rotationFactory.create( {theta: 0} );
+	var sprr = z2.rotationFactory.create( {theta: z2.math.d2r(10)} );
 	var sprs = z2.scaleFactory.create( {sx: 1, sy: 1} );
 	var sprsz = z2.sizeFactory.create( {width: 64, height: 64} );
 	var sprcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
-//	var sprv = z2.velocityFactory.create( {x: 0, y: 0} );
 	var sprxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
-	spre = mgr.createEntity( [z2.renderableFactory, sprxf, sprp, sprpc, sprr, sprsz, sprs, sprcc, sprc, sprv, player] );
+//	spre = mgr.createEntity( [sprxf, sprp, sprpc, sprr, sprsz, sprs, sprcc, sprc, sprv, player] );
+	spre = mgr.createEntity( [sprxf, sprp, sprr, sprsz, sprs, sprcc, sprc] );
 	anims.play( 'walk' );
 
 	// follow this sprite
-	view.target = sprp;
+	view.target = sprxf;
 	view.follow_mode = z2.FOLLOW_MODE_TIGHT;
-	
+
 	// create a movement system
 	var ms = z2.createMovementSystem();
 	mgr.addSystem( ms );
@@ -472,9 +468,35 @@ function start()
 	var xf = z2.createTransformSystem( view, context );
 	mgr.addSystem( xf );
 
+	// create a Group (component, entity & system) for transforming
+	var transformArray = [];
+	var tgc = z2.groupFactory.create( {group:transformArray} );
+	var ttgc = z2.transformGroupFactory.create();
+	var tgxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );
+	var tgp = z2.positionFactory.create( {x:500, y:500} );
+//	var tgr = z2.rotationFactory.create( {theta: 0} );
+	var tgr = z2.rotationFactory.create( {theta: z2.math.d2r(10)} );
+	var tgpc = z2.positionConstraintsFactory.create( {minx: 16, maxx: scene.width-16, miny: 32, maxy: scene.height-32} );
+	var tge = mgr.createEntity( [tgr, tgc, ttgc, tgp, tgxf, tgpc, sprv, player] );
+	var tgs = z2.createTransformGroupSystem( xf );
+	mgr.addSystem( tgs );
+
+	// add our sprite to the transform group
+	transformArray.push( spre );
+
 	// create rendering system
 	var rs = z2.createRenderingSystem( canvas, true );
-//	console.log( "Rendering sys mask: " + rs.mask.key );
+	// since we're using render groups, we don't need to add this system to the
+	// ecs manager
+//	mgr.addSystem( rs );
+
+	// create a Group (component, entity & system) for rendering
+	var rgc = z2.groupFactory.create( {group:[imge, spre]} );
+	var rge = mgr.createEntity( [z2.renderGroupFactory, rgc] );
+	var rgs = z2.createGroupSystem( rs, z2.renderGroupFactory );
+	mgr.addSystem( rgs );
+	// add the rendering system afterwards, so that renderables that aren't 
+	// in the group render *after* the group
 	mgr.addSystem( rs );
 
 	// start the main ecs loop

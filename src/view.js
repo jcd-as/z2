@@ -66,6 +66,16 @@ zSquared.view = function( z2 )
 		this.setPosition( x || 0, y || 0 );
 	};
 
+	/** Update the view for the frame
+	 * @function z2.View.update
+	 */
+	z2.View.prototype.update = function()
+	{
+		// adjust for follow-mode
+		if( this.follow_mode !== z2.FOLLOW_MODE_NONE )
+			this._follow();
+	};
+
 	Object.defineProperty( z2.View.prototype, 'follow_mode',
 	{
 		get: function()
@@ -109,10 +119,6 @@ zSquared.view = function( z2 )
 	 */
 	z2.View.prototype.transform = function( mat )
 	{
-		// TODO: adjust for follow-mode
-		if( this.follow_mode !== z2.FOLLOW_MODE_NONE )
-			this._follow();
-
 		// transform to screen space
 		z2.math.matMul( mat, this._xform );
 		// and then translate over to view space
@@ -129,8 +135,9 @@ zSquared.view = function( z2 )
 		var t = -this._y - this.voffs;
 		var b = -this._y + this.voffs;
 
-		var x = this.target.x;
-		var y = this.target.y;
+		// get the target's x/y coordinates in scene space
+		var x = this.target.scene_x;
+		var y = this.target.scene_y;
 
 		var xstop = false, ystop = false;
 

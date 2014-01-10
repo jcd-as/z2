@@ -3,8 +3,6 @@
 // Components and Systems for 2d games
 //
 // TODO:
-// . Transform System
-//	- parent (group) transforms
 // - 
 
 zSquared['2d'] = function( z2 )
@@ -56,10 +54,22 @@ zSquared['2d'] = function( z2 )
 	z2.radiusFactory = z2.createComponentFactory( {radius:0} );
 
 	/** Component Factory for 2d transform */
-	z2.transformFactory = z2.createComponentFactory( {xform: null} );
+	z2.transformFactory = z2.createComponentFactory( {xform: null, scene_x: 0, scene_y:0} );
+
+	/** Component Factory for root (non-grouped) 2d transforms*/
+	z2.rootTransformFactory = z2.createComponentFactory();
 
 	/** Component Factory for 2d (animated) sprite */
 	z2.spriteFactory = z2.createComponentFactory( {img: null, width: 0, animations: null } );
+
+	/** Component Factory for groups */
+	z2.groupFactory = z2.createComponentFactory( {group: []} );
+
+	/** Component Factory for 2d rendering groups */
+	z2.renderGroupFactory = z2.createComponentFactory();
+
+	/** Component Factory for 2d transform groups */
+	z2.transformGroupFactory = z2.createComponentFactory();
 
 	/** @class z2.AnimationSet
 	 * @classdesc Helper class for sprite animations */
@@ -150,6 +160,54 @@ zSquared['2d'] = function( z2 )
 	/////////////////////////////////////////////////////////////////////////
 	// System factories
 	/////////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////////
+	/** GroupSystem factory function. Creates a System that will operate on a
+	 * group of Entities and apply another System to each of them during update
+	 * requires: group
+	 * optional: ...
+	 * @function z2.createGroupSystem
+	 * @arg {z2.System} sys The System to apply to the members of the group
+	 * @arg {z2.Bitset} mask The mask to use for this system
+	 * @arg {Function} grpsys (Optional) The system to call for the entire
+	 * group's init/onStart/update/onEnd functionality
+	 */
+	z2.createGroupSystem = function( sys, mask, grpsys )
+	{
+		return new z2.System( [z2.groupFactory, mask],
+		{
+			init: function()
+			{
+				if( grpsys && grpsys.init )
+					sys.init();
+			},
+			onStart: function()
+			{
+				if( grpsys && grpsys.onStart )
+					sys.onStart();
+			},
+			update: function( e, dt )
+			{
+				if( grpsys )
+					grpsys.update( e, dt );
+
+				// get the group
+				var rgc = e.getComponent( z2.groupFactory.mask );
+				var grp = rgc.group;
+
+				// render each object in our group
+				for( var i = 0; i < grp.length; i++ )
+				{
+					sys.update( grp[i], dt, e );
+				}
+			},
+			onEnd: function()
+			{
+				if( grpsys && grpsys.onEnd )
+					sys.onEnd();
+			}
+		} );
+	};
 
 	/////////////////////////////////////////////////////////////////////////
 	/** RenderingSystem factory function
@@ -291,16 +349,22 @@ zSquared['2d'] = function( z2 )
 
 	/////////////////////////////////////////////////////////////////////////
 	/** TransformSystem factory function
-	 * requires: transform, position
+	 * requires: rootTransform, transform, position
 	 * optional: size, rotation, scale, center
 	 * @function z2.createTransformSystem
 	 * @arg {z2.View} view The View object for this transform system
 	 */
 	z2.createTransformSystem = function( view )
 	{
-		return new z2.System( [z2.transformFactory, z2.positionFactory],
+		return new z2.System( [z2.rootTransformFactory, z2.transformFactory, z2.positionFactory],
 		{
-			update: function( e, dt )
+			onStart: function()
+			{
+				view.update();
+			},
+			// has optional 3rd argument which is the parent, from which to get
+			// the xform to perform (instead of the view transform)
+			update: function( e, dt, parent )
 			{
 				// get the transform component
 				var xformc = e.getComponent( z2.transformFactory.mask );
@@ -364,17 +428,49 @@ zSquared['2d'] = function( z2 )
 				xf[2] = x - (xf[0] * px) - (xf[1] * py);
 				xf[5] = y - (xf[4] * py) - (xf[3] * px);
 
-				// TODO: parent transform(s)...
+				// if we have a parent transform, use it
+				if( parent )
+				{
+					// get the parent transform
+					var pxformc = parent.getComponent( z2.transformFactory.mask );
+					var pxf = pxformc.xform;
 
-				// transform for view-space
-				view.transform( xf );
+					// save the scene ('world') x & y
+					xformc.scene_x = x + pxformc.scene_x;
+					xformc.scene_y = y + pxformc.scene_y;
+
+					// transform to 'parent space'
+					// TODO: anything to optimize out (?)
+					z2.math.matMul( xf, pxf );
+				}
+				// otherwise we're the root, transform for view-space
+				else
+				{
+					// save the scene ('world') x & y
+					xformc.scene_x = xf[2] + px;
+					xformc.scene_y = xf[5] + py;
+					// transform to view space
+					view.transform( xf );
+				}
 			}
 		} );
 	};
 
 	/////////////////////////////////////////////////////////////////////////
+	/** TransformGroupSystem factory function
+	 * requires: group, transform, position
+	 * optional: size, rotation, scale, center
+	 * @function z2.createTransformGroupSystem
+	 * @arg {z2.System} sys The TransformSystem to apply to this group
+	 */
+	z2.createTransformGroupSystem = function( sys )
+	{
+		return z2.createGroupSystem( sys, z2.transformGroupFactory, sys );
+	};
+
+	/////////////////////////////////////////////////////////////////////////
 	/** MovementSystem factory function
-	 * requires: position, velocity
+	 * requires: position, velocity, transform
 	 * optional: positionConstraints
 	 * @function z2.createMovementSystem
 	 */
@@ -390,11 +486,14 @@ zSquared['2d'] = function( z2 )
 				// get the velocity component
 				var vc = e.getComponent( z2.velocityFactory.mask );
 
+				// get the transform component
+				var xfc = e.getComponent( z2.transformFactory.mask );
+
 				// get the pos constraints component
 				var pcc = e.getComponent( z2.positionConstraintsFactory.mask );
 
-				var minx = 0, maxx = Number.MAX_VALUE;
-				var miny = 0, maxy = Number.MAX_VALUE;
+				var minx = -Number.MAX_VALUE, maxx = Number.MAX_VALUE;
+				var miny = -Number.MAX_VALUE, maxy = Number.MAX_VALUE;
 				if( pcc )
 				{
 					minx = pcc.minx;
@@ -405,12 +504,14 @@ zSquared['2d'] = function( z2 )
 
 				// account for elapsed time since last frame
 				var idt = dt / 1000;
-				var x = pc.x + vc.x * idt;
-				var y = pc.y + vc.y * idt;
+				var xmod = vc.x * idt;
+				var ymod = vc.y * idt;
+				var x = xfc.scene_x + xmod;
+				var y = xfc.scene_y + ymod;
 				if( x < maxx && x > minx )
-					pc.x = x;
+					pc.x += xmod;
 				if( y < maxy && y > miny )
-					pc.y = y;
+					pc.y += ymod;
 			}
 		} );
 	};
