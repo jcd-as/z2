@@ -1,6 +1,13 @@
 // z2.js
 // Copyright 2013 Joshua C Shepard
 // zed-squared html5 game components
+// TODO:
+// - tilemaps:
+//  - load tile sheets
+//  - Tiled json loader
+//  - draw tilemaps
+//  - tilemap (vs sprite) collision
+// - 
 
 var zSquared = function( opts )
 {
@@ -48,6 +55,24 @@ var zSquared = function( opts )
 				requestAnimationFrame( f );
 			};
 			requestAnimationFrame( f );
+		},
+
+		/** Function to create a canvas object
+		 * @function z2.createCanvas
+		 * @arg {Number} w Canvas width, in pixels
+		 * @arg {Number} h Canvas height, in pixels
+		 * @arg {boolean} [add_to_doc] Should this canvas be added to the
+		 * document?
+		 * @returns {Canvas} The Canvas object
+		 */
+		createCanvas : function( w, h, add_to_doc )
+		{
+			var canvas = document.createElement( 'canvas' );
+			canvas.width = w;
+			canvas.height = h;
+			if( add_to_doc )
+				document.body.appendChild( canvas );
+			return canvas;
 		}
 	};
 

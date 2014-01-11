@@ -408,7 +408,7 @@ zSquared.collision = function( z2 )
 	 * @arg {Array} p (flat) Array of values for aabb 1: top, left, bottom, right
 	 * @arg {Array} c Center of circle 2
 	 * @arg {Number} r Radius of circle 2
-	 * @arg {Array} pv (optional, out) Vector (2 element array) for returning penetration direction
+	 * @arg {Array} pv (out) Vector (2 element array) for returning penetration direction
 	 * @returns {Number} magnitude of penetration, or 0 if no collision
 	 */
 	z2.collideAabbVsCircle = function( p, c, r, pv )

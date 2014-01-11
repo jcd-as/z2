@@ -6,6 +6,9 @@
 // - support 'base' URL for loading
 // - support progress indicator callback
 // - support pre-loads
+// x support text files
+// x support json files
+// - support audio files
 // - 
 
 zSquared.loader = function( z2 )
@@ -28,7 +31,13 @@ zSquared.loader = function( z2 )
 		ogg : 'audio',
 		wav : 'audio',
 		m4a : 'audio',
-		mp3 : 'audio'
+		mp3 : 'audio',
+
+		// text files
+		txt : 'text',
+
+		// json files
+		json : 'json'
 	};
 
 	// list of queued asset key/url pairs
@@ -39,6 +48,15 @@ zSquared.loader = function( z2 )
 	var assetsLoaded = 0;
 	var assetsFailed = 0;
 
+	// XML HTTP Request
+	var xhr = new XMLHttpRequest();
+
+	function getAssetTypeFromUrl( name )
+	{
+		var ext = name.split( '.' ).slice(-1)[0].toLowerCase();
+		return assetTypes[ext] || 'unknown';
+	}
+
 	// load an image
 	function loadImage( key, url, onComplete, onError )
 	{
@@ -48,29 +66,42 @@ zSquared.loader = function( z2 )
 		img.src = url;
 	}
 
+	// load a text file
+	function loadText( key, url, onComplete, onError )
+	{
+		xhr.open( "GET", url, true );
+		xhr.responseType = "text";
+		xhr.onload = function () { onComplete( key, xhr.responseText ); };
+		xhr.onerror = onError;
+		xhr.send();
+	}
+
+	// load a json file
+	function loadJson( key, url, onComplete, onError )
+	{
+		xhr.open( "GET", url, true );
+		xhr.responseType = "text";
+		xhr.onload = function () 
+		{
+			// parse json
+			var data = JSON.parse( xhr.responseText );
+			onComplete( key, data );
+		};
+		xhr.onerror = onError;
+		xhr.send();
+	}
+
 	// load an audio file
-//	loadImage: function( key, url, onComplete, onError )
+//	loadAudio: function( key, url, onComplete, onError )
 //	{
 //	},
 
 
 	// public module interface:
 	/** Loader namespace
-	  * @namespace z2.loader */
+	 * @namespace z2.loader */
 	z2.loader = 
 	{
-		// TODO: does this need to be public ?
-		/** Get the type of an asset
-		 * @method z2.loader#getAssetType
-		 * @arg {string} name Asset (file) name
-		 * @returns {string} Asset type
-		 */
-		getAssetType: function( name )
-		{
-			var ext = name.split( '.' ).slice(-1)[0].toLowerCase();
-			return assetTypes[ext] || 'unknown';
-		},
-
 		/** Get an asset
 		 * @method z2.loader#getAsset
 		 * @arg {string} key Asset key (friendly name)
@@ -81,15 +112,27 @@ zSquared.loader = function( z2 )
 			return assets[key];
 		},
 
+		/** Dispose of an asset
+		 * @method z2.loader#deleteAsset
+		 * @arg {string} key Asset key (friendly name)
+		 */
+		deleteAsset : function( key )
+		{
+			delete assets[key];
+		},
+
 		/** Add an item to the loader queue
 		 * @method z2.loader#queueAsset
 		 * @arg {string} key Key (friendly name) that will be used to access the
 		 * asset
 		 * @arg {string} url Asset URL to queue
+		 * @arg {string} [type] Type of asset. Use for assets that would
+		 * otherwise be treated as a more generic type (e.g. 'tiled' to override 
+		 * 'json')
 		 */
-		queueAsset: function( key, url )
+		queueAsset: function( key, url, type )
 		{
-			assetQueue.push( [key, url] );
+			assetQueue.push( [key, url, type] );
 		},
 
 		/** Start the load (asynchronous)
@@ -123,13 +166,51 @@ zSquared.loader = function( z2 )
 				console.warn( "Failed to load asset: " + key );
 			};
 
+			// load a Tiled json file
+			// (define this as a closure inside load() so that we can access
+			// 'remaining' - to increment it as we add more files to load
+			var loadTiledJson = function( key, url, onComplete, onError )
+			{
+				xhr.open( "GET", url, true );
+				xhr.responseType = "text";
+				xhr.onload = function () 
+				{
+					// parse json
+					var data = JSON.parse( xhr.responseText );
+					// load files referenced in Tiled file:
+					// tileset images
+					for( var i = 0; i < data.tilesets.length; i++ )
+					{
+						remaining++;
+						loadImage( data.tilesets[i].name, data.tilesets[i].image, loaded, failed );
+					}
+					// imagelayer images
+					for( i = 0; i < data.layers.length; i++ )
+					{
+						if( data.layers[i].type == 'imagelayer' )
+						{
+							remaining++;
+							loadImage( data.layers[i].name, data.lyers[i].image, loaded, failed );
+						}
+					}
+					// TODO: etc (?)
+
+					onComplete( key, data );
+				};
+				xhr.onerror = onError;
+				xhr.send();
+			}
+
+
 			// do the load
 			while( assetQueue.length )
 			{
 				var data = assetQueue.pop();
 				var key = data[0];
 				var url = data[1];
-				var type = z2.loader.getAssetType( url );
+				var type = data[2];
+				if( !type )
+					type = getAssetTypeFromUrl( url );
 				// don't reload assets
 				if( assets[key] )
 					loaded( key, assets[key] );
@@ -142,6 +223,15 @@ zSquared.loader = function( z2 )
 						break;
 					case 'audio':
 						// TODO: impl
+						break;
+					case 'json':
+						loadJson( key, url, loaded, failed );
+						break;
+					case 'text':
+						loadText( key, url, loaded, failed );
+						break;
+					case 'tiled':
+						loadTiledJson( key, url, loaded, failed );
 						break;
 					case 'unknown':
 						// TODO: impl

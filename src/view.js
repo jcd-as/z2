@@ -34,9 +34,9 @@ zSquared.view = function( z2 )
 	 * @arg {number} height The height of the View, in pixels
 	 * @arg {Object} target The target object to follow. (Must support x and y
 	 * coordinates)
-	 * @arg {string} follow_mode (optional) The 'follow mode' to use
-	 * @arg {number} x (optional) Initial x coordinate of the (center of the) View
-	 * @arg {number} y (optional) Initial y coordinate of the (center of the) View
+	 * @arg {string} [follow_mode] The 'follow mode' to use
+	 * @arg {number} [x] Initial x coordinate of the (center of the) View
+	 * @arg {number} [y] Initial y coordinate of the (center of the) View
 	 */
 	z2.View = function( scene, width, height, target, follow_mode, x, y )
 	{

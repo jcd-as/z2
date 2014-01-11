@@ -169,7 +169,7 @@ zSquared['2d'] = function( z2 )
 	 * @function z2.createGroupSystem
 	 * @arg {z2.System} sys The System to apply to the members of the group
 	 * @arg {z2.Bitset} mask The mask to use for this system
-	 * @arg {Function} grpsys (Optional) The system to call for the entire
+	 * @arg {Function} [grpsys] The system to call for the entire
 	 * group's init/onStart/update/onEnd functionality
 	 */
 	z2.createGroupSystem = function( sys, mask, grpsys )
@@ -435,6 +435,7 @@ zSquared['2d'] = function( z2 )
 					var pxformc = parent.getComponent( z2.transformFactory.mask );
 					var pxf = pxformc.xform;
 
+					// TODO: this doesn't account for view rotation or scaling
 					// save the scene ('world') x & y
 					xformc.scene_x = x + pxformc.scene_x;
 					xformc.scene_y = y + pxformc.scene_y;
@@ -446,6 +447,7 @@ zSquared['2d'] = function( z2 )
 				// otherwise we're the root, transform for view-space
 				else
 				{
+					// TODO: this doesn't account for view rotation or scaling
 					// save the scene ('world') x & y
 					xformc.scene_x = xf[2] + px;
 					xformc.scene_y = xf[5] + py;

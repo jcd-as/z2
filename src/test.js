@@ -11,16 +11,16 @@ var HEIGHT = 384;
 var z2 = zSquared();
 
 // require all the z2 modules
-z2.require( ["bitset", "math", "scene", "view", "ecs", "loader", "input", "statemachine", "2d", "collision"] );
+z2.require( ["bitset", "math", "scene", "view", "ecs", "loader", "input", "statemachine", "2d", "collision", "tilemap"] );
 
 // create a canvas
-var canvas = document.createElement( 'canvas' );
-canvas.width = WIDTH;
-canvas.height = HEIGHT;
-document.body.appendChild( canvas );
+//var canvas = document.createElement( 'canvas' );
+//canvas.width = WIDTH;
+//canvas.height = HEIGHT;
+//document.body.appendChild( canvas );
+var canvas = z2.createCanvas( WIDTH, HEIGHT, true );
 
 // get a 2d context for the canvas
-var context = canvas.getContext( '2d' );
 var context = canvas.getContext( '2d' );
 if( !context )
 	throw new Error( "No 2d canvas context. Unable to continue." );
@@ -30,15 +30,15 @@ context.globalAlpha = 1;
 // load an image
 z2.loader.queueAsset( 'logo', 'logo.png' );
 z2.loader.queueAsset( 'man', 'stylized.png' );
-//z2.loader.load( function(){ console.log( "loaded logo.png" ); } );
+//z2.loader.queueAsset( 'tiles', 'tiles.png' );
+z2.loader.queueAsset( 'level', 'test.json', 'tiled' );
 z2.loader.load( start );
 
 // create a scene
-var scene = new z2.Scene( 1000, 1000 );
+var scene = new z2.Scene( 1024, 1024 );
 
 // create a view
 var view = new z2.View( scene, WIDTH, HEIGHT, null, z2.FOLLOW_MODE_NONE, 500, 500 );
-//var view = new z2.View( scene, WIDTH, HEIGHT, null, z2.FOLLOW_MODE_TIGHT, 500, 500 );
 //view.x = 256;
 //view.x = 400;
 //view.y = -256;
@@ -130,6 +130,20 @@ function swap( i, a, b )
 // called after assets are loaded
 function start()
 {
+	// create a tile map layer
+	var lyr = new z2.TileLayer( view );
+	// load the json into it
+//	var tiles_img = z2.loader.getAsset( 'tiles' );
+	var json = z2.loader.getAsset( 'level' );
+	var lyr_json = json.layers[0];
+	var ts_json = json.tilesets[0];
+	lyr.load( lyr_json, ts_json );
+
+	var tmc = z2.tileMapFactory.create( {layers: [lyr]} );
+	var tme = mgr.createEntity( [tmc] );
+	var tms = z2.createTileMapSystem( context );
+	mgr.addSystem( tms );
+
 	// create a renderable image Entity
 	var img = z2.loader.getAsset( 'logo' );
 	var imgc = z2.imageFactory.create( {img:img} );
@@ -485,7 +499,8 @@ function start()
 	transformArray.push( spre );
 
 	// create rendering system
-	var rs = z2.createRenderingSystem( canvas, true );
+//	var rs = z2.createRenderingSystem( canvas, true );
+	var rs = z2.createRenderingSystem( canvas, false );
 	// since we're using render groups, we don't need to add this system to the
 	// ecs manager
 //	mgr.addSystem( rs );
