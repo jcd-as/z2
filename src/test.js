@@ -11,7 +11,7 @@ var HEIGHT = 384;
 var z2 = zSquared();
 
 // require all the z2 modules
-z2.require( ["bitset", "math", "scene", "view", "ecs", "loader", "input", "statemachine", "2d", "collision", "tilemap"] );
+z2.require( ["bitset", "math", "scene", "view", "ecs", "loader", "input", "statemachine", "2d", "collision", "tilemap", "tiledscene"] );
 
 // create a canvas
 //var canvas = document.createElement( 'canvas' );
@@ -35,10 +35,10 @@ z2.loader.queueAsset( 'level', 'test.json', 'tiled' );
 z2.loader.load( start );
 
 // create a scene
-var scene = new z2.Scene( 1024, 1024 );
-
-// create a view
-var view = new z2.View( scene, WIDTH, HEIGHT, null, z2.FOLLOW_MODE_NONE, 500, 500 );
+//var scene = new z2.Scene( 1024, 1024 );
+//
+//// create a view
+//var view = new z2.View( scene, WIDTH, HEIGHT, null, z2.FOLLOW_MODE_NONE, 500, 500 );
 //view.x = 256;
 //view.x = 400;
 //view.y = -256;
@@ -130,18 +130,15 @@ function swap( i, a, b )
 // called after assets are loaded
 function start()
 {
-	// create a tile map layer
-	var lyr = new z2.TileLayer( view );
-	// load the json into it
-//	var tiles_img = z2.loader.getAsset( 'tiles' );
+	// create a Tiled map scene
 	var json = z2.loader.getAsset( 'level' );
-	var lyr_json = json.layers[0];
-	var ts_json = json.tilesets[0];
-	lyr.load( lyr_json, ts_json );
+	var scene = new z2.TiledScene( json, WIDTH, HEIGHT );
+	// create a view on the scene
+	var view = new z2.View( scene, WIDTH, HEIGHT, null, z2.FOLLOW_MODE_NONE, 500, 500 );
 
-	var tmc = z2.tileMapFactory.create( {layers: [lyr]} );
+	var tmc = z2.tileMapFactory.create( {layers: scene.map.layers} );
 	var tme = mgr.createEntity( [tmc] );
-	var tms = z2.createTileMapSystem( context );
+	var tms = z2.createTileMapSystem( view, canvas );
 	mgr.addSystem( tms );
 
 	// create a renderable image Entity
@@ -479,7 +476,7 @@ function start()
 	mgr.addSystem( ms );
 
 	// create the transform system
-	var xf = z2.createTransformSystem( view, context );
+	var xf = z2.createTransformSystem( view );
 	mgr.addSystem( xf );
 
 	// create a Group (component, entity & system) for transforming
@@ -499,8 +496,8 @@ function start()
 	transformArray.push( spre );
 
 	// create rendering system
-//	var rs = z2.createRenderingSystem( canvas, true );
-	var rs = z2.createRenderingSystem( canvas, false );
+	var rs = z2.createRenderingSystem( canvas, true );
+//	var rs = z2.createRenderingSystem( canvas, false );
 	// since we're using render groups, we don't need to add this system to the
 	// ecs manager
 //	mgr.addSystem( rs );
