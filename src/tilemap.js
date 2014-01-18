@@ -3,6 +3,8 @@
 // Components and Systems for 2d tilemapped games
 //
 // TODO:
+// - convert to using PIXI to draw the tile into the tile layers (instead of
+// drawing to a canvas 2d context like we do now)
 // - optimize 
 // - can we separate the need for the view from the map? (this would allow
 // the same map to (conceptually anyway) have different views. e.g. a main view
@@ -155,6 +157,8 @@ zSquared.tilemap = function( z2 )
 		// scrolling") - or at least we should track a "scroll factor"
 //		this.viewX = 0;
 //		this.viewY = 0;
+		this.scrollFactorX = 1;
+		this.scrollFactorY = 1;
 
 		// PIXI stuff
 		this.baseTexture = new PIXI.BaseTexture( this.canvas );
@@ -174,6 +178,11 @@ zSquared.tilemap = function( z2 )
 	{
 		// tiles data
 		this.data = lyr.data;
+		if( lyr.properties )
+		{
+			this.scrollFactorX = lyr.properties.scrollFactorX ? +lyr.properties.scrollFactorX : 1;
+			this.scrollFactorY = lyr.properties.scrollFactorY ? +lyr.properties.scrollFactorY : 1;
+		}
 	};
 
 	/** Render the tilemap to its canvas
@@ -199,8 +208,11 @@ zSquared.tilemap = function( z2 )
 		var xoffs, yoffs;	// offset from the tile positions
 
 		// view.x/y is the *center* not upper left
-		var x = ~~(viewx - this.map.viewWidth/2);
-		var y = ~~(viewy - this.map.viewHeight/2);
+//		var x = ~~(viewx - this.map.viewWidth/2);
+//		var y = ~~(viewy - this.map.viewHeight/2);
+		// TODO: clamp x,y to the layer/map bounds
+		var x = ~~(viewx - this.map.viewWidth/2)*this.scrollFactorX;
+		var y = ~~(viewy - this.map.viewHeight/2)*this.scrollFactorY;
 		tx = ~~(x / this.map.tileWidth);
 		ty = ~~(y / this.map.tileHeight);
 		xoffs = -(x - (tx * this.map.tileWidth));
@@ -308,50 +320,4 @@ zSquared.tilemap = function( z2 )
 		} );
 	};
 
-
-	/////////////////////////////////////////////////////////////////////////
-	// Monkey-patch PIXI 1.4
-	/**
-	 * Updates a loaded webgl texture
-	 *
-	 * @static
-	 * @method updateTexture
-	 * @param texture {Texture} The texture to update
-	 * @private
-	 */
-	PIXI.WebGLRenderer.updateTexture = function(texture)
-	{
-		//TODO break this out into a texture manager...
-		var gl = PIXI.gl;
-		
-		if(!texture._glTexture)
-		{
-			texture._glTexture = gl.createTexture();
-		}
-
-		if(texture.hasLoaded)
-		{
-			gl.bindTexture(gl.TEXTURE_2D, texture._glTexture);
-			gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-
-			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.source);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-
-			// reguler...
-
-			if(!texture._powerOf2)
-			{
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-			}
-			else
-			{
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
-			}
-
-			gl.bindTexture(gl.TEXTURE_2D, null);
-		}
-	}
 };
