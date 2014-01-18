@@ -4,6 +4,7 @@
 		"document",
 		"window",
 		"zSquared",
+		"PIXI",
 		"Float64Array"
 	]
 

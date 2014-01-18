@@ -4,7 +4,7 @@
 //
 // TODO:
 // - optimize 
-// - can we separate the need for the view size from the map? (this would allow
+// - can we separate the need for the view from the map? (this would allow
 // the same map to (conceptually anyway) have different views. e.g. a main view
 // and a 'minimap' view
 // -
@@ -19,15 +19,15 @@ zSquared.tilemap = function( z2 )
 	/** Tile map class
 	 * @class z2.TileMap
 	 * @constructor
-	 * @arg {Number} view_width The width of the view
-	 * @arg {Number} view_height The height of the view
+	 * @arg {z2.View} view The view 
 	 */
-	z2.TileMap = function( view_width, view_height )
+	z2.TileMap = function( view )
 	{
 		// view dimensions
 		// (size for the layers' canvases)
-		this.viewWidth = view_width;
-		this.viewHeight = view_height;
+		this.view = view;
+		this.viewWidth = view.width;
+		this.viewHeight = view.height;
 
 		// tiles image
 		this.tilesets = [];
@@ -53,6 +53,7 @@ zSquared.tilemap = function( z2 )
 
 	/** Load a tile map from Tiled object
 	 * @method z2.TileMap#load
+	 * @memberof z2.TileMap
 	 * @arg {Object} map map data from a Tiled json file
 	 */
 	z2.TileMap.prototype.load = function( map )
@@ -97,6 +98,9 @@ zSquared.tilemap = function( z2 )
 				var l = new z2.TileLayer( this );
 				l.load( lyr );
 				this.layers.push( l );
+				// TODO: cleaner way to do this:
+//				this.view.doc.addChild( l.sprite );
+//				this.view.scene.stage.addChild( l.sprite );
 			}
 			// TODO: load image layers
 //			else if( lyr.type == 'imagelayer' )
@@ -107,6 +111,12 @@ zSquared.tilemap = function( z2 )
 //			{
 //			}
 		}
+	};
+
+	z2.TileMap.prototype.start = function()
+	{
+		for( var i = 0; i < this.layers.length; i++ )
+			this.view.scene.stage.addChild( this.layers[i].sprite );
 	};
 
 	/** Get the tileset for a given tile index
@@ -129,7 +139,7 @@ zSquared.tilemap = function( z2 )
 	/** Tile map layer class
 	 * @class z2.TileLayer
 	 * @constructor
-	 * @arg {z2.View} view The view for this tile map layer
+	 * @arg {z2.TileMap} map The tile map
 	 */
 	z2.TileLayer = function( map )
 	{
@@ -142,9 +152,17 @@ zSquared.tilemap = function( z2 )
 
 		// TODO: the x,y coordinate into this layer should be tracked separately
 		// from the view, as it can move at different speeds ("parallax
-		// scrolling")
+		// scrolling") - or at least we should track a "scroll factor"
 //		this.viewX = 0;
 //		this.viewY = 0;
+
+		// PIXI stuff
+		this.baseTexture = new PIXI.BaseTexture( this.canvas );
+		this.frame = new PIXI.Rectangle( 0, 0, this.canvas.width, this.canvas.height );
+//		this.texture = new PIXI.Texture( this.baseTexture, this.frame );
+		this.texture = new PIXI.Texture( this.baseTexture );
+		this.sprite = new PIXI.Sprite( this.texture );
+//		this.view.doc.addChild( this.sprite );
 	};
 
 	/** Load a tile layer from Tiled object
@@ -226,6 +244,15 @@ zSquared.tilemap = function( z2 )
 			xoffs = orig_xoffs;
 			yoffs += this.map.tileHeight;
 		}
+
+		// TODO: bleh...
+		// this works in PIXI 1.3:
+//		if( PIXI.gl )
+//        PIXI.texturesToUpdate.push( this.baseTexture );
+		// but texturesToUpdate isn't actually updated in 1.4,
+		// so we have to update it ourselves:
+		if( PIXI.defaultRenderer.renderSession.gl )
+			PIXI.updateWebGLTexture( this.baseTexture, PIXI.defaultRenderer.renderSession.gl );
 	};
 
 	/////////////////////////////////////////////////////////////////////////
@@ -251,6 +278,7 @@ zSquared.tilemap = function( z2 )
 	z2.createTileMapSystem = function( view, canvas )
 	{
 		var context = canvas.getContext( '2d' );
+
 		return new z2.System( [z2.tileMapFactory],
 		{
 //			init: function()
@@ -259,7 +287,7 @@ zSquared.tilemap = function( z2 )
 			onStart: function()
 			{
 				// set transform to identity
-				context.setTransform( 1, 0, 0, 1, 0, 0 );
+//				context.setTransform( 1, 0, 0, 1, 0, 0 );
 			},
 			update: function( e, dt )
 			{
@@ -271,7 +299,7 @@ zSquared.tilemap = function( z2 )
 					// render the layer
 					tmc.layers[i].render( view.x, view.y );
 					// draw the layer to the main context
-					context.drawImage( tmc.layers[i].canvas, 0, 0 );
+//					context.drawImage( tmc.layers[i].canvas, 0, 0 );
 				}
 			},
 //			onEnd: function()
@@ -280,4 +308,50 @@ zSquared.tilemap = function( z2 )
 		} );
 	};
 
+
+	/////////////////////////////////////////////////////////////////////////
+	// Monkey-patch PIXI 1.4
+	/**
+	 * Updates a loaded webgl texture
+	 *
+	 * @static
+	 * @method updateTexture
+	 * @param texture {Texture} The texture to update
+	 * @private
+	 */
+	PIXI.WebGLRenderer.updateTexture = function(texture)
+	{
+		//TODO break this out into a texture manager...
+		var gl = PIXI.gl;
+		
+		if(!texture._glTexture)
+		{
+			texture._glTexture = gl.createTexture();
+		}
+
+		if(texture.hasLoaded)
+		{
+			gl.bindTexture(gl.TEXTURE_2D, texture._glTexture);
+			gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+
+			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.source);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+			// reguler...
+
+			if(!texture._powerOf2)
+			{
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+			}
+			else
+			{
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+			}
+
+			gl.bindTexture(gl.TEXTURE_2D, null);
+		}
+	}
 };

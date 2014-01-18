@@ -3,6 +3,8 @@
 // Entity-Component-System framework for zed-squared
 //
 // TODO:
+// - Systems onStart & onEnd are called regardless of whether they currently
+// have any (active) entities that update will be called on...
 // - Systems collection (in manager) should be a priority queue so that higher
 // priority items can be added after lower ones (currently it runs them in
 // order, so Systems have to be added in priority order)

@@ -56,6 +56,7 @@ var player = z2.createComponentFactory();
 var spre;
 // create an input system
 var vel_sw_time = 0;
+var vel_on;
 var sprv = z2.velocityFactory.create( {x: 0, y: 0} );
 //var input_sys = new z2.System( [z2.velocityFactory, player],
 var input_sys = new z2.System( [player],
@@ -459,7 +460,8 @@ function start()
 	var sprp = z2.positionFactory.create( {x: 0, y: 0} );
 //	var sprr = z2.rotationFactory.create( {theta: 0} );
 	var sprr = z2.rotationFactory.create( {theta: z2.math.d2r(10)} );
-	var sprs = z2.scaleFactory.create( {sx: 1, sy: 1} );
+	// reverse sprite facing
+	var sprs = z2.scaleFactory.create( {sx: -1, sy: 1} );
 	var sprsz = z2.sizeFactory.create( {width: 64, height: 64} );
 	var sprcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
 	var sprxf = z2.transformFactory.create( {xform: z2.math.matCreateIdentity()} );

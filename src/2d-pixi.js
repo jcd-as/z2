@@ -21,13 +21,13 @@ zSquared['2d'] = function( z2 )
 	z2.renderableFactory = z2.createComponentFactory();
 
 	/** Component Factory for 2d image */
-	z2.imageFactory = z2.createComponentFactory( {img: null} );
+	z2.imageFactory = z2.createComponentFactory( {sprite: null} );
 
 	/** Component Factory for 2d polygon */
-	z2.polygonFactory = z2.createComponentFactory( {vertices: []} );
+//	z2.polygonFactory = z2.createComponentFactory( {vertices: []} );
 
 	/** Component Factory for 2d fill type */
-	z2.fillFactory = z2.createComponentFactory( {fill: '#ffffff'} );
+//	z2.fillFactory = z2.createComponentFactory( {fill: '#ffffff'} );
 
 	/** Component Factory for 2d position */
 	z2.positionFactory = z2.createComponentFactory( {x: 0, y: 0} );
@@ -60,7 +60,7 @@ zSquared['2d'] = function( z2 )
 	z2.rootTransformFactory = z2.createComponentFactory();
 
 	/** Component Factory for 2d (animated) sprite */
-	z2.spriteFactory = z2.createComponentFactory( {img: null, width: 0, animations: null } );
+	z2.spriteFactory = z2.createComponentFactory( {sprite: null, width: 0, animations: null } );
 
 	/** Component Factory for groups */
 	z2.groupFactory = z2.createComponentFactory( {group: []} );
@@ -172,204 +172,81 @@ zSquared['2d'] = function( z2 )
 	 * @arg {Function} [grpsys] The system to call for the entire
 	 * group's init/onStart/update/onEnd functionality
 	 */
-	z2.createGroupSystem = function( sys, mask, grpsys )
-	{
-		return new z2.System( [z2.groupFactory, mask],
-		{
-			init: function()
-			{
-				if( grpsys && grpsys.init )
-					sys.init();
-			},
-			onStart: function()
-			{
-				if( grpsys && grpsys.onStart )
-					sys.onStart();
-			},
-			update: function( e, dt )
-			{
-				if( grpsys )
-					grpsys.update( e, dt );
-
-				// get the group
-				var rgc = e.getComponent( z2.groupFactory.mask );
-				var grp = rgc.group;
-
-				// update each object in our group
-				for( var i = 0; i < grp.length; i++ )
-				{
-					sys.update( grp[i], dt, e );
-				}
-			},
-			onEnd: function()
-			{
-				if( grpsys && grpsys.onEnd )
-					sys.onEnd();
-			}
-		} );
-	};
+//	z2.createGroupSystem = function( sys, mask, grpsys )
+//	{
+//		return new z2.System( [z2.groupFactory, mask],
+//		{
+//			init: function()
+//			{
+//				if( grpsys && grpsys.init )
+//					sys.init();
+//			},
+//			onStart: function()
+//			{
+//				if( grpsys && grpsys.onStart )
+//					sys.onStart();
+//			},
+//			update: function( e, dt )
+//			{
+//				if( grpsys )
+//					grpsys.update( e, dt );
+//
+//				// get the group
+//				var rgc = e.getComponent( z2.groupFactory.mask );
+//				var grp = rgc.group;
+//
+//				// update each object in our group
+//				for( var i = 0; i < grp.length; i++ )
+//				{
+//					sys.update( grp[i], dt, e );
+//				}
+//			},
+//			onEnd: function()
+//			{
+//				if( grpsys && grpsys.onEnd )
+//					sys.onEnd();
+//			}
+//		} );
+//	};
 
 	/////////////////////////////////////////////////////////////////////////
 	/** RenderingSystem factory function
 	 * requires: renderable
-	 * optional: image, polygon, sprite
+	 * optional: image, sprite, size, rotation, scale, center
+	 * (MUST be an image or sprite or nothing can be rendered)
 	 * @function z2.createRenderingSystem
-	 * @arg {Canvas} canvas The HTML5 canvas object on which to render
-	 * @arg {boolean} clear Should the canvas automatically be cleared each
-	 * frame?
+	 * @arg {Canvas} canvas The HTML5 canvas to draw to
+	 * @arg {z2.View} view The View object for this transform system
 	 */
-	z2.createRenderingSystem = function( canvas, clear )
+	z2.createRenderingSystem = function( canvas, view )
 	{
-		var context = canvas.getContext( '2d' );
-		if( !context )
-			throw new Error( "No 2d canvas context. Unable to continue." );
+		// TODO: support different widths/heights than the canvas'
+//		var renderer = PIXI.autoDetectRenderer( canvas.width, canvas.height, canvas );
+		var renderer = new PIXI.CanvasRenderer( canvas.width, canvas.height, canvas );
+//		var stage = new PIXI.Stage( 0x880000 );
+		var stage = view.scene.stage;
 
 		return new z2.System( [z2.renderableFactory],
 		{
-			onStart: function()
-			{
-				// clear screen?
-				if( clear )
-				{
-					// set transform to identity
-					context.setTransform( 1, 0, 0, 1, 0, 0 );
-					// clear canvas
-					// TODO: test code, remove
-					////////
-					context.fillStyle = '#800000';
-					context.fillRect( 0, 0, canvas.width, canvas.height );
-					////////
-//					context.clearRect( 0, 0, canvas.width, canvas.height );
-				}
-			},
+//			onStart: function()
+//			{
+//			},
 			update: function( e, dt )
 			{
-				// get the transform component...
-				var xformc = e.getComponent( z2.transformFactory.mask );
-				var xf = xformc.xform;
-				// ... & set the canvas context's transform
-				context.setTransform( xf[0], xf[3], xf[1], xf[4], xf[2], xf[5] );
+				// get the image...
+				var disp = e.getComponent( z2.imageFactory.mask );
 
-				// check for different kinds of renderables
-
-				// image Component?
-				var imgc = e.getComponent( z2.imageFactory.mask );
-
-				// polygon component?
-				var polyc = e.getComponent( z2.polygonFactory.mask );
-
-				// sprite component?
-				var spritec = e.getComponent( z2.spriteFactory.mask );
-
-				// center and radius components?
-				var ctrc = e.getComponent( z2.centerFactory.mask );
-				var radc = e.getComponent( z2.radiusFactory.mask );
-
-				var w, h, szc;
-				var fill, fc;
-
-				// image
-				if( imgc )
+				// ... or sprite
+				var anims;
+				if( !disp )
 				{
-					w = imgc.img.width;
-					h = imgc.img.height;
-					// get size component, if any
-					szc = e.getComponent( z2.sizeFactory.mask );
-					if( szc )
-					{
-						w = szc.width;
-						h = szc.height;
-					}
-					context.drawImage( imgc.img, 0, 0, w, h, 0, 0, w, h );
+					disp = e.getComponent( z2.spriteFactory.mask );
+					anims = disp.animations;
 				}
 
-				// polygon
-				if( polyc )
-				{
-					if( polyc.vertices.length >= 6 )
-					{
-						// TODO: vertices need to be transformed into view space
-						fill = 'rgba( 255, 255, 255, 1 )';
-						// get fill component
-						fc = e.getComponent( z2.fillFactory.mask );
-						if( fc )
-							fill = fc.fill;
-						context.fillStyle = fill;
-						context.beginPath();
-						context.moveTo( polyc.vertices[0], polyc.vertices[1] );
-						for( var i = 2; i < polyc.vertices.length; i += 2 )
-						{
-							context.lineTo( polyc.vertices[i], polyc.vertices[i+1] );
-						}
-						context.closePath();
-						context.fill();
-					}
-				}
-
-				// circle
-				if( ctrc && radc )
-				{
-					// TODO: center needs to be transformed into view space
-					fill = 'rgba( 255, 255, 255, 1 )';
-					fc = e.getComponent( z2.fillFactory.mask );
-					if( fc )
-						fill = fc.fill;
-					context.fillStyle = fill;
-					context.beginPath();
-					context.arc( ctrc.cx, ctrc.cy, radc.radius, 0, Math.PI * 1.99 );
-					context.closePath();
-					context.fill();
-				}
-
-				// sprite
-				if( spritec )
-				{
-					w = spritec.img.width;
-					h = spritec.img.height;
-					// get size component, if any
-					szc = e.getComponent( z2.sizeFactory.mask );
-					if( szc )
-					{
-						w = szc.width;
-						h = szc.height;
-					}
-					// offset to the image in the sprite strip
-					var offs = spritec.animations.currentFrame * w;
-					
-					context.drawImage( spritec.img, offs, 0, w, h, 0, 0, w, h );
-
-					// update the current frame & image
-					spritec.animations.update( dt );
-				}
-
-				// TODO: other renderables ?
-			}
-		} );
-	};
-
-	/////////////////////////////////////////////////////////////////////////
-	/** TransformSystem factory function
-	 * requires: rootTransform, transform, position
-	 * optional: size, rotation, scale, center
-	 * @function z2.createTransformSystem
-	 * @arg {z2.View} view The View object for this transform system
-	 */
-	z2.createTransformSystem = function( view )
-	{
-		return new z2.System( [z2.rootTransformFactory, z2.transformFactory, z2.positionFactory],
-		{
-			onStart: function()
-			{
-				view.update();
-			},
-			// has optional 3rd argument which is the parent, from which to get
-			// the xform to perform (instead of the view transform)
-			update: function( e, dt, parent )
-			{
-				// get the transform component
-				var xformc = e.getComponent( z2.transformFactory.mask );
-				var xf = xformc.xform;
-				z2.math.matSetIdentity( xf );
+				// can't operate on nothing...
+				if( !disp )
+					return;
 
 				// get the position component
 				var pc = e.getComponent( z2.positionFactory.mask );
@@ -378,82 +255,65 @@ zSquared['2d'] = function( z2 )
 
 				// get the size component
 				var szc = e.getComponent( z2.sizeFactory.mask );
-				var w = 0, h = 0;
-				if( szc )
-				{
-					w = szc.width;
-					h = szc.height;
-				}
 
 				// get the rotation component
 				var rc = e.getComponent( z2.rotationFactory.mask );
-				var theta = 0;
-				if( rc )
-					theta = rc.theta;
 
 				// get the scale component
 				var sc = e.getComponent( z2.scaleFactory.mask );
-				var sx = 1, sy = 1;
-				if( sc )
-				{
-					sx = sc.sx;
-					sy = sc.sy;
-				}
 
 				// get the center point
 				var cc = e.getComponent( z2.centerFactory.mask );
-				var cx = 0.5, cy = 0.5;
+
+				// get the PIXI sprite
+				var spr = disp.sprite;
+
+				// apply the size
+				if( szc )
+				{
+					// offset to the image in the sprite strip
+					var w;
+					if( szc ) w = szc.width;
+					else w = spr.width;
+					var offs;
+					if( anims ) offs = anims.currentFrame * w;
+					else offs = 0;
+					
+					// update the current frame & image
+					if( anims )
+						anims.update( dt );
+
+					spr.texture.setFrame( new PIXI.Rectangle( offs, 0, w, szc.height ) );
+				}
+
+				// apply the transforms to the PIXI sprite
+
+				// position
+				spr.position.x = x;
+				spr.position.y = y;
+
+				// scale
+				if( sc )
+				{
+					spr.scale.x = sc.sx;
+					spr.scale.y = sc.sy;
+				}
+
+				// rotation
+				if( rc )
+					spr.rotation = rc.theta;
+
+				// center
 				if( cc )
 				{
-					cx = cc.cx;
-					cy = cc.cy;
+					spr.anchor.x = cc.cx;
+					spr.anchor.y = cc.cy;
 				}
-
-				// set (local) transform 
-
-				// center / pivot point
-				var px = w * cx;
-				var py = h * cy;
-
-				// TODO: cache these & only re-compute when rotation changes
-				var c = Math.cos( theta );
-				var s = Math.sin( theta );
-				// scale & rotation
-				xf[0] = c * sx;
-				xf[1] = -s * sy;
-				xf[3] = s * sx;
-				xf[4] = c * sy;
-				// translation
-				// (& account for pivot point)
-				xf[2] = x - (xf[0] * px) - (xf[1] * py);
-				xf[5] = y - (xf[4] * py) - (xf[3] * px);
-
-				// if we have a parent transform, use it
-				if( parent )
-				{
-					// get the parent transform
-					var pxformc = parent.getComponent( z2.transformFactory.mask );
-					var pxf = pxformc.xform;
-
-					// TODO: this doesn't account for view rotation or scaling
-					// save the scene ('world') x & y
-					xformc.scene_x = x + pxformc.scene_x;
-					xformc.scene_y = y + pxformc.scene_y;
-
-					// transform to 'parent space'
-					// TODO: anything to optimize out (?)
-					z2.math.matMul( xf, pxf );
-				}
-				// otherwise we're the root, transform for view-space
-				else
-				{
-					// TODO: this doesn't account for view rotation or scaling
-					// save the scene ('world') x & y
-					xformc.scene_x = xf[2] + px;
-					xformc.scene_y = xf[5] + py;
-					// transform to view space
-					view.transform( xf );
-				}
+			},
+			onEnd: function()
+			{
+				view.update();
+				renderer.render( stage );
 			}
 		} );
 	};
@@ -465,10 +325,10 @@ zSquared['2d'] = function( z2 )
 	 * @function z2.createTransformGroupSystem
 	 * @arg {z2.System} sys The TransformSystem to apply to this group
 	 */
-	z2.createTransformGroupSystem = function( sys )
-	{
-		return z2.createGroupSystem( sys, z2.transformGroupFactory, sys );
-	};
+//	z2.createTransformGroupSystem = function( sys )
+//	{
+//		return z2.createGroupSystem( sys, z2.transformGroupFactory, sys );
+//	};
 
 	/////////////////////////////////////////////////////////////////////////
 	/** MovementSystem factory function
@@ -488,9 +348,6 @@ zSquared['2d'] = function( z2 )
 				// get the velocity component
 				var vc = e.getComponent( z2.velocityFactory.mask );
 
-				// get the transform component
-				var xfc = e.getComponent( z2.transformFactory.mask );
-
 				// get the pos constraints component
 				var pcc = e.getComponent( z2.positionConstraintsFactory.mask );
 
@@ -508,12 +365,13 @@ zSquared['2d'] = function( z2 )
 				var idt = dt / 1000;
 				var xmod = vc.x * idt;
 				var ymod = vc.y * idt;
-				var x = xfc.scene_x + xmod;
-				var y = xfc.scene_y + ymod;
+				// test constraints
+				var x = pc.x + xmod;
+				var y = pc.y + ymod;
 				if( x < maxx && x > minx )
-					pc.x += xmod;
+					pc.x = x;
 				if( y < maxy && y > miny )
-					pc.y += ymod;
+					pc.y = y;
 			}
 		} );
 	};
