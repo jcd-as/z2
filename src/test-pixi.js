@@ -94,17 +94,18 @@ var input_sys = new z2.System( [player],
 
 		if( vc )
 		{
+			var vel_inc = 500;
 			// check keys
 			if( z2.kbd.isDown( z2.kbd.UP ) )
-				vc.y = -100;
+				vc.y = -vel_inc;
 			else if( z2.kbd.isDown( z2.kbd.DOWN ) )
-				vc.y = 100;
+				vc.y = vel_inc;
 			else
 				vc.y = 0;
 			if( z2.kbd.isDown( z2.kbd.LEFT ) )
-				vc.x = -100;
+				vc.x = -vel_inc;
 			else if( z2.kbd.isDown( z2.kbd.RIGHT ) )
-				vc.x = 100;
+				vc.x = vel_inc;
 			else vc.x = 0;
 		}
 	}
@@ -138,25 +139,25 @@ function start()
 	scene.stage.addChild( view.camera_doc );
 
 	// create a renderable image Entity
-	var img = z2.loader.getAsset( 'logo' );
-	var imgbasetexture = new PIXI.BaseTexture( img );
-	// TODO: pass a frame to use to match the virtual size of the image 
-	// (512x384) instead of the physical size (512x512)
-	var imgtexture = new PIXI.Texture( imgbasetexture );
-	var imgsprite = new PIXI.Sprite( imgtexture );
-	view.doc.addChild( imgsprite );
-	var imgc = z2.imageFactory.create( {sprite:imgsprite} );
-	//
-	var imgp = z2.positionFactory.create( {x: 512, y: 512} );
-	var imgr = z2.rotationFactory.create( {theta: 0} );
-//	var imgr = z2.rotationFactory.create( {theta: z2.d2r(-4)} );
-//	var imgr = z2.rotationFactory.create( {theta: z2.d2r(45)} );
-	var imgs = z2.scaleFactory.create( {sx: 1, sy: 1} );
-	var imgsz = z2.sizeFactory.create( {width: 512, height: 384} );
-//	var imgcc = z2.centerFactory.create( {cx: 0.25, cy: 0.5} );
-	var imgcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
-	var imgv = z2.velocityFactory.create( {x: 0, y: 0} );
-	var imge = mgr.createEntity( [z2.renderableFactory, imgp, imgr, imgsz, imgs, imgcc, imgc, imgv] );
+//	var img = z2.loader.getAsset( 'logo' );
+//	var imgbasetexture = new PIXI.BaseTexture( img );
+//	// TODO: pass a frame to use to match the virtual size of the image 
+//	// (512x384) instead of the physical size (512x512)
+//	var imgtexture = new PIXI.Texture( imgbasetexture );
+//	var imgsprite = new PIXI.Sprite( imgtexture );
+//	view.doc.addChild( imgsprite );
+//	var imgc = z2.imageFactory.create( {sprite:imgsprite} );
+//	//
+//	var imgp = z2.positionFactory.create( {x: 512, y: 512} );
+//	var imgr = z2.rotationFactory.create( {theta: 0} );
+////	var imgr = z2.rotationFactory.create( {theta: z2.d2r(-4)} );
+////	var imgr = z2.rotationFactory.create( {theta: z2.d2r(45)} );
+//	var imgs = z2.scaleFactory.create( {sx: 1, sy: 1} );
+//	var imgsz = z2.sizeFactory.create( {width: 512, height: 384} );
+////	var imgcc = z2.centerFactory.create( {cx: 0.25, cy: 0.5} );
+//	var imgcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
+//	var imgv = z2.velocityFactory.create( {x: 0, y: 0} );
+//	var imge = mgr.createEntity( [z2.renderableFactory, imgp, imgr, imgsz, imgs, imgcc, imgc, imgv] );
 
 
 	// create an (animated) sprite
@@ -180,7 +181,26 @@ function start()
 	spre = mgr.createEntity( [z2.renderableFactory, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc] );
 	anims.play( 'walk' );
 
-	// follow this sprite
+
+	// test for using pixi rendertexture for tilemaps:
+	//////////////////////////////////////////////////
+	// create a pixi rendertexture and draw our player sprite to it (as if it
+	// were a tile)
+//	var rt = new PIXI.RenderTexture( 128, 128 );
+//	var doc = new PIXI.DisplayObjectContainer();
+//	sprite.position.x = -64*8;
+//	doc.addChild( sprite );
+//	rt.render( doc );
+//	var rts = new PIXI.Sprite( rt );
+//	rts.position.x = 512;
+//	rts.position.y = 512;
+//	rts.anchor.x = 0.5;
+//	rts.anchor.y = 0.5;
+//	view.doc.addChild( rts );
+	//////////////////////////////////////////////////
+
+
+	// follow the sprite
 	view.target = sprp;
 	view.follow_mode = z2.FOLLOW_MODE_TIGHT;
 

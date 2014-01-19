@@ -4,7 +4,17 @@
 //
 // TODO:
 // - convert to using PIXI to draw the tile into the tile layers (instead of
-// drawing to a canvas 2d context like we do now)
+// drawing to a canvas 2d context like we do now). one sprite per type of tile -
+// sharing the same baseTexture (so the calls can all be batched)
+// - OR (AND?) optimize the canvas tile drawing technique by using two canvases
+// (remniscent of page-flipping) and copying any area that is the same as
+// the previous frame (which will usually be most of it, since we typically
+// scroll along a few pixels at a time), and then drawing the tiles only to fill
+// in the "new" area(s) (usually just a column and/or row of tiles). like the
+// old mode-x algorithms these off-screen canvases will be one row and one
+// column larger than the screen/viewport canvas so as long as we're scrolling
+// inside of one tile's boundaries we don't even have to draw any "new" tiles...
+// - broad-phase tilemap collision detection (sprite vs tile layer)
 // - optimize 
 // - can we separate the need for the view from the map? (this would allow
 // the same map to (conceptually anyway) have different views. e.g. a main view
@@ -138,6 +148,12 @@ zSquared.tilemap = function( z2 )
 		return null;
 	};
 
+
+	// different ways to render the tile maps
+	var RENDER_SIMPLE = 0;
+	var RENDER_OPT_PAGES = 1;
+	var render_method = RENDER_OPT_PAGES;
+//	var render_method = RENDER_SIMPLE;
 	/** Tile map layer class
 	 * @class z2.TileLayer
 	 * @constructor
@@ -148,15 +164,36 @@ zSquared.tilemap = function( z2 )
 		// reference to the TileMap that contains the layer
 		this.map = map;
 
-		// create a canvas for this layer to be drawn on
-		this.canvas = z2.createCanvas( map.viewWidth, map.viewHeight );
-		this.context = this.canvas.getContext( '2d' );
+		if( render_method == RENDER_SIMPLE )
+		{
+			// create a canvas for this layer to be drawn on
+			this.canvasWidth = map.viewWidth;
+			this.canvasHeight = map.viewHeight;
+			this.canvas = z2.createCanvas( this.canvasWidth, this.canvasHeight );
+			this.context = this.canvas.getContext( '2d' );
+		}
+		else if( render_method == RENDER_OPT_PAGES )
+		{
+			// create two canvases for this layer to be drawn on
+			this.canvasWidth = map.viewWidth + map.tileWidth;
+			this.canvasHeight = map.viewHeight + map.tileHeight;
 
-		// TODO: the x,y coordinate into this layer should be tracked separately
-		// from the view, as it can move at different speeds ("parallax
-		// scrolling") - or at least we should track a "scroll factor"
-//		this.viewX = 0;
-//		this.viewY = 0;
+			this.canvas = z2.createCanvas( this.canvasWidth, this.canvasHeight );
+			this.context = this.canvas.getContext( '2d' );
+
+			this.backCanvas = z2.createCanvas( this.canvasWidth, this.canvasHeight );
+			this.backContext = this.backCanvas.getContext( '2d' );
+
+			// vars for tracking the previous frame position
+			this._prev_x = NaN;
+			this._prev_y = NaN;
+			this._prev_tx = NaN;
+			this._prev_ty = NaN;
+		}
+
+		// the factor by which the movement (scrolling) of this layer differs
+		// from the "main" map. e.g. '2' would be twice as fast, '0.5' would be
+		// half as fast
 		this.scrollFactorX = 1;
 		this.scrollFactorY = 1;
 
@@ -198,18 +235,11 @@ zSquared.tilemap = function( z2 )
 		// can copy the bulk of the image over and only draw a single column of
 		// new tiles)
 
-		// TODO: flag to indicate whether to clear or not
-		// TODO: customizable clear color (?)
-		// clear canvas
-		this.context.clearRect( 0, 0, this.canvas.width, this.canvas.height );
-
 		// draw the tiles onto the canvas
 		var tx, ty;		// tile positions in the data map
 		var xoffs, yoffs;	// offset from the tile positions
 
 		// view.x/y is the *center* not upper left
-//		var x = ~~(viewx - this.map.viewWidth/2);
-//		var y = ~~(viewy - this.map.viewHeight/2);
 		// TODO: clamp x,y to the layer/map bounds
 		var x = ~~(viewx - this.map.viewWidth/2)*this.scrollFactorX;
 		var y = ~~(viewy - this.map.viewHeight/2)*this.scrollFactorY;
@@ -218,44 +248,274 @@ zSquared.tilemap = function( z2 )
 		xoffs = -(x - (tx * this.map.tileWidth));
 		yoffs = -(y - (ty * this.map.tileHeight));
 
+		// set the texture frame for the new position
+		// (NOTE: do this here instead of after updating the canvases or 
+		// you'll get a nasty flashing effect!)
+		if( render_method == RENDER_OPT_PAGES )
+		{
+			this.frame.x = -xoffs;
+			this.frame.y = -yoffs;
+			this.frame.width = this.canvas.width - this.frame.x;
+			this.frame.height = this.canvas.height - this.frame.y;
+			this.texture.setFrame( this.frame );
+		}
+
 		// TODO: if there is only *one* tileset, we can optimize because we
 		// don't need to look-up which tileset this tile is in...
 
-		var tile, tile_x, tile_y;
+		var tileset, tile, tile_x, tile_y;
 		var orig_tx = tx;
+		var orig_ty = ty;
 		var orig_xoffs = xoffs;
-		var i;
-		for( var j = 0; j <= this.map.viewHeightInTiles; j++, ty++ )
+		var orig_yoffs = yoffs;
+		var i, j;
+
+		if( render_method == RENDER_SIMPLE )
 		{
-			for( i = 0, tx = orig_tx; i <= this.map.viewWidthInTiles; i++, tx++ )
+			// clear canvas
+			this.context.clearRect( 0, 0, this.canvas.width, this.canvas.height );
+			for( j = 0; j <= this.map.viewHeightInTiles; j++, ty++ )
 			{
-				tile = this.data[ty * this.map.tilesets[0].widthInTiles + tx];
-				// '0' tiles in Tiled are *empty*
-				if( tile )
+				for( i = 0, tx = orig_tx; i <= this.map.viewWidthInTiles; i++, tx++ )
 				{
-					// get the actual tile index in the tileset
-					var tileset = this.map.getTilesetForIndex( tile );
-					tile -= tileset.start;
-					tile_y = ~~(tile / tileset.widthInTiles);
-					tile_x = tile - (tile_y * tileset.widthInTiles);
-					// draw this tile to the canvas
-					this.context.drawImage( 
-						tileset.tiles,				// source image
-						tile_x * this.map.tileWidth,// source x 
-						tile_y *this.map.tileHeight,// source y
-						this.map.tileWidth,			// source width
-						this.map.tileHeight,		// source height
-						xoffs,						// dest x 
-						yoffs,						// dest y
-						this.map.tileWidth,			// dest width
-						this.map.tileHeight			// dest height
-					);
+					tile = this.data[ty * this.map.widthInTiles + tx];
+					// '0' tiles in Tiled are *empty*
+					if( tile )
+					{
+						// get the actual tile index in the tileset
+						tileset = this.map.getTilesetForIndex( tile );
+						tile -= tileset.start;
+						tile_y = ~~(tile / tileset.widthInTiles);
+						tile_x = tile - (tile_y * tileset.widthInTiles);
+						// draw this tile to the canvas
+						this.context.drawImage( 
+							tileset.tiles,				// source image
+							tile_x * this.map.tileWidth,// source x 
+							tile_y *this.map.tileHeight,// source y
+							this.map.tileWidth,			// source width
+							this.map.tileHeight,		// source height
+							xoffs,						// dest x 
+							yoffs,						// dest y
+							this.map.tileWidth,			// dest width
+							this.map.tileHeight			// dest height
+						);
+					}
+					xoffs += this.map.tileWidth;
 				}
-				xoffs += this.map.tileWidth;
+				xoffs = orig_xoffs;
+				yoffs += this.map.tileHeight;
 			}
-			xoffs = orig_xoffs;
-			yoffs += this.map.tileHeight;
-		}
+		} // end RENDER_SIMPLE
+
+		else if( render_method == RENDER_OPT_PAGES )
+		{
+			// if this is the first frame drawn then we need to draw everything
+			if( isNaN( this._prev_x ) )
+			{
+				// clear canvas
+				this.context.clearRect( 0, 0, this.canvas.width, this.canvas.height );
+				// clear back canvas
+				this.backContext.clearRect( 0, 0, this.backCanvas.width, this.backCanvas.height );
+
+				// have to draw all the tiles...
+				xoffs = 0; yoffs = 0;
+				for( j = 0; j <= this.map.viewHeightInTiles; j++, ty++ )
+				{
+					for( i = 0, tx = orig_tx; i <= this.map.viewWidthInTiles; i++, tx++ )
+					{
+						tile = this.data[ty * this.map.widthInTiles + tx];
+						// '0' tiles in Tiled are *empty*
+						if( tile )
+						{
+							// get the actual tile index in the tileset
+							tileset = this.map.getTilesetForIndex( tile );
+							tile -= tileset.start;
+							tile_y = ~~(tile / tileset.widthInTiles);
+							tile_x = tile - (tile_y * tileset.widthInTiles);
+							// draw this tile to the canvas
+							this.backContext.drawImage( 
+								tileset.tiles,				// source image
+								tile_x * this.map.tileWidth,// source x 
+								tile_y *this.map.tileHeight,// source y
+								this.map.tileWidth,			// source width
+								this.map.tileHeight,		// source height
+								xoffs,						// dest x 
+								yoffs,						// dest y
+								this.map.tileWidth,			// dest width
+								this.map.tileHeight			// dest height
+							);
+						}
+						xoffs += this.map.tileWidth;
+					}
+					xoffs = 0;
+					yoffs += this.map.tileHeight;
+				}
+				xoffs = orig_xoffs;
+				yoffs = orig_yoffs;
+				// ...and copy to the front canvas
+				this.context.drawImage( this.backCanvas, 0, 0 );
+			}
+			// if we are *not* within the same tile as last frame
+			else if( tx !== this._prev_tx || ty !== this._prev_ty )
+			{
+				// clear canvas
+				this.context.clearRect( 0, 0, this.canvas.width, this.canvas.height );
+
+				// determine the amount of overlap the last frame had with this
+				// frame
+				var dtx = tx - this._prev_tx;
+				var dty = ty - this._prev_ty;
+				var dx = dtx * this.map.tileWidth;
+				var dy = dty * this.map.tileHeight;
+				var txoverlap = this.canvasWidth - dx;
+				var tyoverlap = this.canvasHeight - dy;
+
+				var sx = dtx * this.map.tileWidth;
+				var sy = dty * this.map.tileHeight;
+				var sw = this.canvasWidth - sx;
+				var sh = this.canvasHeight - sy;
+				var dw = sw;
+				var dh = sh;
+
+				// copy that overlapping region from the back to the front
+				this.context.drawImage(
+					this.backCanvas,
+					sx,
+					sy,
+					sw,
+					sh,
+					0,
+					0,
+					dw,
+					dh
+				);
+
+
+				// draw the 'missing' rows/columns
+				var startcol, endcol, startrow, endrow;
+				// if dx < 0 we're missing cols at left
+				if( dx < 0 )
+				{
+					startcol = 0;
+					endcol = Math.abs(dtx);
+				}
+				// if dx > 0 we're missing cols at right
+				else
+				{
+					startcol = this.map.viewWidthInTiles + 1 - Math.abs(dtx);
+					endcol = this.map.viewWidthInTiles + 1;
+				}
+				// if dy < 0 we're missing rows at top
+				if( dy < 0 )
+				{
+					startrow = 0;
+					endrow = Math.abs(dty);
+				}
+				// if dy > 0 we're missing rows at bottom
+				else
+				{
+					startrow = this.map.viewHeightInTiles + 1 - Math.abs(dty);
+					endrow = this.map.viewHeightInTiles + 1;
+				}
+
+				var row, col;
+				var numrows = endrow - startrow;
+				var numcols = endcol - startcol;
+
+				// rows
+				for( row = startrow, ty = orig_ty + startrow; row < endrow; row++, ty++ )
+				{
+					// calculate start & end cols such that we don't re-draw
+					// the 'corner' where rows & cols overlap
+					var start, end;
+					if( dx < 0 )
+					{
+						start = numcols;
+						end = this.map.viewWidthInTiles + 1;
+					}
+					else
+					{
+						start = 0;
+						end = this.map.viewWidthInTiles + 1 - numcols;
+					}
+					for( col = start, tx = orig_tx + numcols; col < end; col++, tx++ )
+					{
+						tile = this.data[ty * this.map.widthInTiles + tx];
+						// '0' tiles in Tiled are *empty*
+						if( tile )
+						{
+							// get the actual tile index in the tileset
+							tileset = this.map.getTilesetForIndex( tile );
+							tile -= tileset.start;
+							tile_y = ~~(tile / tileset.widthInTiles);
+							tile_x = tile - (tile_y * tileset.widthInTiles);
+
+							yoffs = row * this.map.tileHeight;
+							xoffs = col * this.map.tileWidth;
+							// draw this tile to the canvas
+							this.context.drawImage( 
+								tileset.tiles,				// source image
+								tile_x * this.map.tileWidth,// source x 
+								tile_y *this.map.tileHeight,// source y
+								this.map.tileWidth,			// source width
+								this.map.tileHeight,		// source height
+								xoffs,						// dest x 
+								yoffs,						// dest y
+								this.map.tileWidth,			// dest width
+								this.map.tileHeight			// dest height
+							);
+						}
+					}
+				}
+				// columns
+				for( col = startcol, tx = orig_tx + startcol; col < endcol; col++, tx++ )
+				{
+					for( row = 0, ty = orig_ty; row <= this.map.viewHeightInTiles; row++, ty++ )
+					{
+						tile = this.data[ty * this.map.widthInTiles + tx];
+						// '0' tiles in Tiled are *empty*
+						if( tile )
+						{
+							// get the actual tile index in the tileset
+							tileset = this.map.getTilesetForIndex( tile );
+							tile -= tileset.start;
+							tile_y = ~~(tile / tileset.widthInTiles);
+							tile_x = tile - (tile_y * tileset.widthInTiles);
+
+							yoffs = row * this.map.tileHeight;
+							xoffs = col * this.map.tileWidth;
+							// draw this tile to the canvas
+							this.context.drawImage( 
+								tileset.tiles,				// source image
+								tile_x * this.map.tileWidth,// source x 
+								tile_y *this.map.tileHeight,// source y
+								this.map.tileWidth,			// source width
+								this.map.tileHeight,		// source height
+								xoffs,						// dest x 
+								yoffs,						// dest y
+								this.map.tileWidth,			// dest width
+								this.map.tileHeight			// dest height
+							);
+						}
+					}
+				}
+
+				// clear back canvas
+				this.backContext.clearRect( 0, 0, this.backCanvas.width, this.backCanvas.height );
+				// then copy that back to the back canvas 
+				this.backContext.drawImage( this.canvas, 0, 0 );
+			}
+			// otherwise the canvas already contains the necessary area 
+//			else { }
+
+			// front canvas now has the correct stuff on it
+
+			// next frame
+			this._prev_tx = orig_tx;
+			this._prev_ty = orig_ty;
+			this._prev_x = x;
+			this._prev_y = y;
+		} // end RENDER_OPT_PAGES
 
 		// TODO: bleh...
 		// this works in PIXI 1.3:
