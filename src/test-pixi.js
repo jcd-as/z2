@@ -94,7 +94,7 @@ var input_sys = new z2.System( [player],
 
 		if( vc )
 		{
-			var vel_inc = 500;
+			var vel_inc = 100;
 			// check keys
 			if( z2.kbd.isDown( z2.kbd.UP ) )
 				vc.y = -vel_inc;
@@ -123,7 +123,7 @@ function start()
 //	var scene = new z2.TiledScene( json, WIDTH, HEIGHT );
 	var scene = new z2.TiledScene();
 	// create a view on the scene
-	var view = new z2.View( scene, WIDTH, HEIGHT, null, z2.FOLLOW_MODE_NONE, 500, 500 );
+	var view = new z2.View( scene, WIDTH, HEIGHT, null, z2.FOLLOW_MODE_NONE, 512, 512 );
 
 	// create rendering system
 	var rs = z2.createRenderingSystem( canvas, view );

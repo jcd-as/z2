@@ -221,8 +221,8 @@ zSquared['2d'] = function( z2 )
 	z2.createRenderingSystem = function( canvas, view )
 	{
 		// TODO: support different widths/heights than the canvas'
-//		var renderer = PIXI.autoDetectRenderer( canvas.width, canvas.height, canvas );
-		var renderer = new PIXI.CanvasRenderer( canvas.width, canvas.height, canvas );
+		var renderer = PIXI.autoDetectRenderer( canvas.width, canvas.height, canvas );
+//		var renderer = new PIXI.CanvasRenderer( canvas.width, canvas.height, canvas );
 //		var stage = new PIXI.Stage( 0x880000 );
 		var stage = view.scene.stage;
 

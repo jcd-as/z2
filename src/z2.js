@@ -33,7 +33,7 @@ var zSquared = function( opts )
 				{
 					m = zSquared[modules[i]] || modules[i];
 					if( !(m instanceof Function) )
-						throw new Error( "Non-function passed to require()" );
+						throw new Error( "Unknown module: '" + m + "' passed to require()" );
 					m( z2 );
 					loaded[modules[i]] = true;
 				}
