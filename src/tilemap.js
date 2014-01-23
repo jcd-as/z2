@@ -185,11 +185,11 @@ zSquared.tilemap = function( z2 )
 
 			// vars for tracking the previous frame position
 			this._prev_x = NaN;
-			this._prev_y = NaN;
 			this._prev_tx = NaN;
 			this._prev_ty = NaN;
 		}
-		else if( render_method == RENDER_PIXI_SPR )
+//		else if( render_method == RENDER_PIXI_SPR )
+		else if( render_method == RENDER_PIXI_SPR || render_method == RENDER_OPT_PIXI_SPR )
 		{
 			this.canvasWidth = map.viewWidth + map.tileWidth;
 			this.canvasHeight = map.viewHeight + map.tileHeight;
@@ -208,6 +208,8 @@ zSquared.tilemap = function( z2 )
 					var spr = new PIXI.Sprite( texture );
 					spr.position.x = j * map.tileWidth;
 					spr.position.y = i * map.tileHeight;
+					texture.frame.width = map.tileWidth;
+					texture.frame.height = map.tileHeight;
 					this.tileSprites[i].push( spr );
 					this.doc.addChild( spr );
 				}
@@ -228,7 +230,7 @@ zSquared.tilemap = function( z2 )
 		this.scrollFactorY = 1;
 
 		// PIXI stuff
-		if( render_method !== RENDER_PIXI_SPR )
+		if( render_method == RENDER_SIMPLE || render_method == RENDER_OPT_PAGES )
 		{	
 			this.baseTexture = new PIXI.BaseTexture( this.canvas );
 			this.frame = new PIXI.Rectangle( 0, 0, this.canvas.width, this.canvas.height );
@@ -256,10 +258,6 @@ zSquared.tilemap = function( z2 )
 	z2.TileLayer.prototype.renderCanvasNaive = function( viewx, viewy )
 	{
 		// TODO: dirty checks - don't draw if not dirty
-		// TODO: track previous (view) coordinates and only update the necessary
-		// areas of the canvas (i.e. if we have just move a bit to the left we
-		// can copy the bulk of the image over and only draw a single column of
-		// new tiles)
 
 		// draw the tiles onto the canvas
 		var tx, ty;		// tile positions in the data map
@@ -330,10 +328,6 @@ zSquared.tilemap = function( z2 )
 	z2.TileLayer.prototype.renderCanvasOpt = function( viewx, viewy )
 	{
 		// TODO: dirty checks - don't draw if not dirty
-		// TODO: track previous (view) coordinates and only update the necessary
-		// areas of the canvas (i.e. if we have just move a bit to the left we
-		// can copy the bulk of the image over and only draw a single column of
-		// new tiles)
 
 		// cache some vars for performance
 		var tw = this.map.tileWidth;
@@ -344,11 +338,8 @@ zSquared.tilemap = function( z2 )
 		var xoffs, yoffs;	// offset from the tile positions
 
 		// view.x/y is the *center* not upper left
-		// TODO: clamp x,y to the layer/map bounds
-//		var x = ~~(viewx - this.map.viewWidth/2)*this.scrollFactorX;
-//		var y = ~~(viewy - this.map.viewHeight/2)*this.scrollFactorY;
-		var x = (viewx - this.map.viewWidth/2)*this.scrollFactorX;
-		var y = (viewy - this.map.viewHeight/2)*this.scrollFactorY;
+		var x = ~~((viewx - this.map.viewWidth/2)*this.scrollFactorX);
+		var y = ~~((viewy - this.map.viewHeight/2)*this.scrollFactorY);
 		tx = ~~(x / tw);
 		ty = ~~(y / th);
 		xoffs = -(x - (tx * tw));
@@ -373,6 +364,11 @@ zSquared.tilemap = function( z2 )
 		var orig_yoffs = yoffs;
 		var i, j;
 
+		var mapWidth = this.map.widthInTiles;
+		var mapHeight = this.map.heightInTiles;
+		var mapViewWidth = this.map.viewWidthInTiles;
+		var mapViewHeight = this.map.viewHeightInTiles;
+
 		// if this is the first frame drawn then we need to draw everything
 		if( isNaN( this._prev_x ) )
 		{
@@ -381,11 +377,15 @@ zSquared.tilemap = function( z2 )
 
 			// have to draw all the tiles...
 			xoffs = 0; yoffs = 0;
-			for( j = 0; j <= this.map.viewHeightInTiles; j++, ty++ )
+			for( j = 0; j <= mapViewHeight; j++, ty++ )
 			{
-				for( i = 0, tx = orig_tx; i <= this.map.viewWidthInTiles; i++, tx++ )
+				if( ty < 0 || ty > mapHeight )
+					continue;
+				for( i = 0, tx = orig_tx; i <= mapViewWidth; i++, tx++ )
 				{
-					tile = this.data[ty * this.map.widthInTiles + tx];
+					if( tx < 0 || tx > mapWidth )
+						continue;
+					tile = this.data[ty * mapWidth + tx];
 					// '0' tiles in Tiled are *empty*
 					if( tile )
 					{
@@ -481,25 +481,25 @@ zSquared.tilemap = function( z2 )
 			if( dx < 0 )
 			{
 				startcol = 0;
-				endcol = Math.abs(dtx);
+				endcol = -dtx;
 			}
 			// if dx > 0 we're missing cols at right
 			else
 			{
-				startcol = this.map.viewWidthInTiles + 1 - Math.abs(dtx);
-				endcol = this.map.viewWidthInTiles + 1;
+				startcol = mapViewWidth + 1 - Math.abs(dtx);
+				endcol = mapViewWidth + 1;
 			}
 			// if dy < 0 we're missing rows at top
 			if( dy < 0 )
 			{
 				startrow = 0;
-				endrow = Math.abs(dty);
+				endrow = -dty;
 			}
 			// if dy > 0 we're missing rows at bottom
 			else
 			{
-				startrow = this.map.viewHeightInTiles + 1 - Math.abs(dty);
-				endrow = this.map.viewHeightInTiles + 1;
+				startrow = mapViewHeight + 1 - dty;
+				endrow = mapViewHeight + 1;
 			}
 
 			var row, col;
@@ -515,16 +515,16 @@ zSquared.tilemap = function( z2 )
 				if( dx < 0 )
 				{
 					start = numcols;
-					end = this.map.viewWidthInTiles + 1;
+					end = mapViewWidth + 1;
 				}
 				else
 				{
 					start = 0;
-					end = this.map.viewWidthInTiles + 1 - numcols;
+					end = mapViewWidth + 1 - numcols;
 				}
 				for( col = start, tx = orig_tx + numcols; col < end; col++, tx++ )
 				{
-					tile = this.data[ty * this.map.widthInTiles + tx];
+					tile = this.data[ty * mapWidth + tx];
 					// '0' tiles in Tiled are *empty*
 					if( tile )
 					{
@@ -554,9 +554,9 @@ zSquared.tilemap = function( z2 )
 			// columns
 			for( col = startcol, tx = orig_tx + startcol; col < endcol; col++, tx++ )
 			{
-				for( row = 0, ty = orig_ty; row <= this.map.viewHeightInTiles; row++, ty++ )
+				for( row = 0, ty = orig_ty; row <= mapViewHeight; row++, ty++ )
 				{
-					tile = this.data[ty * this.map.widthInTiles + tx];
+					tile = this.data[ty * mapWidth + tx];
 					// '0' tiles in Tiled are *empty*
 					if( tile )
 					{
@@ -598,7 +598,6 @@ zSquared.tilemap = function( z2 )
 		this._prev_tx = orig_tx;
 		this._prev_ty = orig_ty;
 		this._prev_x = x;
-		this._prev_y = y;
 
 		// TODO: bleh...
 		// this works in PIXI 1.3:
@@ -613,17 +612,10 @@ zSquared.tilemap = function( z2 )
 	z2.TileLayer.prototype.renderPixiRT = function( viewx, viewy )
 	{
 		// TODO: dirty checks - don't draw if not dirty
-		// TODO: track previous (view) coordinates and only update the necessary
-		// areas of the canvas (i.e. if we have just move a bit to the left we
-		// can copy the bulk of the image over and only draw a single column of
-		// new tiles)
 
 		// view.x/y is the *center* not upper left
-		// TODO: clamp x,y to the layer/map bounds
 		var x = ~~((viewx - this.map.viewWidth/2)*this.scrollFactorX);
 		var y = ~~((viewy - this.map.viewHeight/2)*this.scrollFactorY);
-//		var x = (viewx - this.map.viewWidth/2)*this.scrollFactorX;
-//		var y = (viewy - this.map.viewHeight/2)*this.scrollFactorY;
 		var tx = ~~(x / this.map.tileWidth);
 		var ty = ~~(y / this.map.tileHeight);
 
@@ -678,15 +670,107 @@ zSquared.tilemap = function( z2 )
 				}
 			}
 		}
-//		this.sprite.position.x = -(x - (orig_tx * this.map.tileWidth));
-//		this.sprite.position.y = -(y - (orig_ty * this.map.tileHeight));
-		var px = -(x - (orig_tx * this.map.tileWidth));
-		var py = -(y - (orig_ty * this.map.tileHeight));
 
 		// render the tile sprites' doc to the render texture
 		// (clearing the render texture first)
-//		this.renderTexture.render( this.doc, null, true );
-		this.renderTexture.render( this.doc, {x:px,y:py}, true );
+//		var px = -(x - (orig_tx * this.map.tileWidth));
+//		var py = -(y - (orig_ty * this.map.tileHeight));
+//		this.renderTexture.render( this.doc, {x:px,y:py}, true );
+		this.sprite.position.x = -(x - (orig_tx * this.map.tileWidth));
+		this.sprite.position.y = -(y - (orig_ty * this.map.tileHeight));
+		this.renderTexture.render( this.doc, null, true );
+	};
+
+	z2.TileLayer.prototype.renderPixiRTOpt = function( viewx, viewy )
+	{
+		// TODO: dirty checks - don't draw if not dirty
+
+		// cache some vars for performance
+		var tw = this.map.tileWidth;
+		var th = this.map.tileHeight;
+
+		// draw the tiles onto the canvas
+		var tx, ty;		// tile positions in the data map
+
+		// view.x/y is the *center* not upper left
+		var x = ~~((viewx - this.map.viewWidth/2)*this.scrollFactorX);
+		var y = ~~((viewy - this.map.viewHeight/2)*this.scrollFactorY);
+		tx = ~~(x / tw);
+		ty = ~~(y / th);
+
+		// TODO: if there is only *one* tileset, we can optimize because we
+		// don't need to look-up which tileset this tile is in...
+
+		var tileset, tile, tile_x, tile_y;
+		var orig_tx = tx;
+		var orig_ty = ty;
+		var i, j;
+
+		// TODO: support more than one tileset
+		tileset = this.map.tilesets[0];
+
+		var mapWidth = this.map.widthInTiles;
+		var mapHeight = this.map.heightInTiles;
+
+		// do we need to set all the tile's u/v values?
+		if( tx !== this._prev_tx || ty !== this._prev_ty )
+		{
+			// set the frame for each tile sprite
+			for( i = 0; i <= this.map.viewHeightInTiles; i++, ty++ )
+			{
+				if( ty < 0 || ty > mapHeight )
+					continue;
+				for( j = 0, tx = orig_tx; j <= this.map.viewWidthInTiles; j++, tx++ )
+				{
+					var tileSprite = this.tileSprites[i][j];
+					if( tx < 0 || tx > mapWidth )
+						continue;
+					tile = this.data[ty * mapWidth + tx];
+					// '0' tiles in Tiled are *empty*
+					if( tile )
+					{
+						tileSprite.visible = true;
+						// TODO: support more than one tileset
+						// (this means swapping textures)
+//						tileset = this.map.getTilesetForIndex( tile );
+//						tile -= tileset.start;
+						tile--;
+
+						tile_y = ~~(tile / tileset.widthInTiles);
+						tile_x = tile - (tile_y * tileset.widthInTiles);
+
+						var frame = tileSprite.texture.frame;
+						frame.x = tile_x * tw;
+						frame.y = tile_y * th;
+						tileSprite.texture.setFrame( frame );
+					}
+					else
+					{
+						tileSprite.visible = false;
+					}
+				}
+			}
+		}
+		// TODO: is there any optimization we can make here for the
+		// RenderTexture technique ???
+		// if we are *not* within the same tile as last frame
+//		else if( tx !== this._prev_tx || ty !== this._prev_ty )
+//		{
+//		}
+		// otherwise the canvas already contains the necessary area 
+//			else { }
+
+		// next frame
+		this._prev_tx = orig_tx;
+		this._prev_ty = orig_ty;
+
+		// set the offset into the render texture
+//		var px = -(x - (orig_tx * this.map.tileWidth));
+//		var py = -(y - (orig_ty * this.map.tileHeight));
+//		this.renderTexture.render( this.doc, {x:px,y:py}, true );
+		this.sprite.position.x = -(x - (orig_tx * this.map.tileWidth));
+		this.sprite.position.y = -(y - (orig_ty * this.map.tileHeight));
+		this.renderTexture.render( this.doc, null, true );
 	};
 
 	/** Render the tilemap to its canvas
