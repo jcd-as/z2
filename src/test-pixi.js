@@ -130,11 +130,7 @@ function start()
 
 	scene.load( json, view );
 
-	var tmc = z2.tileMapFactory.create( {layers: scene.map.layers} );
-	var tme = mgr.createEntity( [tmc] );
-	var tms = z2.createTileMapSystem( view, canvas );
-
-	scene.map.start();
+	scene.map.start( mgr );
 
 	scene.stage.addChild( view.camera_doc );
 
@@ -230,8 +226,6 @@ function start()
 	//
 	// movement system
 	mgr.addSystem( ms );
-	// tilemap system
-	mgr.addSystem( tms );
 	// rendering system (last system)
 	mgr.addSystem( rs );
 

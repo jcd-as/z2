@@ -3,16 +3,19 @@
 // Components and Systems for 2d tilemapped games
 //
 // TODO:
-// - implement optimized RenderTexture tile layer rendering technique using the
-// same 'paged' algorithm as RENDER_OPT_PAGES, but with renderTextures instead
-// of canvases
-// - TileLayers need to be rendered by the same rendering System as Sprites, so
-// that sprites can appear *between* layers
+// - change the way in which the Layer Entites are added to the mgr, so
+// that sprites can appear *between* layers (OR add support for loading sprites
+// from Tiled object layers and load/create/add them at the same time as the Layers)
 // - broad-phase tilemap collision detection (sprite vs tile layer)
 // - optimize 
 // - can we separate the need for the view from the map? (this would allow
 // the same map to (conceptually anyway) have different views. e.g. a main view
 // and a 'minimap' view
+// - BUG (?): because out-of-bounds tiles aren't cleared, you can get garbage
+// on-screen if you have a layer that *does* scroll out of bounds (like a
+// parallax foreground layer that moves much faster than the 'main' layer).
+// probably the layer should just STOP moving when the view gets out of its
+// bounds (i.e. just 'stick' at the edge)
 // -
 
 
@@ -65,6 +68,9 @@ zSquared.tilemap = function( z2 )
 
 		// layer data
 		this.layers = [];
+
+		// Tile layer Entities
+		this.layerEntities = [];
 	};
 
 	/** Load a tile map from Tiled object
@@ -129,10 +135,23 @@ zSquared.tilemap = function( z2 )
 		}
 	};
 
-	z2.TileMap.prototype.start = function()
+	/** Start the scene running
+	 * @method z2.TileMap#start
+	 * @arg {z2.Manager} mgr The ECS Manager object
+	 */
+	z2.TileMap.prototype.start = function( mgr )
 	{
+		// add the layers' sprites to the stage
 		for( var i = 0; i < this.layers.length; i++ )
 			this.view.scene.stage.addChild( this.layers[i].sprite );
+
+		// create Entities for the TileLayers
+		for( i = 0; i < this.layers.length; i++ )
+		{
+			var tlc = z2.tileLayerFactory.create( {layer: this.layers[i]} );
+			var tle = mgr.createEntity( [z2.renderableFactory, tlc] );
+			this.layerEntities.push( tle );
+		}
 	};
 
 	/** Get the tileset for a given tile index
@@ -791,53 +810,7 @@ zSquared.tilemap = function( z2 )
 	// Component factories
 	/////////////////////////////////////////////////////////////////////////
 
-	/** Component Factory for tile map */
-	z2.tileMapFactory = z2.createComponentFactory( {layers: null} );
-
 	/** Component Factory for tile map layer */
-//	z2.tileLayerFactory = z2.createComponentFactory( {data: null} );
-
-	/////////////////////////////////////////////////////////////////////////
-	// System factories
-	/////////////////////////////////////////////////////////////////////////
-
-	/////////////////////////////////////////////////////////////////////////
-	/** TileMapSystem factory function.
-	 * requires: tileMap
-	 * optional: ...
-	 * @function z2.createTileMapSystem
-	 */
-	z2.createTileMapSystem = function( view, canvas )
-	{
-		var context = canvas.getContext( '2d' );
-
-		return new z2.System( [z2.tileMapFactory],
-		{
-//			init: function()
-//			{
-//			},
-			onStart: function()
-			{
-				// set transform to identity
-//				context.setTransform( 1, 0, 0, 1, 0, 0 );
-			},
-			update: function( e, dt )
-			{
-				var tmc = e.getComponent( z2.tileMapFactory.mask );
-
-				// draw each layer
-				for( var i = 0; i < tmc.layers.length; i++ )
-				{
-					// render the layer
-					tmc.layers[i].render( view.x, view.y );
-					// draw the layer to the main context
-//					context.drawImage( tmc.layers[i].canvas, 0, 0 );
-				}
-			},
-//			onEnd: function()
-//			{
-//			}
-		} );
-	};
+	z2.tileLayerFactory = z2.createComponentFactory( {layer: null} );
 
 };

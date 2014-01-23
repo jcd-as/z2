@@ -9,7 +9,7 @@ zSquared['2d'] = function( z2 )
 {
 	"use strict";
 
-	z2.require( ["math", "ecs", "time"] );
+	z2.require( ["math", "ecs", "time", "tilemap"] );
 
 
 	/////////////////////////////////////////////////////////////////////////
@@ -212,7 +212,7 @@ zSquared['2d'] = function( z2 )
 	/////////////////////////////////////////////////////////////////////////
 	/** RenderingSystem factory function
 	 * requires: renderable
-	 * optional: image, sprite, size, rotation, scale, center
+	 * optional: image, sprite, tileLayer, size, rotation, scale, center
 	 * (MUST be an image or sprite or nothing can be rendered)
 	 * @function z2.createRenderingSystem
 	 * @arg {Canvas} canvas The HTML5 canvas to draw to
@@ -241,12 +241,24 @@ zSquared['2d'] = function( z2 )
 				// get the image...
 				var disp = e.getComponent( z2.imageFactory.mask );
 
-				// ... or sprite
+				// ...or sprite...
 				var anims;
 				if( !disp )
 				{
 					disp = e.getComponent( z2.spriteFactory.mask );
-					anims = disp.animations;
+					if( disp )
+						anims = disp.animations;
+				}
+
+				// ... or tile layer
+				if( !disp )
+				{
+					disp = e.getComponent( z2.tileLayerFactory.mask );
+					if( disp )
+					{
+						disp.layer.render( view.x, view.y );
+						return;
+					}
 				}
 
 				// can't operate on nothing...
