@@ -9,7 +9,7 @@ zSquared['2d'] = function( z2 )
 {
 	"use strict";
 
-	z2.require( ["math", "ecs", "time", "tilemap"] );
+	z2.require( ["math", "ecs", "time", "tilemap", "collision"] );
 
 
 	/////////////////////////////////////////////////////////////////////////
@@ -70,6 +70,9 @@ zSquared['2d'] = function( z2 )
 
 	/** Component Factory for 2d transform groups */
 	z2.transformGroupFactory = z2.createComponentFactory();
+
+	/** Component Factory for physics body (AABB bounds, mass, etc) */
+	z2.physicsBodyFactory = z2.createComponentFactory( {aabb:null, mass:1, blocked_top: false, blocked_left:false, blocked_bottom:false, blocked_right:false} );
 
 	/** @class z2.AnimationSet
 	 * @classdesc Helper class for sprite animations */
@@ -350,7 +353,8 @@ zSquared['2d'] = function( z2 )
 	/////////////////////////////////////////////////////////////////////////
 	/** MovementSystem factory function
 	 * requires: position, velocity, transform
-	 * optional: positionConstraints
+	 * optional: positionConstraints, collisionMap, physicsBody (*required* if
+	 * there is a collisionMap)
 	 * @function z2.createMovementSystem
 	 */
 	z2.createMovementSystem = function()
@@ -368,6 +372,9 @@ zSquared['2d'] = function( z2 )
 				// get the pos constraints component
 				var pcc = e.getComponent( z2.positionConstraintsFactory.mask );
 
+				// get the collision map component
+				var cmc = e.getComponent( z2.collisionMapFactory.mask );
+
 				var minx = -Number.MAX_VALUE, maxx = Number.MAX_VALUE;
 				var miny = -Number.MAX_VALUE, maxy = Number.MAX_VALUE;
 				if( pcc )
@@ -378,10 +385,24 @@ zSquared['2d'] = function( z2 )
 					maxy = pcc.maxy;
 				}
 
+				var bc = e.getComponent( z2.physicsBodyFactory.mask );
+
 				// account for elapsed time since last frame
 				var idt = dt / 1000;
-				var xmod = vc.x * idt;
-				var ymod = vc.y * idt;
+				var xmod;
+				if( bc && bc.blocked_left && vc.x < 0 )
+					xmod = 0;
+				else if( bc && bc.blocked_right && vc.x > 0 )
+					xmod = 0;
+				else
+					xmod = vc.x * idt;
+				var ymod;
+				if( bc && bc.blocked_up && vc.y < 0 )
+					ymod = 0;
+				else if( bc && bc.blocked_down && vc.y > 0 )
+					ymod = 0;
+				else
+					ymod = vc.y * idt;
 				// test constraints
 				var x = pc.x + xmod;
 				var y = pc.y + ymod;
@@ -389,6 +410,80 @@ zSquared['2d'] = function( z2 )
 					pc.x = x;
 				if( y < maxy && y > miny )
 					pc.y = y;
+
+				// test for collision with collision map
+				if( cmc )
+				{
+					if( !bc )
+						throw new Error( "Entity processed by MovementSystem has collisionMap component, but no physicsBodyComponent!" );
+					// TODO: non-AABB collision body??
+					var aabb = bc.aabb.slice(0); // [top, left, bottom, right]
+					// add to the entity's position
+					aabb[0] += pc.y;
+					aabb[1] += pc.x;
+					aabb[2] += pc.y;
+					aabb[3] += pc.x;
+
+					// perform the collision
+					var m, pv = [0,0];
+
+					m = z2.collideAabbVsCollisionMap( aabb, cmc.data, cmc.map.widthInTiles, cmc.map.heightInTiles, cmc.map.tileWidth, cmc.map.tileHeight, pv );
+
+					// separate the aabb and stop velocity
+					// TODO: proper physics: mass, gravity and bounce
+					if( m )
+					{
+						vc.x = 0;
+						vc.y = 0;
+						pc.x += m * pv[0];
+						pc.y += m * pv[1];
+						// set 'blocked' in direction of collision
+						// left
+						if( pv[0] === 1 )
+						{
+							bc.blocked_left = true;
+							bc.blocked_right = false;
+							bc.blocked_up = false;
+							bc.blocked_down = false;
+						}
+						// right
+						else if( pv[0] === -1 )
+						{
+							bc.blocked_right = true;
+							bc.blocked_left = false;
+							bc.blocked_up = false;
+							bc.blocked_down = false;
+						}
+						// top
+						else if( pv[1] === 1 )
+						{
+							bc.blocked_up = true;
+							bc.blocked_left = false;
+							bc.blocked_right = false;
+							bc.blocked_down = false;
+						}
+						else if( pv[1] === -1 )
+						{
+							bc.blocked_down = true;
+							bc.blocked_left = false;
+							bc.blocked_right = false;
+							bc.blocked_up = false;
+						}
+
+						return;
+					}
+					else
+					{
+						if( vc.x < 0 )
+							bc.blocked_left = false;
+						else if( vc.x > 0 )
+							bc.blocked_right = false;
+						if( vc.y < 0 )
+							bc.blocked_up = false;
+						else if( vc.y > 0 )
+							bc.blocked_down = false;
+					}
+				}
 			}
 		} );
 	};

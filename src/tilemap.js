@@ -51,8 +51,7 @@ zSquared.tilemap = function( z2 )
 		// tiles image
 		this.tilesets = [];
 
-		// tiles data
-		this.data = null;
+		// tile dimensions
 		this.tileWidth = 0;
 		this.tileHeight = 0;
 
@@ -337,11 +336,12 @@ zSquared.tilemap = function( z2 )
 
 		// TODO: bleh...
 		// this works in PIXI 1.3:
-		if( PIXI.gl )
-        PIXI.texturesToUpdate.push( this.baseTexture );
+//		if( PIXI.gl )
+//			PIXI.texturesToUpdate.push( this.baseTexture );
 		// but texturesToUpdate isn't actually updated in 1.4,
 		// so we have to update it ourselves:
-//			PIXI.updateWebGLTexture( this.baseTexture, PIXI.defaultRenderer.renderSession.gl );
+		if( PIXI.defaultRenderer.renderSession.gl )
+			PIXI.updateWebGLTexture( this.baseTexture, PIXI.defaultRenderer.renderSession.gl );
 	};
 
 	z2.TileLayer.prototype.renderCanvasOpt = function( viewx, viewy )
@@ -620,12 +620,12 @@ zSquared.tilemap = function( z2 )
 
 		// TODO: bleh...
 		// this works in PIXI 1.3:
-		if( PIXI.gl )
-			PIXI.texturesToUpdate.push( this.baseTexture );
+//		if( PIXI.gl )
+//			PIXI.texturesToUpdate.push( this.baseTexture );
 		// but texturesToUpdate isn't actually updated in 1.4,
 		// so we have to update it ourselves:
-//		if( PIXI.defaultRenderer.renderSession.gl )
-//			PIXI.updateWebGLTexture( this.baseTexture, PIXI.defaultRenderer.renderSession.gl );
+		if( PIXI.defaultRenderer.renderSession.gl )
+			PIXI.updateWebGLTexture( this.baseTexture, PIXI.defaultRenderer.renderSession.gl );
 	};
 
 	z2.TileLayer.prototype.renderPixiRT = function( viewx, viewy )
@@ -812,5 +812,8 @@ zSquared.tilemap = function( z2 )
 
 	/** Component Factory for tile map layer */
 	z2.tileLayerFactory = z2.createComponentFactory( {layer: null} );
+
+	/** Component Factory for collision map */
+	z2.collisionMapFactory = z2.createComponentFactory( {map: null, data: null} );
 
 };

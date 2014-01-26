@@ -573,6 +573,249 @@ zSquared.collision = function( z2 )
 	};
 
 
+	/////////////////////////////////////////////////////////////////////////
+	// tile map collision routines
+	/////////////////////////////////////////////////////////////////////////
+
+	/** Build a collision map for a given layer & 'solid' tiles array
+	 * @function z2.buildCollisionMap
+	 * @arg {Array} l TileLayer data (array of tile indices)
+	 * @arg {Number} w width of data array
+	 * @arg {Number} h width of data array
+	 * @arg {Array} solid Array of indices of the tiles that are considered for
+	 * collision ('solid' tiles)
+	 * @returns {Array} collision map - an array of objects, one for each tile,
+	 * null for tiles that cannot be collided against ("non-solid"), 
+	 * { left: n, right: n, top: n, bottom: n } for solid tiles (n is 1 for
+	 * solid, 0 for non-solid and -1 for 'interesting' [which is not-yet-impl])
+	 *
+	 */
+	z2.buildCollisionMap = function( l, w, h, solid )
+	{
+		var i, j, k, t;
+
+		// create a collision map var
+		var map = new Array( w * h );
+
+		// iterate over each tile in the layer
+		for( i = 0; i < h; i++ )
+		{
+			for( j = 0; j < w; j++ )
+			{
+				// if it is solid, mark all edges solid
+				k = i * w + j;
+				t = l[k];
+				// in Tiled, tile indices of 0 indicate 'empty tile'
+				if( t !== 0 )
+				{
+					// true index is one less than stored in the Tiled file
+					t--;
+					if( solid.indexOf( t ) !== -1 )
+						map[k] = {left:1, right:1, top:1, bottom:1};
+					else
+						map[k] = null;
+				}
+			}
+		}
+
+		// walk the _edges_ (instead of the tiles),
+		// checking the tile on either side of the edge
+
+		var left, right, top, bottom;
+		// walk the vertical edges (left & right)
+		for( i = 0; i < h; i++ )
+		{
+			for( j = 1; j < w; j++ )
+			{
+				k = i * w + j;
+				left = map[k-1];
+				right = map[k];
+				if( left && right )
+				{
+					if( left.right && right.left )
+					{
+						left.right = 0;
+						right.left = 0;
+					}
+				}
+			}
+		}
+		// walk the horizontal edges (top & bottom)
+		for( i = 1; i < h; i++ )
+		{
+			for( j = 0; j < w; j++ )
+			{
+				k = i * w + j;
+				top = map[k-w];
+				bottom = map[k];
+				if( top && bottom )
+				{
+					if( top.bottom && bottom.top )
+					{
+						top.bottom = 0;
+						bottom.top = 0;
+					}
+				}
+			}
+		}
+
+		return map;
+	};
+
+	/** Collide an AABB against a collision map
+	 * @function z2.collideAabbVsCollisionMap
+	 * @arg {Array} b (flat) Array of values for aabb 1: top, left, bottom, right
+	 * @arg {Array} map collision map (Array of objects)
+	 * @arg {Number} w width of collision map array
+	 * @arg {Number} h height of collision map array
+	 * @arg {Number} tw width of tiles (in pixels)
+	 * @arg {Number} th height of tiles (in pixels)
+	 * solid, 0 for non-solid and -1 for 'interesting' [which is not-yet-impl])
+	 * @arg {Array} pv (out) Vector (2 element array) for returning penetration direction (normal)
+	 * @returns {Number} magnitude of penetration, or 0 if no collision
+	 */
+	z2.collideAabbVsCollisionMap = function( b, map, w, h, tw, th, pv )
+	{
+		// TODO: utilize collision data for tiles that could possibly collide
+		// instead of just colliding with each tile as an AABB
+
+		// get the coordinates of the AABB, rounded to the tile boundary
+		// top, rounds down
+		var btt = Math.floor( b[0] / th );
+		// left, rounds down
+		var btl = Math.floor( b[1] / tw );
+		// bottom, rounds up
+		var btb = Math.ceil( b[2] / th );
+		// right, rounds up
+		var btr = Math.ceil( b[3] / tw );
+
+		// possible collisions are with tiles from btl to btr and btt to btb
+
+		// naive collision
+		// TODO: this doesn't work - the maximum separation is returned, 
+		// but, for instane, if we are colliding with a "wall" to the left, the
+		// maximum penetration is likely to be up or down, which will result in
+		// the colliding object (sprite) sliding up/down the wall instead of
+		// rebounding to the right
+		// Need to account for the collision data. in this example the left-hand
+		// wall won't have top/bottom collision except at it's very top and
+		// bottom tiles, so this problem won't exist
+		// BUT this means we need a collision routine to collide with an AABB
+		// that isn't really a bounding _BOX_, but is just 1 to 4 _SIDES_
+		//
+		// (should also be looking for the *least* penetration, not the most)
+		//
+		var m = 0, t, v = [];
+//		var mag = 0;
+		var mag = Number.MAX_VALUE;
+		// collide with each tile & find maximum penetration
+		for( var i = btt; i < btb; i++ )
+		{
+			for( var j = btl; j < btr; j++ )
+			{
+				t = map[i * w + j];
+				// ignore null tiles - can't collide with them
+				if( t )
+				{
+					var tile_bounds =
+					[
+						// top
+						i * th,
+						// left
+						j * tw,
+						// bottom
+						i * th + th,
+						// right
+						j * tw + tw
+					];
+					// collide vs tile
+					m = z2.collideAabbVsTile( b, tile_bounds, t, v );
+//					if( m > mag )
+					if( m < mag )
+					{
+						mag = m;
+						pv[0] = v[0];	
+						pv[1] = v[1];	
+					}
+				}
+			}
+		}
+		return m;
+	};
+
+	/** Collide an Axis-Aligned Bounding Box and a Tile
+	 * @function z2.collideAabbVsTile
+	 * @arg {Array} box (flat) Array of values for aabb 1: top, left, bottom, right
+	 * @arg {Array} tile (flat) Array of values for tile: top, left, bottom, right
+	 * @arg {Object} td Object containing the tile data for this tile (e.g.
+	 * {left:n, right:n, top:n, bottom:n} )
+	 * @arg {Array} pv (out) Vector (2 element array) for returning penetration direction (normal)
+	 * @returns {Number} magnitude of penetration, or 0 if no collision
+	 */
+	z2.collideAabbVsTile = function( box, tile, td, pv )
+	{
+		// TODO: impl
+
+		// overlap values
+		var t, l, b, r;
+
+		if( td.top )
+		{
+			// check against tile top
+			t = box[2] - tile[0];
+		}
+		if( td.left )
+		{
+			// check against tile left
+			l = box[3] - tile[1];
+		}
+		if( td.bottom )
+		{
+			// check against tile bottom
+			b = tile[2] -  box[0];
+		}
+		if( td.right )
+		{
+			// check against tile right
+			r = tile[3] - box[1];
+		}
+
+		// if there is any overlap, select the least overlap
+		if( t || l || b || r )
+		{
+			var set = [];
+			if( t ) set.push( t );
+			if( l ) set.push( l );
+			if( b ) set.push( b );
+			if( r ) set.push( r );
+
+			var p = Math.min.apply( null, set );
+			if( p === t )
+			{
+				pv[0] = 0;
+				pv[1] = -1;
+			}
+			else if( p === l )
+			{
+				pv[0] = -1;
+				pv[1] = 0;
+			}
+			else if( p === b )
+			{
+				pv[0] = 0;
+				pv[1] = 1;
+			}
+			else if( p === r )
+			{
+				pv[0] = 1;
+				pv[1] = 0;
+			}
+			return p;
+		}
+		else
+			return 0;
+	};
+
 
 	/////////////////////////////////////////////////////////////////////////
 	// helper routines for testing:

@@ -126,13 +126,20 @@ function start()
 	var view = new z2.View( scene, WIDTH, HEIGHT, null, z2.FOLLOW_MODE_NONE, 512, 512 );
 
 	// create rendering system
-	var rs = z2.createRenderingSystem( canvas, view );
+	var force_canvas = false;
+	var rs = z2.createRenderingSystem( canvas, view, force_canvas );
 
 	scene.load( json, view );
 
 	scene.map.start( mgr );
 
 	scene.stage.addChild( view.camera_doc );
+
+	// create a collision map
+	var collisionMap = z2.buildCollisionMap( scene.map.layers[48].data, scene.map.widthInTiles, scene.map.heightInTiles, [0,1,2,3,4] );
+
+	// create a collision map component
+	var cmc = z2.collisionMapFactory.create( {map: scene.map, data: collisionMap} );
 
 	// create a renderable image Entity
 //	var img = z2.loader.getAsset( 'logo' );
@@ -174,7 +181,9 @@ function start()
 	var sprsz = z2.sizeFactory.create( {width: 64, height: 64} );
 	var sprcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
 	var sprpc = z2.positionConstraintsFactory.create( {minx: 16, maxx: scene.width-16, miny: 32, maxy: scene.height-32} );
-	spre = mgr.createEntity( [z2.renderableFactory, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc] );
+	var sprbody = z2.physicsBodyFactory.create( {aabb:[-32, -16, 32, 16]} );
+//	spre = mgr.createEntity( [z2.renderableFactory, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc] );
+	spre = mgr.createEntity( [z2.renderableFactory, cmc, sprbody, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc] );
 	anims.play( 'walk' );
 
 
