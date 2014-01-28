@@ -31,8 +31,8 @@ zSquared.tilemap = function( z2 )
 	var RENDER_PIXI_SPR = 2;
 	var RENDER_OPT_PIXI_SPR = 3;
 	var RENDER_PIXI_ALL_SPR = 4;
-//	var render_method = RENDER_PIXI_ALL_SPR;
-	var render_method = RENDER_OPT_PIXI_SPR;
+	var render_method = RENDER_PIXI_ALL_SPR;
+//	var render_method = RENDER_OPT_PIXI_SPR;
 //	var render_method = RENDER_PIXI_SPR;
 //	var render_method = RENDER_OPT_PAGES;
 //	var render_method = RENDER_SIMPLE;
@@ -303,6 +303,7 @@ zSquared.tilemap = function( z2 )
 					// '0' tiles in Tiled are *empty*
 					if( tile )
 					{
+						tile--;
 						var texture = new PIXI.Texture( this.tileTexture );
 						var spr = new PIXI.Sprite( texture );
 						spr.position.x = j * this.map.tileWidth;
@@ -871,8 +872,8 @@ zSquared.tilemap = function( z2 )
 		}
 		
 		// move the doc (group) to viewx, viewy
-		this.doc.position.x = -viewx;
-		this.doc.position.y = -viewy;
+		this.doc.position.x = -viewx + this.map.viewWidth/2;
+		this.doc.position.y = -viewy + this.map.viewHeight/2;
 	};
 
 	/** Render the tilemap to its canvas
