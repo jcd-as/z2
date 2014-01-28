@@ -30,6 +30,8 @@ zSquared.tilemap = function( z2 )
 	var RENDER_OPT_PAGES = 1;
 	var RENDER_PIXI_SPR = 2;
 	var RENDER_OPT_PIXI_SPR = 3;
+	var RENDER_PIXI_ALL_SPR = 4;
+//	var render_method = RENDER_PIXI_ALL_SPR;
 	var render_method = RENDER_OPT_PIXI_SPR;
 //	var render_method = RENDER_PIXI_SPR;
 //	var render_method = RENDER_OPT_PAGES;
@@ -140,9 +142,12 @@ zSquared.tilemap = function( z2 )
 	 */
 	z2.TileMap.prototype.start = function( mgr )
 	{
-		// add the layers' sprites to the stage
-		for( var i = 0; i < this.layers.length; i++ )
-			this.view.scene.stage.addChild( this.layers[i].sprite );
+		if( render_method !== RENDER_PIXI_ALL_SPR )
+		{
+			// add the layers' sprites to the stage
+			for( var i = 0; i < this.layers.length; i++ )
+				this.view.scene.stage.addChild( this.layers[i].sprite );
+		}
 
 		// create Entities for the TileLayers
 		for( i = 0; i < this.layers.length; i++ )
@@ -240,6 +245,20 @@ zSquared.tilemap = function( z2 )
 			this._prevTx = -1;
 			this._prevTy = 0;
 		}
+		else if( render_method == RENDER_PIXI_ALL_SPR )
+		{
+			this.canvasWidth = map.viewWidth;
+			this.canvasHeight = map.viewHeight;
+			this.frame = new PIXI.Rectangle( 0, 0, this.canvasWidth, this.canvasHeight );
+
+			// TODO: support more than one tileset
+			this.tileTexture = new PIXI.BaseTexture( map.tilesets[0].tiles );
+			this.doc = new PIXI.DisplayObjectContainer();
+
+			this.tileSprites = [];
+
+			map.view.scene.stage.addChild( this.doc );
+		}
 
 		// the factor by which the movement (scrolling) of this layer differs
 		// from the "main" map. e.g. '2' would be twice as fast, '0.5' would be
@@ -270,6 +289,38 @@ zSquared.tilemap = function( z2 )
 		{
 			this.scrollFactorX = lyr.properties.scrollFactorX ? +lyr.properties.scrollFactorX : 1;
 			this.scrollFactorY = lyr.properties.scrollFactorY ? +lyr.properties.scrollFactorY : 1;
+		}
+		if( render_method === RENDER_PIXI_ALL_SPR )
+		{
+			// TODO: support more than one tileset
+			var tileset = this.map.tilesets[0];
+			// create & set-up all the tile sprites
+			for( var i = 0; i <= this.map.heightInTiles; i++ )
+			{
+				for( var j = 0; j <= this.map.widthInTiles; j++ )
+				{
+					var tile = this.data[i * this.map.widthInTiles + j];
+					// '0' tiles in Tiled are *empty*
+					if( tile )
+					{
+						var texture = new PIXI.Texture( this.tileTexture );
+						var spr = new PIXI.Sprite( texture );
+						spr.position.x = j * this.map.tileWidth;
+						spr.position.y = i * this.map.tileHeight;
+						spr.i = i;
+						spr.j = j;
+						var tile_y = ~~(tile / tileset.widthInTiles);
+						var tile_x = tile - (tile_y * tileset.widthInTiles);
+						texture.frame.x = tile_x * this.map.tileWidth;
+						texture.frame.y = tile_y * this.map.tileHeight;
+						texture.frame.width = this.map.tileWidth;
+						texture.frame.height = this.map.tileHeight;
+
+						this.tileSprites.push( spr );
+						this.doc.addChild( spr );
+					}
+				}
+			}
 		}
 	};
 
@@ -792,6 +843,38 @@ zSquared.tilemap = function( z2 )
 		this.renderTexture.render( this.doc, null, true );
 	};
 
+	z2.TileLayer.prototype.renderPixiSpr = function( viewx, viewy )
+	{
+		// draw the tiles onto the canvas
+		var tx, ty;		// tile positions in the data map
+
+		// view.x/y is the *center* not upper left
+		var x = ~~((viewx - this.map.viewWidth/2)*this.scrollFactorX);
+		var y = ~~((viewy - this.map.viewHeight/2)*this.scrollFactorY);
+		tx = ~~(x / this.map.tileWidth);
+		ty = ~~(y / this.map.tileHeight);
+		var txend = tx + this.map.viewWidthInTiles;
+		var tyend = ty + this.map.viewHeightInTiles;
+
+		// set the visibility of all the tile sprites
+		for( var count = 0; count < this.tileSprites.length; count++ )
+		{
+			var spr = this.tileSprites[count];
+			var i = spr.i;
+			var j = spr.j;
+			// if the sprite is on-screen
+			if( j >= tx && j <= txend &&
+				i >= ty && i <= tyend )
+				spr.visible = true;
+			else
+				spr.visible = false;
+		}
+		
+		// move the doc (group) to viewx, viewy
+		this.doc.position.x = -viewx;
+		this.doc.position.y = -viewy;
+	};
+
 	/** Render the tilemap to its canvas
 	 * @method z2.TileLayer#render
 	 * @arg {Number} viewx The x-coordinate that the view is centered on
@@ -805,6 +888,8 @@ zSquared.tilemap = function( z2 )
 		z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderPixiRT;
 	else if( render_method === RENDER_OPT_PIXI_SPR )
 		z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderPixiRTOpt;
+	else if( render_method === RENDER_PIXI_ALL_SPR )
+		z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderPixiSpr;
 
 	/////////////////////////////////////////////////////////////////////////
 	// Component factories

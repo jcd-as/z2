@@ -427,7 +427,7 @@ zSquared['2d'] = function( z2 )
 					// perform the collision
 					var m, pv = [0,0];
 
-					m = z2.collideAabbVsCollisionMap( aabb, cmc.data, cmc.map.widthInTiles, cmc.map.heightInTiles, cmc.map.tileWidth, cmc.map.tileHeight, pv );
+					m = z2.separateAabbVsCollisionMap( aabb, cmc.data, cmc.map.widthInTiles, cmc.map.heightInTiles, cmc.map.tileWidth, cmc.map.tileHeight, pv );
 
 					// separate the aabb and stop velocity
 					// TODO: proper physics: mass, gravity and bounce
@@ -435,8 +435,8 @@ zSquared['2d'] = function( z2 )
 					{
 						vc.x = 0;
 						vc.y = 0;
-						pc.x += m * pv[0];
-						pc.y += m * pv[1];
+						pc.x += pv[0];
+						pc.y += pv[1];
 						// set 'blocked' in direction of collision
 						// left
 						if( pv[0] === 1 )

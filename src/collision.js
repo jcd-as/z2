@@ -692,23 +692,9 @@ zSquared.collision = function( z2 )
 		// possible collisions are with tiles from btl to btr and btt to btb
 
 		// naive collision
-		// TODO: this doesn't work - the maximum separation is returned, 
-		// but, for instane, if we are colliding with a "wall" to the left, the
-		// maximum penetration is likely to be up or down, which will result in
-		// the colliding object (sprite) sliding up/down the wall instead of
-		// rebounding to the right
-		// Need to account for the collision data. in this example the left-hand
-		// wall won't have top/bottom collision except at it's very top and
-		// bottom tiles, so this problem won't exist
-		// BUT this means we need a collision routine to collide with an AABB
-		// that isn't really a bounding _BOX_, but is just 1 to 4 _SIDES_
-		//
-		// (should also be looking for the *least* penetration, not the most)
-		//
 		var m = 0, t, v = [];
-//		var mag = 0;
 		var mag = Number.MAX_VALUE;
-		// collide with each tile & find maximum penetration
+		// collide with each tile & find minimum penetration
 		for( var i = btt; i < btb; i++ )
 		{
 			for( var j = btl; j < btr; j++ )
@@ -730,7 +716,6 @@ zSquared.collision = function( z2 )
 					];
 					// collide vs tile
 					m = z2.collideAabbVsTile( b, tile_bounds, t, v );
-//					if( m > mag )
 					if( m < mag )
 					{
 						mag = m;
@@ -754,31 +739,42 @@ zSquared.collision = function( z2 )
 	 */
 	z2.collideAabbVsTile = function( box, tile, td, pv )
 	{
-		// TODO: impl
+		// TODO: this needs to be changed to return ALL of the
+		// collsions/penetrations, not just the least 
+		//
+		// TODO: optimize
 
 		// overlap values
 		var t, l, b, r;
 
-		if( td.top )
-		{
-			// check against tile top
-			t = box[2] - tile[0];
-		}
-		if( td.left )
-		{
-			// check against tile left
-			l = box[3] - tile[1];
-		}
-		if( td.bottom )
-		{
-			// check against tile bottom
-			b = tile[2] -  box[0];
-		}
-		if( td.right )
-		{
-			// check against tile right
-			r = tile[3] - box[1];
-		}
+		// left, right, top & bottom overlaps
+		l = box[3] - tile[1];
+		r = tile[3] - box[1];
+		t = box[2] - tile[0];
+		b = tile[2] - box[0];
+
+		// no overlap?
+		if( t < 0 || l < 0 || b < 0 || r < 0 )
+			return 0;
+
+		// don't allow overlap greater than the tile size
+		var tw = tile[3] - tile[1];
+		var th = tile[2] - tile[0];
+		if( t > th ) t = 0;
+		if( l > tw ) l = 0;
+		if( b > th ) b = 0;
+		if( r > tw ) r = 0;
+
+		// only check against the sides of the tile that are marked for
+		// collision
+		if( !td.top )
+			t = 0;
+		if( !td.left )
+			l = 0;
+		if( !td.bottom )
+			b = 0;
+		if( !td.right )
+			r = 0;
 
 		// if there is any overlap, select the least overlap
 		if( t || l || b || r )
@@ -815,6 +811,80 @@ zSquared.collision = function( z2 )
 		else
 			return 0;
 	};
+
+	/** Collide an AABB against a collision map
+	 * @function z2.collideAabbVsCollisionMap
+	 * @arg {Array} b (flat) Array of values for aabb 1: top, left, bottom, right
+	 * @arg {Array} map collision map (Array of objects)
+	 * @arg {Number} w width of collision map array
+	 * @arg {Number} h height of collision map array
+	 * @arg {Number} tw width of tiles (in pixels)
+	 * @arg {Number} th height of tiles (in pixels)
+	 * solid, 0 for non-solid and -1 for 'interesting' [which is not-yet-impl])
+	 * @arg {Array} pv (out) Vector (2 element array) for returning penetration direction (normal)
+	 * @returns {Number} magnitude of penetration, or 0 if no collision
+	 */
+	z2.separateAabbVsCollisionMap = function( b, map, w, h, tw, th, pv )
+	{
+		// get the coordinates of the AABB, rounded to the tile boundary
+		// top, rounds down
+		var btt = Math.floor( b[0] / th );
+		if( btt < 0 ) btt = 0;
+		// left, rounds down
+		var btl = Math.floor( b[1] / tw );
+		if( btl < 0 ) btl = 0;
+		// bottom, rounds up
+		var btb = Math.ceil( b[2] / th );
+		if( btb > h ) btb = w;
+		// right, rounds up
+		var btr = Math.ceil( b[3] / tw );
+		if( btr > w ) btr = w;
+
+		// possible collisions are with tiles from btl to btr and btt to btb
+
+		var m = 0, t, v = [];
+		pv[0] = 0;
+		pv[1] = 0;
+		v[0] = 0;
+		v[1] = 0;
+		// collide with each tile & find maximum penetration in each axis
+		var collision = false;
+		for( var i = btt; i < btb; i++ )
+		{
+			for( var j = btl; j < btr; j++ )
+			{
+				t = map[i * w + j];
+				// ignore null tiles - can't collide with them
+				if( t )
+				{
+					var tile_bounds =
+					[
+						// top
+						i * th,
+						// left
+						j * tw,
+						// bottom
+						i * th + th,
+						// right
+						j * tw + tw
+					];
+					// collide vs tile
+					m = z2.collideAabbVsTile( b, tile_bounds, t, v );
+					if( m )
+					{
+						collision = true;
+						// combine the penetration
+						if( v[0] && Math.abs(m) > Math.abs(pv[0]) )
+							pv[0] = m * v[0];
+						if( v[1] && Math.abs(m) > Math.abs(pv[1]) )
+							pv[1] = m * v[1];
+					}
+				}
+			}
+		}
+		return collision;
+	};
+
 
 
 	/////////////////////////////////////////////////////////////////////////
