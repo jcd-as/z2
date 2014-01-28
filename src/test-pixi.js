@@ -136,7 +136,9 @@ function start()
 	scene.stage.addChild( view.camera_doc );
 
 	// create a collision map
-	var collisionMap = z2.buildCollisionMap( scene.map.layers[48].data, scene.map.widthInTiles, scene.map.heightInTiles, [0,1,2,3,4] );
+	// (for 50-layer perf test:)
+//	var collisionMap = z2.buildCollisionMap( scene.map.layers[48].data, scene.map.widthInTiles, scene.map.heightInTiles, [0,1,2,3,4] );
+	var collisionMap = z2.buildCollisionMap( scene.map.layers[1].data, scene.map.widthInTiles, scene.map.heightInTiles, [0,1,2,3,4] );
 
 	// create a collision map component
 	var cmc = z2.collisionMapFactory.create( {map: scene.map, data: collisionMap} );

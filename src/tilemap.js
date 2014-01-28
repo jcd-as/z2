@@ -6,7 +6,7 @@
 // - change the way in which the Layer Entites are added to the mgr, so
 // that sprites can appear *between* layers (OR add support for loading sprites
 // from Tiled object layers and load/create/add them at the same time as the Layers)
-// - broad-phase tilemap collision detection (sprite vs tile layer)
+// - physics: gravity, acceleration, mass, 'bounce'
 // - optimize 
 // - can we separate the need for the view from the map? (this would allow
 // the same map to (conceptually anyway) have different views. e.g. a main view
@@ -31,8 +31,8 @@ zSquared.tilemap = function( z2 )
 	var RENDER_PIXI_SPR = 2;
 	var RENDER_OPT_PIXI_SPR = 3;
 	var RENDER_PIXI_ALL_SPR = 4;
-	var render_method = RENDER_PIXI_ALL_SPR;
-//	var render_method = RENDER_OPT_PIXI_SPR;
+//	var render_method = RENDER_PIXI_ALL_SPR;
+	var render_method = RENDER_OPT_PIXI_SPR;
 //	var render_method = RENDER_PIXI_SPR;
 //	var render_method = RENDER_OPT_PAGES;
 //	var render_method = RENDER_SIMPLE;
@@ -844,9 +844,12 @@ zSquared.tilemap = function( z2 )
 		this.renderTexture.render( this.doc, null, true );
 	};
 
+	// "brute force" renderer - one sprite for each tile in each layer, mark
+	// offscreen tiles 'visible=false' & set parent transform for view (camera)
 	z2.TileLayer.prototype.renderPixiSpr = function( viewx, viewy )
 	{
-		// draw the tiles onto the canvas
+		// TODO: scrollFactor's other than 1 not being accounted for properly
+
 		var tx, ty;		// tile positions in the data map
 
 		// view.x/y is the *center* not upper left
