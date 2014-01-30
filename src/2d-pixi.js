@@ -3,6 +3,9 @@
 // Components and Systems for 2d games
 //
 // TODO:
+// - physics in movement system: gravity (x), acceleration, mass, 'bounce'
+// - physicsBody's 'blocked_n' not implemented
+// - gravity bug: camera 'jitters' when sprite it is following is standing at certain places
 // - 
 
 zSquared['2d'] = function( z2 )
@@ -72,7 +75,11 @@ zSquared['2d'] = function( z2 )
 	z2.transformGroupFactory = z2.createComponentFactory();
 
 	/** Component Factory for physics body (AABB bounds, mass, etc) */
-	z2.physicsBodyFactory = z2.createComponentFactory( {aabb:null, mass:1, blocked_top: false, blocked_left:false, blocked_bottom:false, blocked_right:false} );
+	z2.physicsBodyFactory = z2.createComponentFactory( {aabb:null, mass:1, blocked_top: false, blocked_left:false, blocked_down:false, blocked_right:false} );
+
+	/** Component Factory for 2d gravity */
+	z2.gravityFactory = z2.createComponentFactory( {x: 0, y: 0} );
+
 
 	/** @class z2.AnimationSet
 	 * @classdesc Helper class for sprite animations */
@@ -354,7 +361,7 @@ zSquared['2d'] = function( z2 )
 	/** MovementSystem factory function
 	 * requires: position, velocity, transform
 	 * optional: positionConstraints, collisionMap, physicsBody (*required* if
-	 * there is a collisionMap)
+	 * there is a collisionMap), gravity
 	 * @function z2.createMovementSystem
 	 */
 	z2.createMovementSystem = function()
@@ -369,12 +376,20 @@ zSquared['2d'] = function( z2 )
 				// get the velocity component
 				var vc = e.getComponent( z2.velocityFactory.mask );
 
+				// get the gravity component
+				var gc = e.getComponent( z2.gravityFactory.mask );
+
 				// get the pos constraints component
 				var pcc = e.getComponent( z2.positionConstraintsFactory.mask );
 
 				// get the collision map component
 				var cmc = e.getComponent( z2.collisionMapFactory.mask );
 
+				// get the physics body
+				var bc = e.getComponent( z2.physicsBodyFactory.mask );
+
+
+				// apply pos constraints
 				var minx = -Number.MAX_VALUE, maxx = Number.MAX_VALUE;
 				var miny = -Number.MAX_VALUE, maxy = Number.MAX_VALUE;
 				if( pcc )
@@ -385,10 +400,28 @@ zSquared['2d'] = function( z2 )
 					maxy = pcc.maxy;
 				}
 
-				var bc = e.getComponent( z2.physicsBodyFactory.mask );
+				// dt factor
+				var idt = dt / 1000;
+
+				// gravity? apply first half prior to changing position
+				// (see http://www.niksula.cs.hut.fi/~hkankaan/Homepages/gravity.html) 
+				// for an explanation of why we split physics mods into two
+				// parts)
+				if( gc )
+				{
+//					if( gc.x < 0 && !bc.blocked_left ||
+//						gc.x > 0 && !bc.blocked_right )
+						vc.x += gc.x * idt * 0.5;
+//					if( gc.y < 0 && !bc.blocked_top ||
+//						gc.y > 0 && !bc.blocked_down )
+						vc.y += gc.y * idt * 0.5;
+				}
+				// TODO: cap velocity based on component, not hard-coded number
+				var MAX_VELOCITY = 500;
+				if( vc.x > MAX_VELOCITY ) vc.x = MAX_VELOCITY;
+				if( vc.y > MAX_VELOCITY ) vc.y = MAX_VELOCITY;
 
 				// account for elapsed time since last frame
-				var idt = dt / 1000;
 				var xmod;
 				if( bc && bc.blocked_left && vc.x < 0 )
 					xmod = 0;
@@ -403,13 +436,37 @@ zSquared['2d'] = function( z2 )
 					ymod = 0;
 				else
 					ymod = vc.y * idt;
-				// test constraints
+
+				// test constraints & set position
 				var x = pc.x + xmod;
 				var y = pc.y + ymod;
-				if( x < maxx && x > minx )
+				// TODO: if we get 'blocked_n' working, then these should set
+				// them too...
+				if( x > maxx || x < minx )
+					vc.x = 0;
+				else
 					pc.x = x;
-				if( y < maxy && y > miny )
+				if( y > maxy || y < miny )
+					vc.y = 0;
+				else
 					pc.y = y;
+
+				// gravity? apply second half after changing position
+				// (see http://www.niksula.cs.hut.fi/~hkankaan/Homepages/gravity.html) 
+				// for an explanation of why we split physics mods into two
+				// parts)
+				if( gc )
+				{
+//					if( gc.x < 0 && !bc.blocked_left ||
+//						gc.x > 0 && !bc.blocked_right )
+						vc.x += gc.x * idt * 0.5;
+//					if( gc.y < 0 && !bc.blocked_top ||
+//						gc.y > 0 && !bc.blocked_down )
+						vc.y += gc.y * idt * 0.5;
+				}
+				// TODO: cap velocity based on component, not hard-coded number
+				if( vc.x > MAX_VELOCITY ) vc.x = MAX_VELOCITY;
+				if( vc.y > MAX_VELOCITY ) vc.y = MAX_VELOCITY;
 
 				// test for collision with collision map
 				if( cmc )
@@ -430,59 +487,60 @@ zSquared['2d'] = function( z2 )
 					m = z2.collideAabbVsCollisionMap( aabb, cmc.data, cmc.map.widthInTiles, cmc.map.heightInTiles, cmc.map.tileWidth, cmc.map.tileHeight, pv );
 
 					// separate the aabb and stop velocity
-					// TODO: proper physics: mass, gravity and bounce
 					if( m )
 					{
-						vc.x = 0;
-						vc.y = 0;
 						pc.x += pv[0];
 						pc.y += pv[1];
-						// set 'blocked' in direction of collision
+						// set velocity & 'blocked' in direction of collision
 						// left
-						if( pv[0] === 1 )
+						if( pv[0] > 0 )
 						{
-							bc.blocked_left = true;
-							bc.blocked_right = false;
-							bc.blocked_up = false;
-							bc.blocked_down = false;
+							vc.x = 0;
+//							bc.blocked_left = true;
+//							bc.blocked_right = false;
+//							bc.blocked_up = false;
+//							bc.blocked_down = false;
 						}
 						// right
-						else if( pv[0] === -1 )
+						else if( pv[0] < 0 )
 						{
-							bc.blocked_right = true;
-							bc.blocked_left = false;
-							bc.blocked_up = false;
-							bc.blocked_down = false;
+							vc.x = 0;
+//							bc.blocked_right = true;
+//							bc.blocked_left = false;
+//							bc.blocked_up = false;
+//							bc.blocked_down = false;
 						}
 						// top
-						else if( pv[1] === 1 )
+						else if( pv[1] > 0 )
 						{
-							bc.blocked_up = true;
-							bc.blocked_left = false;
-							bc.blocked_right = false;
-							bc.blocked_down = false;
+							vc.y = 0;
+//							bc.blocked_up = true;
+//							bc.blocked_left = false;
+//							bc.blocked_right = false;
+//							bc.blocked_down = false;
 						}
-						else if( pv[1] === -1 )
+						else if( pv[1] < 0 )
 						{
-							bc.blocked_down = true;
-							bc.blocked_left = false;
-							bc.blocked_right = false;
-							bc.blocked_up = false;
+							vc.y = 0;
+//							bc.blocked_down = true;
+//							bc.blocked_left = false;
+//							bc.blocked_right = false;
+//							bc.blocked_up = false;
 						}
 
 						return;
 					}
-					else
-					{
-						if( vc.x < 0 )
-							bc.blocked_left = false;
-						else if( vc.x > 0 )
-							bc.blocked_right = false;
-						if( vc.y < 0 )
-							bc.blocked_up = false;
-						else if( vc.y > 0 )
-							bc.blocked_down = false;
-					}
+//					else
+//					{
+//						if( vc.x < 0 )
+//							bc.blocked_left = false;
+//						else if( vc.x > 0 )
+//							bc.blocked_right = false;
+//						if( vc.y < 0 )
+//							bc.blocked_up = false;
+//						else if( vc.y > 0 )
+//							bc.blocked_down = false;
+//					}
 				}
 			}
 		} );

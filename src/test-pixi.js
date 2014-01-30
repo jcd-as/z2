@@ -94,18 +94,33 @@ var input_sys = new z2.System( [player],
 
 		if( vc )
 		{
-			var vel_inc = 100;
 			// check keys
+
+			// top-down 
+//			var vel_inc = 100;
+//			if( z2.kbd.isDown( z2.kbd.UP ) )
+//				vc.y = -vel_inc;
+//			else if( z2.kbd.isDown( z2.kbd.DOWN ) )
+//				vc.y = vel_inc;
+//			else
+//				vc.y = 0;
+//			if( z2.kbd.isDown( z2.kbd.LEFT ) )
+//				vc.x = -vel_inc;
+//			else if( z2.kbd.isDown( z2.kbd.RIGHT ) )
+//				vc.x = vel_inc;
+//			else vc.x = 0;
+			// side-scroller
+			var h_vel_inc = 100;
+			var v_vel_inc = 250;
+			// TODO: only jump when standing on 'ground'
 			if( z2.kbd.isDown( z2.kbd.UP ) )
-				vc.y = -vel_inc;
-			else if( z2.kbd.isDown( z2.kbd.DOWN ) )
-				vc.y = vel_inc;
-			else
-				vc.y = 0;
+				vc.y = -v_vel_inc;
+//			else
+//				vc.y = 0;
 			if( z2.kbd.isDown( z2.kbd.LEFT ) )
-				vc.x = -vel_inc;
+				vc.x = -h_vel_inc;
 			else if( z2.kbd.isDown( z2.kbd.RIGHT ) )
-				vc.x = vel_inc;
+				vc.x = h_vel_inc;
 			else vc.x = 0;
 		}
 	}
@@ -164,6 +179,8 @@ function start()
 //	var imgv = z2.velocityFactory.create( {x: 0, y: 0} );
 //	var imge = mgr.createEntity( [z2.renderableFactory, imgp, imgr, imgsz, imgs, imgcc, imgc, imgv] );
 
+	// gravity component
+	var gravc = z2.gravityFactory.create( {x: 0, y: 1000} );
 
 	// create an (animated) sprite
 	var s_img = z2.loader.getAsset( 'man' );
@@ -185,7 +202,8 @@ function start()
 	var sprpc = z2.positionConstraintsFactory.create( {minx: 16, maxx: scene.width-16, miny: 32, maxy: scene.height-32} );
 	var sprbody = z2.physicsBodyFactory.create( {aabb:[-32, -16, 32, 16]} );
 //	spre = mgr.createEntity( [z2.renderableFactory, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc] );
-	spre = mgr.createEntity( [z2.renderableFactory, cmc, sprbody, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc] );
+//	spre = mgr.createEntity( [z2.renderableFactory, cmc, sprbody, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc] );
+	spre = mgr.createEntity( [z2.renderableFactory, gravc, cmc, sprbody, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc] );
 	anims.play( 'walk' );
 
 

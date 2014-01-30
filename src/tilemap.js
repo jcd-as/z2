@@ -6,8 +6,6 @@
 // - change the way in which the Layer Entites are added to the mgr, so
 // that sprites can appear *between* layers (OR add support for loading sprites
 // from Tiled object layers and load/create/add them at the same time as the Layers)
-// - physics: gravity, acceleration, mass, 'bounce'
-// - optimize 
 // - can we separate the need for the view from the map? (this would allow
 // the same map to (conceptually anyway) have different views. e.g. a main view
 // and a 'minimap' view
@@ -31,8 +29,8 @@ zSquared.tilemap = function( z2 )
 	var RENDER_PIXI_SPR = 2;
 	var RENDER_OPT_PIXI_SPR = 3;
 	var RENDER_PIXI_ALL_SPR = 4;
-	var render_method = RENDER_PIXI_ALL_SPR;
-//	var render_method = RENDER_OPT_PIXI_SPR;
+//	var render_method = RENDER_PIXI_ALL_SPR;
+	var render_method = RENDER_OPT_PIXI_SPR;
 //	var render_method = RENDER_PIXI_SPR;
 //	var render_method = RENDER_OPT_PAGES;
 //	var render_method = RENDER_SIMPLE;
