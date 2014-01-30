@@ -54,7 +54,7 @@ var spre;
 var vel_sw_time = 0;
 var vel_on;
 var sprv = z2.velocityFactory.create( {x: 0, y: 0} );
-var input_sys = new z2.System( [player],
+var input_sys = new z2.System( [player, z2.velocityFactory, z2.physicsBodyFactory],
 {
 	init: function()
 	{
@@ -69,6 +69,9 @@ var input_sys = new z2.System( [player],
 	{
 		// get the velocity component
 		var vc = e.getComponent( z2.velocityFactory.mask );
+
+		// get the physics body
+		var bc = e.getComponent( z2.physicsBodyFactory.mask );
 
 		if( z2.kbd.isDown( z2.kbd.SPACEBAR ) )
 		{
@@ -111,9 +114,9 @@ var input_sys = new z2.System( [player],
 //			else vc.x = 0;
 			// side-scroller
 			var h_vel_inc = 100;
-			var v_vel_inc = 250;
+			var v_vel_inc = 500;
 			// TODO: only jump when standing on 'ground'
-			if( z2.kbd.isDown( z2.kbd.UP ) )
+			if( bc.blocked_down && z2.kbd.isDown( z2.kbd.UP ) )
 				vc.y = -v_vel_inc;
 //			else
 //				vc.y = 0;

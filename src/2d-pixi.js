@@ -389,7 +389,7 @@ zSquared['2d'] = function( z2 )
 				var bc = e.getComponent( z2.physicsBodyFactory.mask );
 
 
-				// apply pos constraints
+				// get pos constraints
 				var minx = -Number.MAX_VALUE, maxx = Number.MAX_VALUE;
 				var miny = -Number.MAX_VALUE, maxy = Number.MAX_VALUE;
 				if( pcc )
@@ -403,18 +403,18 @@ zSquared['2d'] = function( z2 )
 				// dt factor
 				var idt = dt / 1000;
 
+				// save previous position
+				var px = pc.x;
+				var py = pc.y;
+
 				// gravity? apply first half prior to changing position
 				// (see http://www.niksula.cs.hut.fi/~hkankaan/Homepages/gravity.html) 
 				// for an explanation of why we split physics mods into two
 				// parts)
 				if( gc )
 				{
-//					if( gc.x < 0 && !bc.blocked_left ||
-//						gc.x > 0 && !bc.blocked_right )
-						vc.x += gc.x * idt * 0.5;
-//					if( gc.y < 0 && !bc.blocked_top ||
-//						gc.y > 0 && !bc.blocked_down )
-						vc.y += gc.y * idt * 0.5;
+					vc.x += gc.x * idt * 0.5;
+					vc.y += gc.y * idt * 0.5;
 				}
 				// TODO: cap velocity based on component, not hard-coded number
 				var MAX_VELOCITY = 500;
@@ -440,8 +440,7 @@ zSquared['2d'] = function( z2 )
 				// test constraints & set position
 				var x = pc.x + xmod;
 				var y = pc.y + ymod;
-				// TODO: if we get 'blocked_n' working, then these should set
-				// them too...
+				// TODO: these should set the 'bc.blocked_X' vars
 				if( x > maxx || x < minx )
 					vc.x = 0;
 				else
@@ -457,12 +456,8 @@ zSquared['2d'] = function( z2 )
 				// parts)
 				if( gc )
 				{
-//					if( gc.x < 0 && !bc.blocked_left ||
-//						gc.x > 0 && !bc.blocked_right )
-						vc.x += gc.x * idt * 0.5;
-//					if( gc.y < 0 && !bc.blocked_top ||
-//						gc.y > 0 && !bc.blocked_down )
-						vc.y += gc.y * idt * 0.5;
+					vc.x += gc.x * idt * 0.5;
+					vc.y += gc.y * idt * 0.5;
 				}
 				// TODO: cap velocity based on component, not hard-coded number
 				if( vc.x > MAX_VELOCITY ) vc.x = MAX_VELOCITY;
@@ -496,51 +491,48 @@ zSquared['2d'] = function( z2 )
 						if( pv[0] > 0 )
 						{
 							vc.x = 0;
-//							bc.blocked_left = true;
-//							bc.blocked_right = false;
-//							bc.blocked_up = false;
-//							bc.blocked_down = false;
+							bc.blocked_left = true;
+							bc.blocked_right = false;
+							bc.blocked_up = false;
+							bc.blocked_down = false;
 						}
 						// right
 						else if( pv[0] < 0 )
 						{
 							vc.x = 0;
-//							bc.blocked_right = true;
-//							bc.blocked_left = false;
-//							bc.blocked_up = false;
-//							bc.blocked_down = false;
+							bc.blocked_right = true;
+							bc.blocked_left = false;
+							bc.blocked_up = false;
+							bc.blocked_down = false;
 						}
 						// top
 						else if( pv[1] > 0 )
 						{
 							vc.y = 0;
-//							bc.blocked_up = true;
-//							bc.blocked_left = false;
-//							bc.blocked_right = false;
-//							bc.blocked_down = false;
+							bc.blocked_up = true;
+							bc.blocked_left = false;
+							bc.blocked_right = false;
+							bc.blocked_down = false;
 						}
 						else if( pv[1] < 0 )
 						{
 							vc.y = 0;
-//							bc.blocked_down = true;
-//							bc.blocked_left = false;
-//							bc.blocked_right = false;
-//							bc.blocked_up = false;
+							bc.blocked_down = true;
+							bc.blocked_left = false;
+							bc.blocked_right = false;
+							bc.blocked_up = false;
 						}
 
 						return;
 					}
-//					else
-//					{
-//						if( vc.x < 0 )
-//							bc.blocked_left = false;
-//						else if( vc.x > 0 )
-//							bc.blocked_right = false;
-//						if( vc.y < 0 )
-//							bc.blocked_up = false;
-//						else if( vc.y > 0 )
-//							bc.blocked_down = false;
-//					}
+					// no collision, un-set blocked status
+					else
+					{
+						bc.blocked_left = false;
+						bc.blocked_right = false;
+						bc.blocked_up = false;
+						bc.blocked_down = false;
+					}
 				}
 			}
 		} );
