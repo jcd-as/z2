@@ -170,9 +170,9 @@ zSquared.view = function( z2 )
 		}
 
 		if( setx )
-			this.doc.position.x = -x;
+			this.doc.position.x = Math.round(-x);
 		if( sety )
-			this.doc.position.y = -y;
+			this.doc.position.y = Math.round(-y);
 	};
 
 	Object.defineProperty( z2.View.prototype, 'rotation',

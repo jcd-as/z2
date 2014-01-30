@@ -115,8 +115,9 @@ var input_sys = new z2.System( [player, z2.velocityFactory, z2.physicsBodyFactor
 			// side-scroller
 			var h_vel_inc = 100;
 			var v_vel_inc = 500;
-			// TODO: only jump when standing on 'ground'
-			if( bc.blocked_down && z2.kbd.isDown( z2.kbd.UP ) )
+			// only jump when standing on 'ground'
+//			if( bc.blocked_down && z2.kbd.isDown( z2.kbd.UP ) )
+			if( z2.kbd.isDown( z2.kbd.UP ) )
 				vc.y = -v_vel_inc;
 //			else
 //				vc.y = 0;

@@ -3,9 +3,7 @@
 // Components and Systems for 2d games
 //
 // TODO:
-// - physics in movement system: gravity (x), acceleration, mass, 'bounce'
-// - physicsBody's 'blocked_n' not implemented
-// - gravity bug: camera 'jitters' when sprite it is following is standing at certain places
+// - physics in movement system: gravity (x), acceleration, mass, friction, 'bounce'
 // - 
 
 zSquared['2d'] = function( z2 )
@@ -413,8 +411,14 @@ zSquared['2d'] = function( z2 )
 				// parts)
 				if( gc )
 				{
-					vc.x += gc.x * idt * 0.5;
-					vc.y += gc.y * idt * 0.5;
+//					vc.x += gc.x * idt * 0.5;
+//					vc.y += gc.y * idt * 0.5;
+					if( gc.x < 0 && !bc.blocked_left ||
+						gc.x > 0 && !bc.blocked_right )
+						vc.x += gc.x * idt * 0.5;
+					if( gc.y < 0 && !bc.blocked_top ||
+						gc.y > 0 && !bc.blocked_down )
+						vc.y += gc.y * idt * 0.5;
 				}
 				// TODO: cap velocity based on component, not hard-coded number
 				var MAX_VELOCITY = 500;
@@ -456,8 +460,14 @@ zSquared['2d'] = function( z2 )
 				// parts)
 				if( gc )
 				{
-					vc.x += gc.x * idt * 0.5;
-					vc.y += gc.y * idt * 0.5;
+//					vc.x += gc.x * idt * 0.5;
+//					vc.y += gc.y * idt * 0.5;
+					if( gc.x < 0 && !bc.blocked_left ||
+						gc.x > 0 && !bc.blocked_right )
+						vc.x += gc.x * idt * 0.5;
+					if( gc.y < 0 && !bc.blocked_top ||
+						gc.y > 0 && !bc.blocked_down )
+						vc.y += gc.y * idt * 0.5;
 				}
 				// TODO: cap velocity based on component, not hard-coded number
 				if( vc.x > MAX_VELOCITY ) vc.x = MAX_VELOCITY;
