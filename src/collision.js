@@ -216,18 +216,18 @@ zSquared.collision = function( z2 )
 			pen2 = Math.min( t3, t4 );
 
 			// penetration direction
-			var nx = (p2[0] + p2[2]) - (p1[0] + p1[2]);
-			var ny = (p2[1] + p2[3]) - (p1[1] + p1[3]);
+			var nx = (p2[1] + p2[3]) - (p1[1] + p1[3]);
+			var ny = (p2[0] + p2[2]) - (p1[0] + p1[2]);
 
 			// least penetration is vertical
-			if( pen1 < pen2 )
+			if( pen1 > pen2 )
 			{
 				pv[0] = 0;
 				if( ny > 0 )
 					pv[1] = -1;
 				else
 					pv[1] = 1;
-				return pen1;
+				return pen2;
 			}
 			// least penetration is horizontal
 			else
@@ -237,7 +237,7 @@ zSquared.collision = function( z2 )
 				else
 					pv[0] = 1;
 				pv[1] = 0;
-				return pen2;
+				return pen1;
 			}
 		}
 	};

@@ -40,7 +40,7 @@ zSquared['2d'] = function( z2 )
 	z2.sizeFactory = z2.createComponentFactory( {width:0, height:0} );
 
 	/** Component Factory for 2d velocity */
-	z2.velocityFactory = z2.createComponentFactory( {x: 0, y: 0} );
+	z2.velocityFactory = z2.createComponentFactory( {x: 0, y: 0, maxx:1000, maxy:1000} );
 
 	/** Component Factory for 2d rotation */
 	z2.rotationFactory = z2.createComponentFactory( {theta: 0} );
@@ -77,6 +77,9 @@ zSquared['2d'] = function( z2 )
 
 	/** Component Factory for 2d gravity */
 	z2.gravityFactory = z2.createComponentFactory( {x: 0, y: 0} );
+
+	/** Component Factory for sprite vs sprite collision */
+	z2.collisionGroupFactory = z2.createComponentFactory( {entities:null} );
 
 
 	/** @class z2.AnimationSet
@@ -116,7 +119,7 @@ zSquared['2d'] = function( z2 )
 	z2.AnimationSet.prototype.play = function( name )
 	{
 		this.cur_animation = this.animations[name];
-		this._cur_frame = this.cur_animation[0][0];
+		this._cur_frame = 0;
 		this._frame_time = 0;
 	};
 	/** Stop playing any animation sequence
@@ -359,7 +362,7 @@ zSquared['2d'] = function( z2 )
 	/** MovementSystem factory function
 	 * requires: position, velocity, transform
 	 * optional: positionConstraints, collisionMap, physicsBody (*required* if
-	 * there is a collisionMap), gravity
+	 * there is a collisionMap), gravity, collisionGroup
 	 * @function z2.createMovementSystem
 	 */
 	z2.createMovementSystem = function()
@@ -386,6 +389,9 @@ zSquared['2d'] = function( z2 )
 				// get the physics body
 				var bc = e.getComponent( z2.physicsBodyFactory.mask );
 
+				// get the collision group (sprite vs sprite collisions)
+				var cgc = e.getComponent( z2.collisionGroupFactory.mask );
+
 
 				// get pos constraints
 				var minx = -Number.MAX_VALUE, maxx = Number.MAX_VALUE;
@@ -406,24 +412,17 @@ zSquared['2d'] = function( z2 )
 				var py = pc.y;
 
 				// gravity? apply first half prior to changing position
-				// (see http://www.niksula.cs.hut.fi/~hkankaan/Homepages/gravity.html) 
+				// (see www.niksula.cs.hut.fi/~hkankaan/Homepages/gravity.html) 
 				// for an explanation of why we split physics mods into two
 				// parts)
 				if( gc )
 				{
-//					vc.x += gc.x * idt * 0.5;
-//					vc.y += gc.y * idt * 0.5;
-					if( gc.x < 0 && !bc.blocked_left ||
-						gc.x > 0 && !bc.blocked_right )
-						vc.x += gc.x * idt * 0.5;
-					if( gc.y < 0 && !bc.blocked_top ||
-						gc.y > 0 && !bc.blocked_down )
-						vc.y += gc.y * idt * 0.5;
+					vc.x += gc.x * idt * 0.5;
+					vc.y += gc.y * idt * 0.5;
 				}
-				// TODO: cap velocity based on component, not hard-coded number
-				var MAX_VELOCITY = 500;
-				if( vc.x > MAX_VELOCITY ) vc.x = MAX_VELOCITY;
-				if( vc.y > MAX_VELOCITY ) vc.y = MAX_VELOCITY;
+				// cap velocity
+				if( vc.x > vc.maxx ) vc.x = vc.maxx;
+				if( vc.y > vc.maxy ) vc.y = vc.maxy;
 
 				// account for elapsed time since last frame
 				var xmod;
@@ -455,25 +454,24 @@ zSquared['2d'] = function( z2 )
 					pc.y = y;
 
 				// gravity? apply second half after changing position
-				// (see http://www.niksula.cs.hut.fi/~hkankaan/Homepages/gravity.html) 
+				// (see www.niksula.cs.hut.fi/~hkankaan/Homepages/gravity.html) 
 				// for an explanation of why we split physics mods into two
 				// parts)
 				if( gc )
 				{
-//					vc.x += gc.x * idt * 0.5;
-//					vc.y += gc.y * idt * 0.5;
-					if( gc.x < 0 && !bc.blocked_left ||
-						gc.x > 0 && !bc.blocked_right )
-						vc.x += gc.x * idt * 0.5;
-					if( gc.y < 0 && !bc.blocked_top ||
-						gc.y > 0 && !bc.blocked_down )
-						vc.y += gc.y * idt * 0.5;
+					vc.x += gc.x * idt * 0.5;
+					vc.y += gc.y * idt * 0.5;
 				}
-				// TODO: cap velocity based on component, not hard-coded number
-				if( vc.x > MAX_VELOCITY ) vc.x = MAX_VELOCITY;
-				if( vc.y > MAX_VELOCITY ) vc.y = MAX_VELOCITY;
+				// cap velocity
+				if( vc.x > vc.maxx ) vc.x = vc.maxx;
+				if( vc.y > vc.maxy ) vc.y = vc.maxy;
 
-				// test for collision with collision map
+
+				// collisions:
+
+				var m, pv = [0,0];
+
+				// handle collision with collision map
 				if( cmc )
 				{
 					if( !bc )
@@ -487,8 +485,6 @@ zSquared['2d'] = function( z2 )
 					aabb[3] += pc.x;
 
 					// perform the collision
-					var m, pv = [0,0];
-
 					m = z2.collideAabbVsCollisionMap( aabb, cmc.data, cmc.map.widthInTiles, cmc.map.heightInTiles, cmc.map.tileWidth, cmc.map.tileHeight, pv );
 
 					// separate the aabb and stop velocity
@@ -497,6 +493,9 @@ zSquared['2d'] = function( z2 )
 						pc.x += pv[0];
 						pc.y += pv[1];
 						// set velocity & 'blocked' in direction of collision
+						//
+						// TODO: apply friction and 'bounce' (restitution)
+						//
 						// left
 						if( pv[0] > 0 )
 						{
@@ -532,8 +531,6 @@ zSquared['2d'] = function( z2 )
 							bc.blocked_right = false;
 							bc.blocked_up = false;
 						}
-
-						return;
 					}
 					// no collision, un-set blocked status
 					else
@@ -542,6 +539,61 @@ zSquared['2d'] = function( z2 )
 						bc.blocked_right = false;
 						bc.blocked_up = false;
 						bc.blocked_down = false;
+					}
+				}
+
+				// handle sprite vs sprite collisions
+				if( cgc )
+				{
+					// TODO: implement
+					pv = [0,0];
+
+					var entities = cgc.entities;
+					if( entities )
+					{
+						// TODO: optimize! figure out a better way to do this,
+						// it is potentially n^2 behaviour
+						for( var i = 0; i < entities.length; i++ )
+						{
+							var ent = entities[i];
+							var body = ent.getComponent( z2.physicsBodyFactory.mask );
+							var pos = ent.getComponent( z2.positionFactory.mask );
+
+							// don't collide against self
+							if( bc === body )
+								continue;
+
+							var aabb1 = bc.aabb.slice(0);
+							aabb1[0] += pc.y;
+							aabb1[1] += pc.x;
+							aabb1[2] += pc.y;
+							aabb1[3] += pc.x;
+
+							var aabb2 = body.aabb.slice(0);
+							aabb2[0] += pos.y;
+							aabb2[1] += pos.x;
+							aabb2[2] += pos.y;
+							aabb2[3] += pos.x;
+
+							// collide
+							m = z2.collideAabbVsAabb( aabb1, aabb2, pv );
+
+							// separate the aabb and stop velocity
+							//
+							// TODO: apply friction and 'bounce' (restitution)
+							// & use both objects' mass & velocity to
+							// determine new velocities
+							//
+							if( m )
+							{
+								// TODO: modify collideAabbVsAabb() to set
+								// the magnitude in the return vector, then
+								// change this code to use it
+								// separate
+								pc.x += m * pv[0];
+								pc.y += m * pv[1];
+							}
+						}
 					}
 				}
 			}
