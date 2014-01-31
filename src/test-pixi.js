@@ -187,11 +187,15 @@ function start()
 	var sprsz = z2.sizeFactory.create( {width: 64, height: 64} );
 	var sprcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
 	var sprpc = z2.positionConstraintsFactory.create( {minx: 16, maxx: scene.width-16, miny: 32, maxy: scene.height-32} );
-	var sprbody = z2.physicsBodyFactory.create( {aabb:[-32, -16, 32, 16]} );
+//	var sprbody = z2.physicsBodyFactory.create( {aabb:[-32, -16, 32, 16]} );
+	var sprbody = z2.physicsBodyFactory.create( {aabb:[-32, -15, 32, 15]} );
 //	spre = mgr.createEntity( [z2.renderableFactory, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc] );
 //	spre = mgr.createEntity( [z2.renderableFactory, cmc, sprbody, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc] );
 //	spre = mgr.createEntity( [z2.renderableFactory, gravc, cmc, sprbody, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc] );
 	anims.play( 'walk' );
+
+	// collision group for the enemy to collide against
+	var ecolg = z2.collisionGroupFactory.create( {entities:null} );
 
 	// create a non-player sprite
 //	var s_img = z2.loader.getAsset( 'man' );
@@ -205,14 +209,17 @@ function start()
 	var sprc2 = z2.spriteFactory.create( {sprite:sprite2, animations:anims2} );
 	var sprp2 = z2.positionFactory.create( {x: 400, y: 512} );
 	var sprbody2 = z2.physicsBodyFactory.create( {aabb:[-32, -16, 32, 16]} );
-	var spre2 = mgr.createEntity( [z2.renderableFactory, enemyc, gravc, cmc, sprbody2, sprv2, sprp2, /*sprr2,*/ sprsz, sprs, sprcc, sprpc, sprc2] );
+	var spre2 = mgr.createEntity( [z2.renderableFactory, enemyc, gravc, cmc, sprbody2, sprv2, sprp2, /*sprr2,*/ sprsz, sprs, sprcc, sprpc, sprc2, ecolg] );
 	anims2.play( 'jitter' );
 
 	// collision group for the player to collide against
-	var colg = z2.collisionGroupFactory.create( {entities:[spre2]} );
+	var pcolg = z2.collisionGroupFactory.create( {entities:[spre2]} );
 
 	// create the player sprite
-	spre = mgr.createEntity( [z2.renderableFactory, gravc, cmc, sprbody, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc, colg] );
+	spre = mgr.createEntity( [z2.renderableFactory, gravc, cmc, sprbody, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc, pcolg] );
+
+	// set the entities for enemy collision group
+	ecolg.entities = [spre];
 
 	// follow the player sprite
 	view.target = sprp;
@@ -227,6 +234,7 @@ function start()
 	mgr.addSystem( ms );
 	// rendering system (last system)
 	mgr.addSystem( rs );
+
 
 	// start the main ecs loop
 	z2.main( z2.ecsUpdate );

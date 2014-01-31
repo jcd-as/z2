@@ -470,77 +470,7 @@ zSquared['2d'] = function( z2 )
 				// collisions:
 
 				var m, pv = [0,0];
-
-				// handle collision with collision map
-				if( cmc )
-				{
-					if( !bc )
-						throw new Error( "Entity processed by MovementSystem has collisionMap component, but no physicsBodyComponent!" );
-					// TODO: non-AABB collision body??
-					var aabb = bc.aabb.slice(0); // [top, left, bottom, right]
-					// add to the entity's position
-					aabb[0] += pc.y;
-					aabb[1] += pc.x;
-					aabb[2] += pc.y;
-					aabb[3] += pc.x;
-
-					// perform the collision
-					m = z2.collideAabbVsCollisionMap( aabb, cmc.data, cmc.map.widthInTiles, cmc.map.heightInTiles, cmc.map.tileWidth, cmc.map.tileHeight, pv );
-
-					// separate the aabb and stop velocity
-					if( m )
-					{
-						pc.x += pv[0];
-						pc.y += pv[1];
-						// set velocity & 'blocked' in direction of collision
-						//
-						// TODO: apply friction and 'bounce' (restitution)
-						//
-						// left
-						if( pv[0] > 0 )
-						{
-							vc.x = 0;
-							bc.blocked_left = true;
-							bc.blocked_right = false;
-							bc.blocked_up = false;
-							bc.blocked_down = false;
-						}
-						// right
-						else if( pv[0] < 0 )
-						{
-							vc.x = 0;
-							bc.blocked_right = true;
-							bc.blocked_left = false;
-							bc.blocked_up = false;
-							bc.blocked_down = false;
-						}
-						// top
-						else if( pv[1] > 0 )
-						{
-							vc.y = 0;
-							bc.blocked_up = true;
-							bc.blocked_left = false;
-							bc.blocked_right = false;
-							bc.blocked_down = false;
-						}
-						else if( pv[1] < 0 )
-						{
-							vc.y = 0;
-							bc.blocked_down = true;
-							bc.blocked_left = false;
-							bc.blocked_right = false;
-							bc.blocked_up = false;
-						}
-					}
-					// no collision, un-set blocked status
-					else
-					{
-						bc.blocked_left = false;
-						bc.blocked_right = false;
-						bc.blocked_up = false;
-						bc.blocked_down = false;
-					}
-				}
+				var collision = false;
 
 				// handle sprite vs sprite collisions
 				if( cgc )
@@ -586,15 +516,103 @@ zSquared['2d'] = function( z2 )
 							//
 							if( m )
 							{
+								collision = true;
+
 								// TODO: modify collideAabbVsAabb() to set
 								// the magnitude in the return vector, then
 								// change this code to use it
 								// separate
 								pc.x += m * pv[0];
 								pc.y += m * pv[1];
+								
+								// left
+								if( pv[0] < 0 )
+									bc.blocked_right = true;
+								// right
+								if( pv[0] > 0 )
+									bc.blocked_left = true;
+								// up 
+								if( pv[1] < 0 )
+									bc.blocked_down = true;
+								// down
+								if( pv[1] > 0 )
+									bc.blocked_up = true;
 							}
 						}
 					}
+				}
+
+				// handle collision with collision map
+				if( cmc )
+				{
+					if( !bc )
+						throw new Error( "Entity processed by MovementSystem has collisionMap component, but no physicsBodyComponent!" );
+					// TODO: non-AABB collision body??
+					var aabb = bc.aabb.slice(0); // [top, left, bottom, right]
+					// add to the entity's position
+					aabb[0] += pc.y;
+					aabb[1] += pc.x;
+					aabb[2] += pc.y;
+					aabb[3] += pc.x;
+
+					// perform the collision
+					m = z2.collideAabbVsCollisionMap( aabb, cmc.data, cmc.map.widthInTiles, cmc.map.heightInTiles, cmc.map.tileWidth, cmc.map.tileHeight, pv );
+
+					// separate the aabb and stop velocity
+					if( m )
+					{
+						collision = true;
+						pc.x += pv[0];
+						pc.y += pv[1];
+						// set velocity & 'blocked' in direction of collision
+						//
+						// TODO: apply friction and 'bounce' (restitution)
+						//
+						// left
+						if( pv[0] > 0 )
+						{
+							vc.x = 0;
+							bc.blocked_left = true;
+							bc.blocked_right = false;
+							bc.blocked_up = false;
+							bc.blocked_down = false;
+						}
+						// right
+						else if( pv[0] < 0 )
+						{
+							vc.x = 0;
+							bc.blocked_right = true;
+							bc.blocked_left = false;
+							bc.blocked_up = false;
+							bc.blocked_down = false;
+						}
+						// top
+						else if( pv[1] > 0 )
+						{
+							vc.y = 0;
+							bc.blocked_up = true;
+							bc.blocked_left = false;
+							bc.blocked_right = false;
+							bc.blocked_down = false;
+						}
+						else if( pv[1] < 0 )
+						{
+							vc.y = 0;
+							bc.blocked_down = true;
+							bc.blocked_left = false;
+							bc.blocked_right = false;
+							bc.blocked_up = false;
+						}
+					}
+				}
+
+				// no collision, un-set blocked status
+				if( !collision )
+				{
+					bc.blocked_left = false;
+					bc.blocked_right = false;
+					bc.blocked_up = false;
+					bc.blocked_down = false;
 				}
 			}
 		} );
