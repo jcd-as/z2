@@ -187,7 +187,6 @@ function start()
 	var sprsz = z2.sizeFactory.create( {width: 64, height: 64} );
 	var sprcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
 	var sprpc = z2.positionConstraintsFactory.create( {minx: 16, maxx: scene.width-16, miny: 32, maxy: scene.height-32} );
-//	var sprbody = z2.physicsBodyFactory.create( {aabb:[-32, -16, 32, 16]} );
 	var sprbody = z2.physicsBodyFactory.create( {aabb:[-32, -15, 32, 15], restitution:0.5} );
 //	spre = mgr.createEntity( [z2.renderableFactory, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc] );
 //	spre = mgr.createEntity( [z2.renderableFactory, cmc, sprbody, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc] );

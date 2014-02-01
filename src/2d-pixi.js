@@ -454,19 +454,6 @@ zSquared['2d'] = function( z2 )
 				else
 					pc.y = y;
 
-				// gravity? apply second half after changing position
-				// (see www.niksula.cs.hut.fi/~hkankaan/Homepages/gravity.html) 
-				// for an explanation of why we split physics mods into two
-				// parts)
-				if( gc )
-				{
-					vc.x += gc.x * idt * 0.5;
-					vc.y += gc.y * idt * 0.5;
-				}
-				// cap velocity
-				if( vc.x > vc.maxx ) vc.x = vc.maxx;
-				if( vc.y > vc.maxy ) vc.y = vc.maxy;
-
 
 				// collisions:
 
@@ -476,7 +463,6 @@ zSquared['2d'] = function( z2 )
 				// handle sprite vs sprite collisions
 				if( cgc )
 				{
-					// TODO: implement
 					pv = [0,0];
 
 					var entities = cgc.entities;
@@ -510,11 +496,6 @@ zSquared['2d'] = function( z2 )
 							m = z2.collideAabbVsAabb( aabb1, aabb2, pv );
 
 							// separate the aabb and stop velocity
-							//
-							// TODO: apply friction and 'bounce' (restitution)
-							// & use both objects' mass & velocity to
-							// determine new velocities
-							//
 							if( m )
 							{
 								collision = true;
@@ -612,6 +593,7 @@ zSquared['2d'] = function( z2 )
 							bc.blocked_right = false;
 							bc.blocked_down = false;
 						}
+						// bottom
 						else if( pv[1] < 0 )
 						{
 							vc.y = vc.y * -bc.restitution;
@@ -631,6 +613,19 @@ zSquared['2d'] = function( z2 )
 					bc.blocked_up = false;
 					bc.blocked_down = false;
 				}
+
+				// gravity? apply second half after changing position
+				// (see www.niksula.cs.hut.fi/~hkankaan/Homepages/gravity.html) 
+				// for an explanation of why we split physics mods into two
+				// parts)
+				if( gc )
+				{
+					vc.x += gc.x * idt * 0.5;
+					vc.y += gc.y * idt * 0.5;
+				}
+				// cap velocity
+				if( vc.x > vc.maxx ) vc.x = vc.maxx;
+				if( vc.y > vc.maxy ) vc.y = vc.maxy;
 			}
 		} );
 	};
