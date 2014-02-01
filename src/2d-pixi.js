@@ -3,7 +3,8 @@
 // Components and Systems for 2d games
 //
 // TODO:
-// - physics in movement system: gravity (x), acceleration, mass, friction, 'bounce'
+// - physics in movement system: gravity (x), mass, friction, 'bounce'
+// (coefficient of restitution) (x)
 // - 
 
 zSquared['2d'] = function( z2 )
@@ -73,7 +74,7 @@ zSquared['2d'] = function( z2 )
 	z2.transformGroupFactory = z2.createComponentFactory();
 
 	/** Component Factory for physics body (AABB bounds, mass, etc) */
-	z2.physicsBodyFactory = z2.createComponentFactory( {aabb:null, mass:1, blocked_top: false, blocked_left:false, blocked_down:false, blocked_right:false} );
+	z2.physicsBodyFactory = z2.createComponentFactory( {aabb:null, restitution: 0, mass:1, blocked_top: false, blocked_left:false, blocked_down:false, blocked_right:false} );
 
 	/** Component Factory for 2d gravity */
 	z2.gravityFactory = z2.createComponentFactory( {x: 0, y: 0} );
@@ -525,18 +526,33 @@ zSquared['2d'] = function( z2 )
 								pc.x += m * pv[0];
 								pc.y += m * pv[1];
 								
+								// TODO: need to apply friction & mass & apply
+								// the change in velocity to BOTH sprites
+
 								// left
 								if( pv[0] < 0 )
+								{
+									vc.x = vc.x * -bc.restitution;
 									bc.blocked_right = true;
+								}
 								// right
 								if( pv[0] > 0 )
+								{
+									vc.x = vc.x * -bc.restitution;
 									bc.blocked_left = true;
+								}
 								// up 
 								if( pv[1] < 0 )
+								{
+									vc.y = vc.y * -bc.restitution;
 									bc.blocked_down = true;
+								}
 								// down
 								if( pv[1] > 0 )
+								{
+									vc.y = vc.y * -bc.restitution;
 									bc.blocked_up = true;
+								}
 							}
 						}
 					}
@@ -566,12 +582,12 @@ zSquared['2d'] = function( z2 )
 						pc.y += pv[1];
 						// set velocity & 'blocked' in direction of collision
 						//
-						// TODO: apply friction and 'bounce' (restitution)
+						// TODO: apply friction 
 						//
 						// left
 						if( pv[0] > 0 )
 						{
-							vc.x = 0;
+							vc.x = vc.x * -bc.restitution;
 							bc.blocked_left = true;
 							bc.blocked_right = false;
 							bc.blocked_up = false;
@@ -580,7 +596,8 @@ zSquared['2d'] = function( z2 )
 						// right
 						else if( pv[0] < 0 )
 						{
-							vc.x = 0;
+							vc.x = vc.x * -bc.restitution;
+							bc.blocked_left = true;
 							bc.blocked_right = true;
 							bc.blocked_left = false;
 							bc.blocked_up = false;
@@ -589,7 +606,7 @@ zSquared['2d'] = function( z2 )
 						// top
 						else if( pv[1] > 0 )
 						{
-							vc.y = 0;
+							vc.y = vc.y * -bc.restitution;
 							bc.blocked_up = true;
 							bc.blocked_left = false;
 							bc.blocked_right = false;
@@ -597,7 +614,7 @@ zSquared['2d'] = function( z2 )
 						}
 						else if( pv[1] < 0 )
 						{
-							vc.y = 0;
+							vc.y = vc.y * -bc.restitution;
 							bc.blocked_down = true;
 							bc.blocked_left = false;
 							bc.blocked_right = false;
