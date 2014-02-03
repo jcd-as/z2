@@ -193,7 +193,7 @@ function start()
 	var sprsz = z2.sizeFactory.create( {width: 64, height: 64} );
 	var sprcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
 	var sprpc = z2.positionConstraintsFactory.create( {minx: 16, maxx: scene.width-16, miny: 32, maxy: scene.height-32} );
-	var sprbody = z2.physicsBodyFactory.create( {aabb:[-32, -15, 32, 15], restitution:1, mass:5} );
+	var sprbody = z2.physicsBodyFactory.create( {aabb:[-32, -15, 32, 15], restitution:0.5, mass:5, resistance_x:0.95} );
 //	spre = mgr.createEntity( [z2.renderableFactory, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc] );
 //	spre = mgr.createEntity( [z2.renderableFactory, cmc, sprbody, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc] );
 //	spre = mgr.createEntity( [z2.renderableFactory, gravc, cmc, sprbody, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc] );
@@ -214,7 +214,7 @@ function start()
 	var sprc2 = z2.spriteFactory.create( {sprite:sprite2, animations:anims2} );
 //	var sprp2 = z2.positionFactory.create( {x: 400, y: 512} );
 	var sprp2 = z2.positionFactory.create( {x: 64, y: 1024-64} );
-	var sprbody2 = z2.physicsBodyFactory.create( {aabb:[-32, -16, 32, 16], restitution:1, mass:1} );
+	var sprbody2 = z2.physicsBodyFactory.create( {aabb:[-32, -16, 32, 16], restitution:1, mass:1, resistance_x: 0} );
 	var spre2 = mgr.createEntity( [z2.renderableFactory, enemyc, gravc, cmc, sprbody2, sprv2, sprp2, /*sprr2,*/ sprsz, sprs, sprcc, sprpc, sprc2, ecolg] );
 	anims2.play( 'jitter' );
 

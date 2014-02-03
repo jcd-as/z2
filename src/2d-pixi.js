@@ -74,7 +74,7 @@ zSquared['2d'] = function( z2 )
 	z2.transformGroupFactory = z2.createComponentFactory();
 
 	/** Component Factory for physics body (AABB bounds, mass, etc) */
-	z2.physicsBodyFactory = z2.createComponentFactory( {aabb:null, restitution: 0, mass:1, blocked_top: false, blocked_left:false, blocked_down:false, blocked_right:false} );
+	z2.physicsBodyFactory = z2.createComponentFactory( {aabb:null, restitution: 0, mass:1, resistance_x: 0, resistance_y: 0, blocked_top: false, blocked_left:false, blocked_down:false, blocked_right:false} );
 
 	/** Component Factory for 2d gravity */
 	z2.gravityFactory = z2.createComponentFactory( {x: 0, y: 0} );
@@ -423,7 +423,9 @@ zSquared['2d'] = function( z2 )
 				}
 				// cap velocity
 				if( vc.x > vc.maxx ) vc.x = vc.maxx;
+				else if( vc.x < -vc.maxx ) vc.x = -vc.maxx;
 				if( vc.y > vc.maxy ) vc.y = vc.maxy;
+				else if( vc.x < -vc.maxy ) vc.y = -vc.maxy;
 
 				// account for elapsed time since last frame
 				var xmod;
@@ -464,6 +466,9 @@ zSquared['2d'] = function( z2 )
 				if( cgc )
 				{
 					pv = [0,0];
+
+					// TODO: friction only makes sense for 'full' (non-AABB)
+					// collisions (using circles, for example)
 
 					var entities = cgc.entities;
 					if( entities )
@@ -508,8 +513,6 @@ zSquared['2d'] = function( z2 )
 								pc.x += m * pv[0];
 								pc.y += m * pv[1];
 								
-								// TODO: apply friction
-
 								// m = mass, u = init vel, v = resultant vel
 								// v1 = (u1(m1 - m2) + 2m2u2) / (m1 + m2)
 								// v2 = (u2(m2 - m1) + 2m1u1) / (m1 + m2)
@@ -561,9 +564,11 @@ zSquared['2d'] = function( z2 )
 				// handle collision with collision map
 				if( cmc )
 				{
-					if( !bc )
-						throw new Error( "Entity processed by MovementSystem has collisionMap component, but no physicsBodyComponent!" );
 					// TODO: non-AABB collision body??
+
+					// TODO: friction only makes sense for 'full' (non-AABB)
+					// collisions (using circles, for example)
+
 					var aabb = bc.aabb.slice(0); // [top, left, bottom, right]
 					// add to the entity's position
 					aabb[0] += pc.y;
@@ -580,10 +585,9 @@ zSquared['2d'] = function( z2 )
 						collision = true;
 						pc.x += pv[0];
 						pc.y += pv[1];
+
 						// set velocity & 'blocked' in direction of collision
-						//
-						// TODO: apply friction 
-						//
+
 						// left
 						if( pv[0] > 0 )
 						{
@@ -633,6 +637,10 @@ zSquared['2d'] = function( z2 )
 					bc.blocked_down = false;
 				}
 
+				// apply basic "air resistance" friction-like component
+				vc.x *= 1 - bc.resistance_x * idt;
+				vc.y *= 1 - bc.resistance_y * idt;
+
 				// gravity? apply second half after changing position
 				// (see www.niksula.cs.hut.fi/~hkankaan/Homepages/gravity.html) 
 				// for an explanation of why we split physics mods into two
@@ -644,7 +652,9 @@ zSquared['2d'] = function( z2 )
 				}
 				// cap velocity
 				if( vc.x > vc.maxx ) vc.x = vc.maxx;
+				else if( vc.x < -vc.maxx ) vc.x = -vc.maxx;
 				if( vc.y > vc.maxy ) vc.y = vc.maxy;
+				else if( vc.x < -vc.maxy ) vc.y = -vc.maxy;
 			}
 		} );
 	};
