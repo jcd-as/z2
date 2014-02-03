@@ -121,7 +121,7 @@ var input_sys = new z2.System( [player, z2.velocityFactory, z2.physicsBodyFactor
 			// side-scroller
 //			var h_vel_inc = 100;
 			var h_vel_inc = 10;
-			var v_vel_inc = 500;
+			var v_vel_inc = 750;
 			// only jump when standing on 'ground'
 			if( bc.blocked_down && z2.kbd.isDown( z2.kbd.UP ) )
 //			if( z2.kbd.isDown( z2.kbd.UP ) )
@@ -183,8 +183,8 @@ function start()
 	var sprite = new PIXI.Sprite( stexture );
 	view.doc.addChild( sprite );
 	var sprc = z2.spriteFactory.create( {sprite:sprite, animations:anims} );
-	var sprp = z2.positionFactory.create( {x: 512, y: 512} );
-//	var sprp = z2.positionFactory.create( {x: 1024-64, y: 1024-64} );
+//	var sprp = z2.positionFactory.create( {x: 512, y: 512} );
+	var sprp = z2.positionFactory.create( {x: 1024-64, y: 1024-64} );
 	var sprr = z2.rotationFactory.create( {theta: 0} );
 //	var sprr = z2.rotationFactory.create( {theta: z2.math.d2r(10)} );
 	// reverse sprite facing
@@ -229,8 +229,9 @@ function start()
 	ecolg.entities = [spre];
 
 	// follow the player sprite
-	view.target = sprp;
 	view.follow_mode = z2.FOLLOW_MODE_TIGHT;
+	view.target = sprp;
+//	view.follow_mode = z2.FOLLOW_MODE_PLATFORMER;
 
 	// create a movement system
 	var ms = z2.createMovementSystem();

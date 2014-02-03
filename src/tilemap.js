@@ -9,11 +9,9 @@
 // - can we separate the need for the view from the map? (this would allow
 // the same map to (conceptually anyway) have different views. e.g. a main view
 // and a 'minimap' view
-// - BUG (?): because out-of-bounds tiles aren't cleared, you can get garbage
-// on-screen if you have a layer that *does* scroll out of bounds (like a
-// parallax foreground layer that moves much faster than the 'main' layer).
-// probably the layer should just STOP moving when the view gets out of its
-// bounds (i.e. just 'stick' at the edge)
+// - BUG (?): if you have a layer that scrolls out of bounds (like a
+// parallax foreground layer that moves much faster than the 'main' layer),
+// probably the layer should just STOP moving (i.e. just 'stick' at the edge)
 // -
 
 
@@ -698,14 +696,10 @@ zSquared.tilemap = function( z2 )
 		// set the frame for each tile sprite
 		for( i = 0; i <= this.map.viewHeightInTiles; i++, ty++ )
 		{
-			if( ty > this.map.heightInTiles )
-			{
-				this.tileSprites[i][0].visible = false;
-				continue;
-			}
 			for( j = 0, tx = orig_tx; j <= this.map.viewWidthInTiles; j++, tx++ )
 			{
-				if( tx > this.map.widthInTiles )
+				if( ty > this.map.heightInTiles ||
+					tx > this.map.widthInTiles )
 				{
 					this.tileSprites[i][j].visible = false;
 					continue;
@@ -785,13 +779,17 @@ zSquared.tilemap = function( z2 )
 			// set the frame for each tile sprite
 			for( i = 0; i <= this.map.viewHeightInTiles; i++, ty++ )
 			{
-				if( ty < 0 || ty > mapHeight )
-					continue;
 				for( j = 0, tx = orig_tx; j <= this.map.viewWidthInTiles; j++, tx++ )
 				{
 					var tileSprite = this.tileSprites[i][j];
-					if( tx < 0 || tx > mapWidth )
+					// if this tile is out-of-world-bounds,
+					// don't draw it
+					if( ty < 0 || ty > mapHeight ||
+						tx < 0 || tx > mapWidth )
+					{
+						tileSprite.visible = false;
 						continue;
+					}
 					tile = this.data[ty * mapWidth + tx];
 					// '0' tiles in Tiled are *empty*
 					if( tile )

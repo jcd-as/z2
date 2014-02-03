@@ -43,7 +43,9 @@ zSquared.view = function( z2 )
 		this.scene = scene;
 		this.width = width;
 		this.height = height;
-		this.target = target;
+		this._target = null;
+		if( target )
+			this.target = target;
 
 		// PIXI display object container for camera / view space
 		this.camera_doc = new PIXI.DisplayObjectContainer();
@@ -121,8 +123,8 @@ zSquared.view = function( z2 )
 		var b = -this.doc.position.y + this.voffs;
 
 		// get the target's x/y coordinates in scene space
-		var x = this.target.x;
-		var y = this.target.y;
+		var x = this._target.x;
+		var y = this._target.y;
 
 		var xstop = false, ystop = false;
 
@@ -237,6 +239,42 @@ zSquared.view = function( z2 )
 		this.doc.position.x = x;
 		this.doc.position.y = y;
 	};
+
+	Object.defineProperty( z2.View.prototype, 'target',
+	{
+		get: function()
+		{
+			return this._target;
+		},
+		set: function( val )
+		{
+			this._target = val;
+			// center the view on the target
+			this.doc.position.x = Math.round( -val.x );
+			this.doc.position.y = Math.round( -val.y );
+			// if the view exceeds the scene boundaries, we need to adjust
+			var left = -this.doc.position.x - this.width/2;
+			var right = -this.doc.position.x + this.width/2;
+			var top = -this.doc.position.y - this.height/2;
+			var bottom = -this.doc.position.y + this.height/2;
+			if( left < 0 || right > this.scene.width || top < 0 || bottom > this.scene.height )
+			{
+				// adjust the view so that we're not 'out of bounds'
+				var xoff, yoff;
+				if( left < 0 )
+					xoff = left;
+				else if( right > this.scene.width )
+					xoff = right - this.scene.width;
+				if( top < 0 )
+					yoff = top;
+				else if( bottom > this.scene.height )
+					yoff = bottom - this.scene.height;
+
+				this.doc.position.x += xoff;
+				this.doc.position.y += yoff;
+			}
+		}
+	} );
 
 	Object.defineProperty( z2.View.prototype, 'x',
 	{
