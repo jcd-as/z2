@@ -35,18 +35,18 @@ var enemy_sys = new z2.System( [enemyc, z2.velocityFactory, z2.physicsBodyFactor
 	},
 	update: function( e, dt )
 	{
-		var bc = e.getComponent( z2.physicsBodyFactory.mask );
-		var vc = e.getComponent( z2.velocityFactory.mask );
-
-		// if we're going to the left and we're blocked, turn right
-		if( vc.x <= 0 && bc.blocked_left )
-			vc.x = 100;
-		// if we're going to the right and we're blocked, turn left
-		else if( vc.x >= 0 && bc.blocked_right )
-			vc.x = -100;
-		// if we're not moving, just try going left
-		else if( vc.x === 0 )
-			vc.x = -100;
+//		var bc = e.getComponent( z2.physicsBodyFactory.mask );
+//		var vc = e.getComponent( z2.velocityFactory.mask );
+//
+//		// if we're going to the left and we're blocked, turn right
+//		if( vc.x <= 0 && bc.blocked_left )
+//			vc.x = 100;
+//		// if we're going to the right and we're blocked, turn left
+//		else if( vc.x >= 0 && bc.blocked_right )
+//			vc.x = -100;
+//		// if we're not moving, just try going left
+//		else if( vc.x === 0 )
+//			vc.x = -100;
 	}
 } );
 mgr.addSystem( enemy_sys );
@@ -59,6 +59,7 @@ var spre;
 var vel_sw_time = 0;
 var vel_on;
 var sprv = z2.velocityFactory.create( {x: 0, y: 0, maxx: 200, maxy: 500} );
+//var sprv = z2.velocityFactory.create( {x: 100, y: 0, maxx: 200, maxy: 500} );
 var input_sys = new z2.System( [player, z2.velocityFactory, z2.physicsBodyFactory],
 {
 	init: function()
@@ -118,7 +119,8 @@ var input_sys = new z2.System( [player, z2.velocityFactory, z2.physicsBodyFactor
 //				vc.x = vel_inc;
 //			else vc.x = 0;
 			// side-scroller
-			var h_vel_inc = 100;
+//			var h_vel_inc = 100;
+			var h_vel_inc = 10;
 			var v_vel_inc = 500;
 			// only jump when standing on 'ground'
 			if( bc.blocked_down && z2.kbd.isDown( z2.kbd.UP ) )
@@ -127,10 +129,12 @@ var input_sys = new z2.System( [player, z2.velocityFactory, z2.physicsBodyFactor
 //			else
 //				vc.y = 0;
 			if( z2.kbd.isDown( z2.kbd.LEFT ) )
-				vc.x = -h_vel_inc;
+//				vc.x = -h_vel_inc;
+				vc.x += -h_vel_inc;
 			else if( z2.kbd.isDown( z2.kbd.RIGHT ) )
-				vc.x = h_vel_inc;
-			else vc.x = 0;
+//				vc.x = h_vel_inc;
+				vc.x += h_vel_inc;
+//			else vc.x = 0;
 		}
 	}
 } );
@@ -146,6 +150,7 @@ function start()
 	var json = z2.loader.getAsset( 'level' );
 	var scene = new z2.TiledScene();
 	// create a view on the scene
+//	var view = new z2.View( scene, WIDTH, HEIGHT, null, z2.FOLLOW_MODE_NONE, 512, 512 );
 	var view = new z2.View( scene, WIDTH, HEIGHT, null, z2.FOLLOW_MODE_NONE, 512, 512 );
 
 	// create rendering system
@@ -179,6 +184,7 @@ function start()
 	view.doc.addChild( sprite );
 	var sprc = z2.spriteFactory.create( {sprite:sprite, animations:anims} );
 	var sprp = z2.positionFactory.create( {x: 512, y: 512} );
+//	var sprp = z2.positionFactory.create( {x: 1024-64, y: 1024-64} );
 	var sprr = z2.rotationFactory.create( {theta: 0} );
 //	var sprr = z2.rotationFactory.create( {theta: z2.math.d2r(10)} );
 	// reverse sprite facing
@@ -187,7 +193,7 @@ function start()
 	var sprsz = z2.sizeFactory.create( {width: 64, height: 64} );
 	var sprcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
 	var sprpc = z2.positionConstraintsFactory.create( {minx: 16, maxx: scene.width-16, miny: 32, maxy: scene.height-32} );
-	var sprbody = z2.physicsBodyFactory.create( {aabb:[-32, -15, 32, 15], restitution:0.5} );
+	var sprbody = z2.physicsBodyFactory.create( {aabb:[-32, -15, 32, 15], restitution:1, mass:5} );
 //	spre = mgr.createEntity( [z2.renderableFactory, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc] );
 //	spre = mgr.createEntity( [z2.renderableFactory, cmc, sprbody, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc] );
 //	spre = mgr.createEntity( [z2.renderableFactory, gravc, cmc, sprbody, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc] );
@@ -206,8 +212,9 @@ function start()
 	var sprite2 = new PIXI.Sprite( stexture2 );
 	view.doc.addChild( sprite2 );
 	var sprc2 = z2.spriteFactory.create( {sprite:sprite2, animations:anims2} );
-	var sprp2 = z2.positionFactory.create( {x: 400, y: 512} );
-	var sprbody2 = z2.physicsBodyFactory.create( {aabb:[-32, -16, 32, 16], restitution:0.5} );
+//	var sprp2 = z2.positionFactory.create( {x: 400, y: 512} );
+	var sprp2 = z2.positionFactory.create( {x: 64, y: 1024-64} );
+	var sprbody2 = z2.physicsBodyFactory.create( {aabb:[-32, -16, 32, 16], restitution:1, mass:1} );
 	var spre2 = mgr.createEntity( [z2.renderableFactory, enemyc, gravc, cmc, sprbody2, sprv2, sprp2, /*sprr2,*/ sprsz, sprs, sprcc, sprpc, sprc2, ecolg] );
 	anims2.play( 'jitter' );
 
@@ -216,6 +223,7 @@ function start()
 
 	// create the player sprite
 	spre = mgr.createEntity( [z2.renderableFactory, gravc, cmc, sprbody, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc, pcolg] );
+//	spre = mgr.createEntity( [z2.renderableFactory, gravc, cmc, sprbody, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc, pcolg] );
 
 	// set the entities for enemy collision group
 	ecolg.entities = [spre];

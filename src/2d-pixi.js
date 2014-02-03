@@ -3,7 +3,7 @@
 // Components and Systems for 2d games
 //
 // TODO:
-// - physics in movement system: gravity (x), mass, friction, 'bounce'
+// - physics in movement system: gravity (x), mass (x), friction ( ), 'bounce'
 // (coefficient of restitution) (x)
 // - 
 
@@ -475,6 +475,7 @@ zSquared['2d'] = function( z2 )
 							var ent = entities[i];
 							var body = ent.getComponent( z2.physicsBodyFactory.mask );
 							var pos = ent.getComponent( z2.positionFactory.mask );
+							var vel = ent.getComponent( z2.velocityFactory.mask );
 
 							// don't collide against self
 							if( bc === body )
@@ -507,32 +508,50 @@ zSquared['2d'] = function( z2 )
 								pc.x += m * pv[0];
 								pc.y += m * pv[1];
 								
-								// TODO: need to apply friction & mass & apply
-								// the change in velocity to BOTH sprites
+								// TODO: apply friction
+
+								// m = mass, u = init vel, v = resultant vel
+								// v1 = (u1(m1 - m2) + 2m2u2) / (m1 + m2)
+								// v2 = (u2(m2 - m1) + 2m1u1) / (m1 + m2)
+								var m1 = bc.mass;
+								var m2 = body.mass;
+								var mt = m1 + m2;
 
 								// left
 								if( pv[0] < 0 )
 								{
-									vc.x = vc.x * -bc.restitution;
+									var u1 = vc.x, u2 = vel.x;
+									vc.x = (u1 * (m1 - m2) + (2 * m2 * u2)) / mt * bc.restitution;
+									vel.x = (u2 * (m2 - m1) + (2 * m1 * u1)) / mt * body.restitution;
 									bc.blocked_right = true;
+									body.blocked_left = true;
 								}
 								// right
 								if( pv[0] > 0 )
 								{
-									vc.x = vc.x * -bc.restitution;
+									var u1 = vc.x, u2 = vel.x;
+									vc.x = (u1 * (m1 - m2) + (2 * m2 * u2)) / mt * bc.restitution;
+									vel.x = (u2 * (m2 - m1) + (2 * m1 * u1)) / mt * body.restitution;
 									bc.blocked_left = true;
+									body.blocked_right = true;
 								}
 								// up 
 								if( pv[1] < 0 )
 								{
-									vc.y = vc.y * -bc.restitution;
+									var u1 = vc.y, u2 = vel.y;
+									vc.y = (u1 * (m1 - m2) + (2 * m2 * u2)) / mt * -bc.restitution;
+									vel.y = (u2 * (m2 - m1) + (2 * m1 * u1)) / mt * -body.restitution;
 									bc.blocked_down = true;
+									body.blocked_up = true;
 								}
 								// down
 								if( pv[1] > 0 )
 								{
-									vc.y = vc.y * -bc.restitution;
+									var u1 = vc.y, u2 = vel.y;
+									vc.y = (u1 * (m1 - m2) + (2 * m2 * u2)) / mt * -bc.restitution;
+									vel.y = (u2 * (m2 - m1) + (2 * m1 * u2)) / mt * -body.restitution;
 									bc.blocked_up = true;
+									body.blocked_down = true;
 								}
 							}
 						}
