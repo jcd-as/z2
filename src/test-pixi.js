@@ -11,7 +11,7 @@ var HEIGHT = 384;
 var z2 = zSquared();
 
 // require z2 modules
-z2.require( ["loader", "input", "tiledscene"] );
+z2.require( ["loader", "input", "tiledscene", "audio"] );
 
 
 // create a canvas
@@ -24,6 +24,8 @@ var myScene =
 	load : function()
 	{
 		z2.loader.queueAsset( 'man', 'stylized.png' );
+		z2.loader.queueAsset( 'snd', 'field.mp3' );
+//		z2.loader.queueAsset( 'snd', 'field.ogg' );
 	},
 
 	create : function()
@@ -214,6 +216,9 @@ var myScene =
 
 		// movement system
 		this.mgr.addSystem( ms );
+
+		z2.playSound( 'snd' );
+
 	},
 
 	update : function( dt )

@@ -8,14 +8,15 @@
 // - support pre-loads
 // x support text files
 // x support json files
-// - support audio files
+// x support audio files
+// - use browser type to load appropriate audio files (i.e. ogg for firefox)
 // - 
 
 zSquared.loader = function( z2 )
 {
 	"use strict";
 
-//	z2.require( [""] );
+	z2.require( ["audio"] );
 
 	// private module data/functionality:
 
@@ -49,7 +50,7 @@ zSquared.loader = function( z2 )
 	var assetsFailed = 0;
 
 	// XML HTTP Request
-	var xhr = new XMLHttpRequest();
+//	var xhr = new XMLHttpRequest();
 
 	function getAssetTypeFromUrl( name )
 	{
@@ -69,6 +70,7 @@ zSquared.loader = function( z2 )
 	// load a text file
 	function loadText( key, url, onComplete, onError, that )
 	{
+		var xhr = new XMLHttpRequest();
 		xhr.open( "GET", url, true );
 		xhr.responseType = "text";
 		xhr.onload = function () { onComplete.call( that, key, xhr.responseText ); };
@@ -79,6 +81,7 @@ zSquared.loader = function( z2 )
 	// load a json file
 	function loadJson( key, url, onComplete, onError, that )
 	{
+		var xhr = new XMLHttpRequest();
 		xhr.open( "GET", url, true );
 		xhr.responseType = "text";
 		xhr.onload = function () 
@@ -92,9 +95,23 @@ zSquared.loader = function( z2 )
 	}
 
 	// load an audio file
-//	loadAudio: function( key, url, onComplete, onError )
-//	{
-//	},
+	function loadAudio( key, url, onComplete, onError, that )
+	{
+		var xhr = new XMLHttpRequest();
+		xhr.open( "GET", url, true );
+		xhr.responseType = "arraybuffer";
+		xhr.onload = function()
+		{
+			var data;
+			z2.audio.decodeAudioData( xhr.response, function( buffer )
+			{
+				data = buffer;
+				onComplete.call( that, key, data );
+			}, onError );
+		};
+		xhr.onerror = onError;
+		xhr.send();
+	}
 
 
 	// public module interface:
@@ -171,6 +188,7 @@ zSquared.loader = function( z2 )
 			// 'remaining' - to increment it as we add more files to load
 			var loadTiledJson = function( key, url, onComplete, onError )
 			{
+				var xhr = new XMLHttpRequest();
 				xhr.open( "GET", url, true );
 				xhr.responseType = "text";
 				xhr.onload = function () 
@@ -222,7 +240,7 @@ zSquared.loader = function( z2 )
 						loadImage( key, url, loaded, failed, that );
 						break;
 					case 'audio':
-						// TODO: impl
+						loadAudio( key, url, loaded, failed, that );
 						break;
 					case 'json':
 						loadJson( key, url, loaded, failed, that );

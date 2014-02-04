@@ -26,8 +26,8 @@ zSquared.scene = function( z2 )
 		this.create = scene.create || function() {};
 		this.update = scene.update || function(dt) {};
 
-		this.width = width | 0;
-		this.height = height | 0;
+		this.width = width || 0;
+		this.height = height || 0;
 
 		// create a Pixi stage for everything to be drawn on
 		this.stage = new PIXI.Stage( 0x800000 );
