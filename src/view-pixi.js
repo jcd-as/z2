@@ -99,8 +99,8 @@ zSquared.view = function( z2 )
 			case z2.FOLLOW_MODE_PLATFORMER:
 				// TODO: better values? different 'top' value than 'bottom'
 				// (instead of same 'vbuf' for top & bottom)
-				this.hbuf = this.width/3;
-				this.vbuf = this.height/4;
+				this.hbuf = this.width/2.5;
+				this.vbuf = this.height/3;
 				break;
 			case z2.FOLLOW_MODE_OVERHEAD_SCROLLER:
 				this.hbuf = this.width/3;

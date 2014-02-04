@@ -520,10 +520,12 @@ zSquared['2d'] = function( z2 )
 								var m2 = body.mass;
 								var mt = m1 + m2;
 
+								var u1, u2;
+
 								// left
 								if( pv[0] < 0 )
 								{
-									var u1 = vc.x, u2 = vel.x;
+									u1 = vc.x; u2 = vel.x;
 									vc.x = (u1 * (m1 - m2) + (2 * m2 * u2)) / mt * bc.restitution;
 									vel.x = (u2 * (m2 - m1) + (2 * m1 * u1)) / mt * body.restitution;
 									bc.blocked_right = true;
@@ -532,7 +534,7 @@ zSquared['2d'] = function( z2 )
 								// right
 								if( pv[0] > 0 )
 								{
-									var u1 = vc.x, u2 = vel.x;
+									u1 = vc.x; u2 = vel.x;
 									vc.x = (u1 * (m1 - m2) + (2 * m2 * u2)) / mt * bc.restitution;
 									vel.x = (u2 * (m2 - m1) + (2 * m1 * u1)) / mt * body.restitution;
 									bc.blocked_left = true;
@@ -541,18 +543,18 @@ zSquared['2d'] = function( z2 )
 								// up 
 								if( pv[1] < 0 )
 								{
-									var u1 = vc.y, u2 = vel.y;
-									vc.y = (u1 * (m1 - m2) + (2 * m2 * u2)) / mt * -bc.restitution;
-									vel.y = (u2 * (m2 - m1) + (2 * m1 * u1)) / mt * -body.restitution;
+									u1 = vc.y; u2 = vel.y;
+									vc.y = (u1 * (m1 - m2) + (2 * m2 * u2)) / mt * bc.restitution;
+									vel.y = (u2 * (m2 - m1) + (2 * m1 * u1)) / mt * body.restitution;
 									bc.blocked_down = true;
 									body.blocked_up = true;
 								}
 								// down
 								if( pv[1] > 0 )
 								{
-									var u1 = vc.y, u2 = vel.y;
-									vc.y = (u1 * (m1 - m2) + (2 * m2 * u2)) / mt * -bc.restitution;
-									vel.y = (u2 * (m2 - m1) + (2 * m1 * u2)) / mt * -body.restitution;
+									u1 = vc.y; u2 = vel.y;
+									vc.y = (u1 * (m1 - m2) + (2 * m2 * u2)) / mt * bc.restitution;
+									vel.y = (u2 * (m2 - m1) + (2 * m1 * u1)) / mt * body.restitution;
 									bc.blocked_up = true;
 									body.blocked_down = true;
 								}

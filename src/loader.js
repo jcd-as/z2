@@ -58,26 +58,26 @@ zSquared.loader = function( z2 )
 	}
 
 	// load an image
-	function loadImage( key, url, onComplete, onError )
+	function loadImage( key, url, onComplete, onError, that )
 	{
 		var img = new Image();
-		img.onload = function(){ onComplete( key, img ); };
+		img.onload = function(){ onComplete.call( that, key, img ); };
 		img.onerror = onError;
 		img.src = url;
 	}
 
 	// load a text file
-	function loadText( key, url, onComplete, onError )
+	function loadText( key, url, onComplete, onError, that )
 	{
 		xhr.open( "GET", url, true );
 		xhr.responseType = "text";
-		xhr.onload = function () { onComplete( key, xhr.responseText ); };
+		xhr.onload = function () { onComplete.call( that, key, xhr.responseText ); };
 		xhr.onerror = onError;
 		xhr.send();
 	}
 
 	// load a json file
-	function loadJson( key, url, onComplete, onError )
+	function loadJson( key, url, onComplete, onError, that )
 	{
 		xhr.open( "GET", url, true );
 		xhr.responseType = "text";
@@ -85,7 +85,7 @@ zSquared.loader = function( z2 )
 		{
 			// parse json
 			var data = JSON.parse( xhr.responseText );
-			onComplete( key, data );
+			onComplete.call( that, key, data );
 		};
 		xhr.onerror = onError;
 		xhr.send();
@@ -140,7 +140,7 @@ zSquared.loader = function( z2 )
 		 * @arg {Function} onComplete Callback function. Should take two numeric
 		 * arguments: the number of loaded items and the number of failed items
 		 */
-		load: function( onComplete)
+		load: function( onComplete, that )
 		{
 			var remaining = assetQueue.length;
 
@@ -155,7 +155,7 @@ zSquared.loader = function( z2 )
 
 				// if we're done, call the final callback
 				if( remaining === 0 )
-					onComplete( assetsLoaded, assetsFailed );
+					onComplete.call( that, assetsLoaded, assetsFailed );
 			};
 
 			// error callback
@@ -182,7 +182,7 @@ zSquared.loader = function( z2 )
 					for( var i = 0; i < data.tilesets.length; i++ )
 					{
 						remaining++;
-						loadImage( data.tilesets[i].name, data.tilesets[i].image, loaded, failed );
+						loadImage( data.tilesets[i].name, data.tilesets[i].image, loaded, failed, that );
 					}
 					// imagelayer images
 					for( i = 0; i < data.layers.length; i++ )
@@ -190,16 +190,16 @@ zSquared.loader = function( z2 )
 						if( data.layers[i].type == 'imagelayer' )
 						{
 							remaining++;
-							loadImage( data.layers[i].name, data.lyers[i].image, loaded, failed );
+							loadImage( data.layers[i].name, data.lyers[i].image, loaded, failed, that );
 						}
 					}
 					// TODO: etc (?)
 
-					onComplete( key, data );
+					onComplete.call( that, key, data );
 				};
 				xhr.onerror = onError;
 				xhr.send();
-			}
+			};
 
 
 			// do the load
@@ -219,19 +219,19 @@ zSquared.loader = function( z2 )
 					switch( type )
 					{
 					case 'image':
-						loadImage( key, url, loaded, failed );
+						loadImage( key, url, loaded, failed, that );
 						break;
 					case 'audio':
 						// TODO: impl
 						break;
 					case 'json':
-						loadJson( key, url, loaded, failed );
+						loadJson( key, url, loaded, failed, that );
 						break;
 					case 'text':
-						loadText( key, url, loaded, failed );
+						loadText( key, url, loaded, failed, that );
 						break;
 					case 'tiled':
-						loadTiledJson( key, url, loaded, failed );
+						loadTiledJson( key, url, loaded, failed, that );
 						break;
 					case 'unknown':
 						// TODO: impl
