@@ -306,7 +306,7 @@ zSquared.tilemap = function( z2 )
 						spr.position.y = i * this.map.tileHeight;
 						spr.i = i;
 						spr.j = j;
-						var tile_y = (tile / tileset.widthInTiles) | 0;
+						var tile_y = 0 | (tile / tileset.widthInTiles);
 						var tile_x = tile - (tile_y * tileset.widthInTiles);
 						texture.frame.x = tile_x * this.map.tileWidth;
 						texture.frame.y = tile_y * this.map.tileHeight;
@@ -331,10 +331,10 @@ zSquared.tilemap = function( z2 )
 
 		// view.x/y is the *center* not upper left
 		// TODO: clamp x,y to the layer/map bounds
-		var x = (viewx - this.map.viewWidth/2)*this.scrollFactorX | 0;
-		var y = (viewy - this.map.viewHeight/2)*this.scrollFactorY | 0;
-		tx = (x / this.map.tileWidth) | 0;
-		ty = (y / this.map.tileHeight) | 0;
+		var x = 0 | (viewx - this.map.viewWidth/2)*this.scrollFactorX;
+		var y = 0 | (viewy - this.map.viewHeight/2)*this.scrollFactorY;
+		tx = 0 | (x / this.map.tileWidth);
+		ty = 0 | (y / this.map.tileHeight);
 		xoffs = -(x - (tx * this.map.tileWidth));
 		yoffs = -(y - (ty * this.map.tileHeight));
 
@@ -361,7 +361,7 @@ zSquared.tilemap = function( z2 )
 					// get the actual tile index in the tileset
 					tileset = this.map.getTilesetForIndex( tile );
 					tile -= tileset.start;
-					tile_y = (tile / tileset.widthInTiles) | 0;
+					tile_y = 0 | (tile / tileset.widthInTiles);
 					tile_x = tile - (tile_y * tileset.widthInTiles);
 					// draw this tile to the canvas
 					this.context.drawImage( 
@@ -405,10 +405,10 @@ zSquared.tilemap = function( z2 )
 		var xoffs, yoffs;	// offset from the tile positions
 
 		// view.x/y is the *center* not upper left
-		var x = ((viewx - this.map.viewWidth/2)*this.scrollFactorX) | 0;
-		var y = ((viewy - this.map.viewHeight/2)*this.scrollFactorY) | 0;
-		tx = (x / tw) | 0;
-		ty = (y / th) | 0;
+		var x = 0 | ((viewx - this.map.viewWidth/2)*this.scrollFactorX);
+		var y = 0 | ((viewy - this.map.viewHeight/2)*this.scrollFactorY);
+		tx = 0 | (x / tw);
+		ty = 0 | (y / th);
 		xoffs = -(x - (tx * tw));
 		yoffs = -(y - (ty * th));
 
@@ -459,7 +459,7 @@ zSquared.tilemap = function( z2 )
 						// get the actual tile index in the tileset
 						tileset = this.map.getTilesetForIndex( tile );
 						tile -= tileset.start;
-						tile_y = (tile / tileset.widthInTiles) | 0;
+						tile_y = 0 | (tile / tileset.widthInTiles);
 						tile_x = tile - (tile_y * tileset.widthInTiles);
 						// draw this tile to the canvas
 						this.backContext.drawImage( 
@@ -598,7 +598,7 @@ zSquared.tilemap = function( z2 )
 						// get the actual tile index in the tileset
 						tileset = this.map.getTilesetForIndex( tile );
 						tile -= tileset.start;
-						tile_y = (tile / tileset.widthInTiles) | 0;
+						tile_y = 0 | (tile / tileset.widthInTiles);
 						tile_x = tile - (tile_y * tileset.widthInTiles);
 
 						yoffs = row * th;
@@ -630,7 +630,7 @@ zSquared.tilemap = function( z2 )
 						// get the actual tile index in the tileset
 						tileset = this.map.getTilesetForIndex( tile );
 						tile -= tileset.start;
-						tile_y = (tile / tileset.widthInTiles) | 0;
+						tile_y = 0 | (tile / tileset.widthInTiles);
 						tile_x = tile - (tile_y * tileset.widthInTiles);
 
 						yoffs = row * th;
@@ -680,10 +680,10 @@ zSquared.tilemap = function( z2 )
 		// TODO: dirty checks - don't draw if not dirty
 
 		// view.x/y is the *center* not upper left
-		var x = ((viewx - this.map.viewWidth/2)*this.scrollFactorX) | 0;
-		var y = ((viewy - this.map.viewHeight/2)*this.scrollFactorY) | 0;
-		var tx = (x / this.map.tileWidth) | 0;
-		var ty = (y / this.map.tileHeight) | 0;
+		var x = 0 | ((viewx - this.map.viewWidth/2)*this.scrollFactorX);
+		var y = 0 | ((viewy - this.map.viewHeight/2)*this.scrollFactorY);
+		var tx = 0 | (x / this.map.tileWidth);
+		var ty = 0 | (y / this.map.tileHeight);
 
 		// TODO: if there is only *one* tileset, we can optimize because we
 		// don't need to look-up which tileset this tile is in...
@@ -715,7 +715,7 @@ zSquared.tilemap = function( z2 )
 					tileset = this.map.tilesets[0];
 //						tile -= tileset.start;
 					tile--;
-					tile_y = (tile / tileset.widthInTiles) | 0;
+					tile_y = 0 | (tile / tileset.widthInTiles);
 					tile_x = tile - (tile_y * tileset.widthInTiles);
 
 					var frame = this.tileSprites[i][j].texture.frame;
@@ -754,10 +754,10 @@ zSquared.tilemap = function( z2 )
 		var tx, ty;		// tile positions in the data map
 
 		// view.x/y is the *center* not upper left
-		var x = ((viewx - this.map.viewWidth/2)*this.scrollFactorX) | 0;
-		var y = ((viewy - this.map.viewHeight/2)*this.scrollFactorY) | 0;
-		tx = (x / tw) | 0;
-		ty = (y / th) | 0;
+		var x = 0 | ((viewx - this.map.viewWidth/2)*this.scrollFactorX);
+		var y = 0 | ((viewy - this.map.viewHeight/2)*this.scrollFactorY);
+		tx = 0 | (x / tw);
+		ty = 0 | (y / th);
 
 		// TODO: if there is only *one* tileset, we can optimize because we
 		// don't need to look-up which tileset this tile is in...
@@ -801,7 +801,7 @@ zSquared.tilemap = function( z2 )
 //						tile -= tileset.start;
 						tile--;
 
-						tile_y = (tile / tileset.widthInTiles) | 0;
+						tile_y = 0 | (tile / tileset.widthInTiles);
 						tile_x = tile - (tile_y * tileset.widthInTiles);
 
 						var frame = tileSprite.texture.frame;
@@ -837,10 +837,10 @@ zSquared.tilemap = function( z2 )
 		var tx, ty;		// tile positions in the data map
 
 		// view.x/y is the *center* not upper left
-		var x = ((viewx - this.map.viewWidth/2)*this.scrollFactorX) | 0;
-		var y = ((viewy - this.map.viewHeight/2)*this.scrollFactorY) | 0;
-		tx = (x / this.map.tileWidth) | 0;
-		ty = (y / this.map.tileHeight) | 0;
+		var x = 0 | ((viewx - this.map.viewWidth/2)*this.scrollFactorX);
+		var y = 0 | ((viewy - this.map.viewHeight/2)*this.scrollFactorY);
+		tx = 0 | (x / this.map.tileWidth);
+		ty = 0 | (y / this.map.tileHeight);
 		var txend = tx + this.map.viewWidthInTiles;
 		var tyend = ty + this.map.viewHeightInTiles;
 
@@ -860,8 +860,8 @@ zSquared.tilemap = function( z2 )
 		
 		// move the doc (group) to viewx, viewy
 		// (truncate positions down to 32 bit integer)
-		this.doc.position.x = (-x) | 0;
-		this.doc.position.y = (-y) | 0;
+		this.doc.position.x = 0 | (-x);
+		this.doc.position.y = 0 | (-y);
 	};
 
 	/** Render the tilemap to its canvas
