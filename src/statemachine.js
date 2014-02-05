@@ -90,6 +90,8 @@ zSquared.statemachine = function( z2 )
 	 * @function z2.StateMachine#consumeEvent
 	 * @memberof z2.StateMachine
 	 * @arg {string} e The event that has occurred
+	 * @arg {any} args Any further arguments that you want to be passed to the
+	 * receiver's function for this state change
 	 */
 	z2.StateMachine.prototype.consumeEvent = function( e )
 	{
@@ -98,7 +100,7 @@ zSquared.statemachine = function( z2 )
 		{
 			this.currentState = this.states[this.indices[this.currentState.events[e]]];
 			// call the callback
-			this.receiver[this.currentState.name].call( this.receiver );
+			this.receiver[this.currentState.name].apply( this.receiver, Array.prototype.slice.call( arguments, 1 ) );
 		}
 		else
 			console.warn( "State Machine called with invalid event: '" + e + "' for current state: '" + this.currentState.name + "'." );

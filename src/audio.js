@@ -17,15 +17,35 @@ zSquared.audio = function( z2 )
 
 	z2.audio = new z2.AudioContext();
 
-	z2.playSound = function( key )
+	z2.playSound = function( key, offset, volume, loop )
 	{
+		offset = offset || 0;
+
 		// get the asset
 		var snd = z2.loader.getAsset( key );
 
+		// create a buffer source
 		var src = z2.audio.createBufferSource();
+		// loop?
+		if( loop )
+			src.loop = true;
+
+		// set the source buffer
 		src.buffer = snd;
-		src.connect( z2.audio.destination );
-		src.start( 0 );
+
+		// volume?
+		if( volume )
+		{
+			var gain = z2.audio.createGain();
+			src.connect( gain );
+			gain.gain.value = volume;
+			gain.connect( z2.audio.destination );
+		}
+		else
+			src.connect( z2.audio.destination );
+
+		// play
+		src.start( offset );
 	};
 };
 

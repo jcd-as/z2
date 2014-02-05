@@ -5,6 +5,8 @@
 // TODO:
 // - physics in movement system: gravity (x), mass (x), friction ( ), 'bounce'
 // (coefficient of restitution) (x)
+// - way to implement callbacks or the like. for example: on collision of two
+// bodies, need a way to play sounds etc for those two entities ??
 // - 
 
 zSquared['2d'] = function( z2 )
@@ -475,6 +477,7 @@ zSquared['2d'] = function( z2 )
 					{
 						// TODO: optimize! figure out a better way to do this,
 						// it is potentially n^2 behaviour
+						// (keep a list of already collided sprites?)
 						for( var i = 0; i < entities.length; i++ )
 						{
 							var ent = entities[i];
@@ -514,47 +517,55 @@ zSquared['2d'] = function( z2 )
 								pc.y += m * pv[1];
 								
 								// m = mass, u = init vel, v = resultant vel
-								// v1 = (u1(m1 - m2) + 2m2u2) / (m1 + m2)
-								// v2 = (u2(m2 - m1) + 2m1u1) / (m1 + m2)
+								// cr = coefficient of restitution
+								// from wikipedia:
+								// (http://en.wikipedia.org/wiki/Coefficient_of_restitution#Speeds_after_impact)
+								// v1 = [(m1)(u1) + (m2)(u2) + (m2)(cr)(u2-u1)] / (m1+m2)
+								// v2 = [(m1)(u1) + (m2)(u2) + (m1)(cr)(u1-u2)] / (m1+m2)
+
 								var m1 = bc.mass;
 								var m2 = body.mass;
 								var mt = m1 + m2;
 
 								var u1, u2;
 
-								// left
+								// CoR is a properly a property of a *collision*, 
+								// not an object... we'll just take the average
+								var cr = (bc.restitution + body.restitution) / 2;
+
+								// left separation
 								if( pv[0] < 0 )
 								{
 									u1 = vc.x; u2 = vel.x;
-									vc.x = (u1 * (m1 - m2) + (2 * m2 * u2)) / mt * bc.restitution;
-									vel.x = (u2 * (m2 - m1) + (2 * m1 * u1)) / mt * body.restitution;
+									vc.x = ((m1*u1)+(m2*u2) + (m2*cr) * (u2-u1)) / mt;
+									vel.x = ((m1*u1)+(m2*u2) + (m1*cr) * (u1-u2)) / mt;
 									bc.blocked_right = true;
 									body.blocked_left = true;
 								}
-								// right
+								// right separation
 								if( pv[0] > 0 )
 								{
 									u1 = vc.x; u2 = vel.x;
-									vc.x = (u1 * (m1 - m2) + (2 * m2 * u2)) / mt * bc.restitution;
-									vel.x = (u2 * (m2 - m1) + (2 * m1 * u1)) / mt * body.restitution;
+									vc.x = ((m1*u1)+(m2*u2) + (m2*cr) * (u2-u1)) / mt;
+									vel.x = ((m1*u1)+(m2*u2) + (m1*cr) * (u1-u2)) / mt;
 									bc.blocked_left = true;
 									body.blocked_right = true;
 								}
-								// up 
+								// up separation
 								if( pv[1] < 0 )
 								{
 									u1 = vc.y; u2 = vel.y;
-									vc.y = (u1 * (m1 - m2) + (2 * m2 * u2)) / mt * bc.restitution;
-									vel.y = (u2 * (m2 - m1) + (2 * m1 * u1)) / mt * body.restitution;
+									vc.y = ((m1*u1)+(m2*u2) + (m2*cr) * (u2-u1)) / mt;
+									vel.y = ((m1*u1)+(m2*u2) + (m1*cr) * (u1-u2)) / mt;
 									bc.blocked_down = true;
 									body.blocked_up = true;
 								}
-								// down
+								// down separation
 								if( pv[1] > 0 )
 								{
 									u1 = vc.y; u2 = vel.y;
-									vc.y = (u1 * (m1 - m2) + (2 * m2 * u2)) / mt * bc.restitution;
-									vel.y = (u2 * (m2 - m1) + (2 * m1 * u1)) / mt * body.restitution;
+									vc.y = ((m1*u1)+(m2*u2) + (m2*cr) * (u2-u1)) / mt;
+									vel.y = ((m1*u1)+(m2*u2) + (m1*cr) * (u1-u2)) / mt;
 									bc.blocked_up = true;
 									body.blocked_down = true;
 								}

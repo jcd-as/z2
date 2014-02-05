@@ -49,9 +49,6 @@ zSquared.loader = function( z2 )
 	var assetsLoaded = 0;
 	var assetsFailed = 0;
 
-	// XML HTTP Request
-//	var xhr = new XMLHttpRequest();
-
 	function getAssetTypeFromUrl( name )
 	{
 		var ext = name.split( '.' ).slice(-1)[0].toLowerCase();
@@ -136,6 +133,14 @@ zSquared.loader = function( z2 )
 		deleteAsset : function( key )
 		{
 			delete assets[key];
+		},
+
+		/** Free all assets
+		 * @method z2.loader#freeAssets
+		 */
+		freeAssets : function()
+		{
+			assets = {};
 		},
 
 		/** Add an item to the loader queue

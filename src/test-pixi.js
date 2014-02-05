@@ -3,6 +3,8 @@
 // - improve usability of z2 & make this sample much cleaner
 //
 
+(function()
+{
 "use strict";
 
 var WIDTH = 512;
@@ -11,9 +13,8 @@ var HEIGHT = 384;
 var z2 = zSquared();
 
 // require z2 modules
-z2.require( ["loader", "input", "tiledscene", "audio"] );
-
-
+z2.require( ["loader", "input", "tiledscene", "audio", "statemachine"] );
+ 
 // create a canvas
 var canvas = z2.createCanvas( WIDTH, HEIGHT, true );
 
@@ -24,8 +25,10 @@ var myScene =
 	load : function()
 	{
 		z2.loader.queueAsset( 'man', 'stylized.png' );
-		z2.loader.queueAsset( 'snd', 'field.mp3' );
+//		z2.loader.queueAsset( 'snd', 'field.mp3' );
+//		z2.loader.queueAsset( 'snd', 'landing.mp3' );
 //		z2.loader.queueAsset( 'snd', 'field.ogg' );
+		z2.loader.queueAsset( 'snd', 'landing.ogg' );
 	},
 
 	create : function()
@@ -59,20 +62,20 @@ var myScene =
 		// placeholder for sprite entity
 		var spre;
 		// create an input system
-		var vel_sw_time = 0;
-		var vel_on;
 		var sprv = z2.velocityFactory.create( {x: 0, y: 0, maxx: 200, maxy: 500} );
 		//var sprv = z2.velocityFactory.create( {x: 100, y: 0, maxx: 200, maxy: 500} );
 		var input_sys = new z2.System( [player, z2.velocityFactory, z2.physicsBodyFactory],
 		{
 			init: function()
 			{
+				// initialize FSM
+				this.fsm = new z2.StateMachine( this.states, this );
+				
+				// initialize keyboard
 				z2.kbd.start();
 				z2.kbd.addKey( z2.kbd.UP );
-				z2.kbd.addKey( z2.kbd.DOWN );
 				z2.kbd.addKey( z2.kbd.LEFT );
 				z2.kbd.addKey( z2.kbd.RIGHT );
-				z2.kbd.addKey( z2.kbd.SPACEBAR );
 			},
 			update: function( e, dt )
 			{
@@ -82,63 +85,170 @@ var myScene =
 				// get the physics body
 				var bc = e.getComponent( z2.physicsBodyFactory.mask );
 
-				if( z2.kbd.isDown( z2.kbd.SPACEBAR ) )
+				// check keys
+				var left = false;
+				var right = false;
+				var jump = false;
+				// only jump when standing on 'ground'
+				if( bc.blocked_down && z2.kbd.isDown( z2.kbd.UP ) )
+					jump = true;
+				if( z2.kbd.isDown( z2.kbd.LEFT ) )
+					left = true;
+				else if( z2.kbd.isDown( z2.kbd.RIGHT ) )
+					right = true;
+
+				var state = this.fsm.getState();
+				switch( state )
 				{
-					// only allow turning velocity off once every 500 ms
-					var t = z2.time.now();
-					if( t - vel_sw_time > 500 )
+				case 'walking':
+					// reset horizontal velocity
+//					vc.x = 0;
+
+					// can jump, fall, keep walking or stop
+					if( jump )
+						this.fsm.consumeEvent( 'jump', vc, bc );
+					// not touching ground ?
+					else if( !bc.blocked_down )
+						this.fsm.consumeEvent( 'fall', vc, bc );
+					else if( left )
 					{
-						vel_sw_time = t;
-						if( vc )
-						{
-							// turn vel off
-							vel_on = false;
-							spre.removeComponent( z2.velocityFactory.mask );
-						}
-						else
-						{
-							// turn vel on
-							vel_on = true;
-							spre.addComponent( sprv );
-						}
+						this.goLeft( vc, bc );
+					}
+					else if( right )
+					{
+						this.goRight( vc, bc );
+					}
+					else
+					{
+						// stop
+						this.fsm.consumeEvent( 'stop' );
+					}
+					break;
+				case 'jumping':
+				case 'falling':
+					// reset horizontal velocity
+//					vc.x = 0;
+
+					// land?
+					if( bc.blocked_down )
+					{
+						this.fsm.consumeEvent( 'land', vc, bc );
+					}
+					// can move side to side
+					if( left )
+					{
+						this.facing = 'left';
+						this.goLeft( vc, bc );
+					}
+					else if( right )
+					{
+						this.facing = 'right';
+						this.goRight( vc, bc );
+					}
+					break;
+				case 'idle':
+					// reset horizontal velocity
+//					vc.x = 0;
+
+					// can walk or jump
+					if( jump )
+						this.fsm.consumeEvent( 'jump', vc, bc );
+					else if( left )
+					{
+						this.facing = 'left';
+						this.fsm.consumeEvent( 'left', vc, bc );
+					}
+					else if( right )
+					{
+						this.facing = 'right';
+						this.fsm.consumeEvent( 'right', vc, bc );
+					}
+					break;
+				default:
+					break;
+				}
+				////////////////////////////
+			},
+			facing : 'left',
+			h_vel_inc : 200,
+			v_vel_inc : 750,
+			// finite state machine states for player sprite
+			fsm : null,
+			states : 
+			[
+				{
+					'name' : 'idle',
+					'initial' : true,
+					'events' :
+					{
+						'left' : 'walking',
+						'right' : 'walking',
+						'jump' : 'jumping',
+					}
+				},
+				{
+					'name' : 'walking',
+					'events' :
+					{
+						'stop' : 'idle',
+						'jump' : 'jumping',
+						'fall' : 'falling',
+					}
+				},
+				{
+					'name' : 'jumping',
+					'events' :
+					{
+						'land' : 'idle',
+						'fall' : 'falling'
+					}
+				},
+				{
+					'name' : 'recovering',
+					'events' :
+					{
+						'recover' : 'idle'
+					}
+				},
+				{
+					'name' : 'falling',
+					'events' : 
+					{
+						'land' : 'idle',
 					}
 				}
-
-				if( vc )
-				{
-					// check keys
-
-					// top-down 
-//					var vel_inc = 100;
-//					if( z2.kbd.isDown( z2.kbd.UP ) )
-//						vc.y = -vel_inc;
-//					else if( z2.kbd.isDown( z2.kbd.DOWN ) )
-//						vc.y = vel_inc;
-//					else
-//						vc.y = 0;
-//					if( z2.kbd.isDown( z2.kbd.LEFT ) )
-//						vc.x = -vel_inc;
-//					else if( z2.kbd.isDown( z2.kbd.RIGHT ) )
-//						vc.x = vel_inc;
-//					else vc.x = 0;
-					// side-scroller
-//					var h_vel_inc = 100;
-					var h_vel_inc = 10;
-					var v_vel_inc = 750;
-					// only jump when standing on 'ground'
-					if( bc.blocked_down && z2.kbd.isDown( z2.kbd.UP ) )
-						vc.y = -v_vel_inc;
-//					else
-//						vc.y = 0;
-					if( z2.kbd.isDown( z2.kbd.LEFT ) )
-//						vc.x = -h_vel_inc;
-						vc.x += -h_vel_inc;
-					else if( z2.kbd.isDown( z2.kbd.RIGHT ) )
-//						vc.x = h_vel_inc;
-						vc.x += h_vel_inc;
-//					else vc.x = 0;
-				}
-			}
+			],
+			// state handlers
+			idle : function( vc, bc )
+			{
+				// set animation, facing
+			},
+			walking : function( vc, bc )
+			{
+				// set animation, facing
+				if( this.facing == 'left' )
+					this.goLeft( vc, bc );
+				else if( this.facing == 'right' )
+					this.goRight( vc, bc );
+//				else error
+			},
+			jumping : function( vc, bc )
+			{
+				vc.y = -this.v_vel_inc;
+				// set animation, facing
+			},
+			falling : function( vc, bc )
+			{
+				// set animation, facing
+			},
+			goLeft : function( vc, bc )
+			{
+				vc.x += -this.h_vel_inc;
+			},
+			goRight : function( vc, bc )
+			{
+				vc.x += this.h_vel_inc;
+			},
 		} );
 
 		// create a collision map
@@ -171,7 +281,7 @@ var myScene =
 		var sprsz = z2.sizeFactory.create( {width: 64, height: 64} );
 		var sprcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
 		var sprpc = z2.positionConstraintsFactory.create( {minx: 16, maxx: this.width-16, miny: 32, maxy: this.height-32} );
-		var sprbody = z2.physicsBodyFactory.create( {aabb:[-32, -15, 32, 15], restitution:1, mass:1, resistance_x:0.95} );
+		var sprbody = z2.physicsBodyFactory.create( {aabb:[-32, -15, 32, 15], restitution:0, mass:1, resistance_x:0.95} );
 		anims.play( 'walk' );
 
 		// collision group for the enemy to collide against
@@ -188,7 +298,8 @@ var myScene =
 		var sprc2 = z2.spriteFactory.create( {sprite:sprite2, animations:anims2} );
 		var sprp2 = z2.positionFactory.create( {x: 64, y: 1024-64} );
 		var sprbody2 = z2.physicsBodyFactory.create( {aabb:[-32, -16, 32, 16], restitution:1, mass:1, resistance_x: 0} );
-		var spre2 = this.mgr.createEntity( [z2.renderableFactory, enemyc, gravc, cmc, sprbody2, sprv2, sprp2, sprsz, sprs, sprcc, sprpc, sprc2, ecolg] );
+//		var spre2 = this.mgr.createEntity( [z2.renderableFactory, enemyc, gravc, cmc, sprbody2, sprv2, sprp2, sprsz, sprs, sprcc, sprpc, sprc2, ecolg] );
+		var spre2 = this.mgr.createEntity( [z2.renderableFactory, gravc, cmc, sprbody2, sprv2, sprp2, sprsz, sprs, sprcc, sprpc, sprc2] );
 		anims2.play( 'jitter' );
 
 		// collision group for the player to collide against
@@ -217,7 +328,8 @@ var myScene =
 		// movement system
 		this.mgr.addSystem( ms );
 
-		z2.playSound( 'snd' );
+//		z2.playSound( 'snd' );
+		z2.playSound( 'snd', 0, 1, false );
 
 	},
 
@@ -236,3 +348,4 @@ scene.start();
 // start the main ecs loop
 z2.main( z2.ecsUpdate );
 
+})();
