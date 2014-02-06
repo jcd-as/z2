@@ -18,6 +18,28 @@ z2.require( ["loader", "input", "tiledscene", "audio", "statemachine"] );
 // create a canvas
 var canvas = z2.createCanvas( WIDTH, HEIGHT, true );
 
+// global set-up stuff
+// TODO: move this to a "game" class??
+var paused = false;
+var visibilityChange = function( event )
+{
+	if( paused === false && (event.type == 'pagehide' || event.type == 'blur' || document.hidden === true || document.webkitHidden === true))
+		paused = true;
+	else
+		paused = false;
+
+	if( paused )
+		z2.pauseSounds();
+	else
+		z2.resumeSounds();
+};
+document.addEventListener( 'visibilitychange', visibilityChange, false );
+document.addEventListener( 'webkitvisibilitychange', visibilityChange, false );
+document.addEventListener( 'pagehide', visibilityChange, false );
+document.addEventListener( 'pageshow', visibilityChange, false );
+window.onblur = visibilityChange;
+window.onfocus = visibilityChange;
+
 // create an object defining our scene
 // (load, create and update methods)
 var myScene = 
@@ -25,10 +47,12 @@ var myScene =
 	load : function()
 	{
 		z2.loader.queueAsset( 'man', 'stylized.png' );
-//		z2.loader.queueAsset( 'snd', 'field.mp3' );
-//		z2.loader.queueAsset( 'snd', 'landing.mp3' );
-//		z2.loader.queueAsset( 'snd', 'field.ogg' );
-		z2.loader.queueAsset( 'snd', 'landing.ogg' );
+		z2.loader.queueAsset( 'field', 'field.mp3' );
+//		z2.loader.queueAsset( 'field', 'field.ogg' );
+		z2.loader.queueAsset( 'land', 'landing.mp3' );
+//		z2.loader.queueAsset( 'land', 'landing.ogg' );
+		z2.loader.queueAsset( 'logo', 'logo.mp3' );
+//		z2.loader.queueAsset( 'logo', 'logo.ogg' );
 	},
 
 	create : function()
@@ -132,6 +156,7 @@ var myScene =
 					// land?
 					if( bc.blocked_down )
 					{
+						z2.playSound( 'land' );
 						this.fsm.consumeEvent( 'land', vc, bc );
 					}
 					// can move side to side
@@ -281,7 +306,7 @@ var myScene =
 		var sprsz = z2.sizeFactory.create( {width: 64, height: 64} );
 		var sprcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
 		var sprpc = z2.positionConstraintsFactory.create( {minx: 16, maxx: this.width-16, miny: 32, maxy: this.height-32} );
-		var sprbody = z2.physicsBodyFactory.create( {aabb:[-32, -15, 32, 15], restitution:0, mass:1, resistance_x:0.95} );
+		var sprbody = z2.physicsBodyFactory.create( {aabb:[-32, -15, 32, 15], restitution:1, mass:1, resistance_x:0.95} );
 		anims.play( 'walk' );
 
 		// collision group for the enemy to collide against
@@ -328,8 +353,31 @@ var myScene =
 		// movement system
 		this.mgr.addSystem( ms );
 
-//		z2.playSound( 'snd' );
-		z2.playSound( 'snd', 0, 1, false );
+//		z2.playSound( 'field', 0, 1, true );
+		z2.playSound( 'logo', 0, 1, true );
+
+		//////////////////
+		// add global handlers for web page controls
+		window.updateMass = function( value )
+		{
+			sprbody.mass = value;
+		};
+		window.updateRestitution = function( value )
+		{
+			sprbody.restitution = value;
+		};
+		window.updateResistanceX = function( value )
+		{
+			sprbody.resistance_x = value;
+		};
+		window.updateResistanceY = function( value )
+		{
+			sprbody.resistance_y = value;
+		};
+		window.updateGravity = function( value )
+		{
+			gravc.y = value;
+		};
 
 	},
 
@@ -346,6 +394,14 @@ var scene = new z2.TiledScene( canvas, 'test.json', myScene );
 scene.start();
 
 // start the main ecs loop
-z2.main( z2.ecsUpdate );
+//z2.main( z2.ecsUpdate );
+function mainloop( et )
+{
+	// TODO: problem with this is that ecsUpdate calculates the time delta, so
+	// by intercepting here the dt doesn't get updated properly
+	if( !paused )
+		z2.ecsUpdate( et );
+}
+z2.main( mainloop );
 
 })();
