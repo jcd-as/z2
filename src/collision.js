@@ -5,6 +5,9 @@
 // TODO:
 // - AABB vs AA right triangles 
 // - (optimized) routines to just detect intersection, not resolve collision
+// - convert all collision routines to return boolean and use out param for
+// separation vector (not just direction normal)
+// - 
 
 zSquared.collision = function( z2 )
 {
@@ -190,8 +193,8 @@ zSquared.collision = function( z2 )
 	 * @function z2.collideAabbVsAabb
 	 * @arg {Array} p1 (flat) Array of values for aabb 1: top, left, bottom, right
 	 * @arg {Array} p2 (flat) Array of values for aabb 2: top, left, bottom, right
-	 * @arg {Array} pv (out) Vector (2 element array) for returning penetration direction (normal)
-	 * @returns {Number} magnitude of penetration, or 0 if no collision
+	 * @arg {Array} pv (out) Vector (2 element array) for returning penetration vector (direction and magnitude)
+	 * @returns {boolean} true if collision, or false if no collision
 	 */
 	z2.collideAabbVsAabb = function( p1, p2, pv )
 	{
@@ -209,7 +212,7 @@ zSquared.collision = function( z2 )
 
 		// no overlap?
 		if( t1 < 0 || t2 < 0 || t3 < 0 || t4 < 0 )
-			return 0;
+			return false;
 		else
 		{
 			pen1 = Math.min( t1, t2 );
@@ -224,20 +227,20 @@ zSquared.collision = function( z2 )
 			{
 				pv[0] = 0;
 				if( ny > 0 )
-					pv[1] = -1;
+					pv[1] = -pen2;
 				else
-					pv[1] = 1;
-				return pen2;
+					pv[1] = pen2;
+				return true;
 			}
 			// least penetration is horizontal
 			else
 			{
 				if( nx > 0 )
-					pv[0] = -1;
+					pv[0] = -pen1;
 				else
-					pv[0] = 1;
+					pv[0] = pen1;
 				pv[1] = 0;
-				return pen1;
+				return true;
 			}
 		}
 	};

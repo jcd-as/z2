@@ -7,7 +7,8 @@
 // (coefficient of restitution) (x)
 // - way to implement callbacks or the like. for example: on collision of two
 // bodies, need a way to play sounds etc for those two entities ??
-// - 
+// - handle collisions of non-AABBs (circles & polygons)
+// -
 
 zSquared['2d'] = function( z2 )
 {
@@ -513,12 +514,9 @@ zSquared['2d'] = function( z2 )
 							{
 								collision = true;
 
-								// TODO: modify collideAabbVsAabb() to set
-								// the magnitude in the return vector, then
-								// change this code to use it
 								// separate
-								pc.x += m * pv[0];
-								pc.y += m * pv[1];
+								pc.x += pv[0];
+								pc.y += pv[1];
 								
 								// m = mass, u = init vel, v = resultant vel
 								// cr = coefficient of restitution
