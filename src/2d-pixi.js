@@ -370,8 +370,13 @@ zSquared['2d'] = function( z2 )
 	 */
 	z2.createMovementSystem = function()
 	{
+		var aabb1 = new Array( 4 );
+		var aabb2 = new Array( 4 );
 		return new z2.System( [z2.positionFactory, z2.velocityFactory],
 		{
+//			aabb1 : new Array( 4 ),
+//			aabb2 : new Array( 4 ),
+
 			update: function( e, dt )
 			{
 				// get the position component
@@ -489,19 +494,16 @@ zSquared['2d'] = function( z2 )
 							if( bc === body )
 								continue;
 
-							// TODO: this allocates a new object (array)
-							var aabb1 = bc.aabb.slice(0);
-							aabb1[0] += pc.y;
-							aabb1[1] += pc.x;
-							aabb1[2] += pc.y;
-							aabb1[3] += pc.x;
+							// setup the bounding boxes
+							aabb1[0] = bc.aabb[0] + pc.y;
+							aabb1[1] = bc.aabb[1] + pc.x;
+							aabb1[2] = bc.aabb[2] + pc.y;
+							aabb1[3] = bc.aabb[3] + pc.x;
 
-							// TODO: this allocates a new object (array)
-							var aabb2 = body.aabb.slice(0);
-							aabb2[0] += pos.y;
-							aabb2[1] += pos.x;
-							aabb2[2] += pos.y;
-							aabb2[3] += pos.x;
+							aabb2[0] = body.aabb[0] + pos.y;
+							aabb2[1] = body.aabb[1] + pos.x;
+							aabb2[2] = body.aabb[2] + pos.y;
+							aabb2[3] = body.aabb[3] + pos.x;
 
 							// collide
 							m = z2.collideAabbVsAabb( aabb1, aabb2, pv );
@@ -588,16 +590,13 @@ zSquared['2d'] = function( z2 )
 					// TODO: friction only makes sense for 'full' (non-AABB)
 					// collisions (using circles, for example)
 
-					// TODO: this allocates a new object (array)
-					var aabb = bc.aabb.slice(0); // [top, left, bottom, right]
-					// add to the entity's position
-					aabb[0] += pc.y;
-					aabb[1] += pc.x;
-					aabb[2] += pc.y;
-					aabb[3] += pc.x;
+					aabb1[0] = bc.aabb[0] + pc.y;
+					aabb1[1] = bc.aabb[1] + pc.x;
+					aabb1[2] = bc.aabb[2] + pc.y;
+					aabb1[3] = bc.aabb[3] + pc.x;
 
 					// perform the collision
-					m = z2.collideAabbVsCollisionMap( aabb, cmc.data, cmc.map.widthInTiles, cmc.map.heightInTiles, cmc.map.tileWidth, cmc.map.tileHeight, pv );
+					m = z2.collideAabbVsCollisionMap( aabb1, cmc.data, cmc.map.widthInTiles, cmc.map.heightInTiles, cmc.map.tileWidth, cmc.map.tileHeight, pv );
 
 					// separate the aabb and stop velocity
 					if( m )
