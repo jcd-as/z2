@@ -489,12 +489,14 @@ zSquared['2d'] = function( z2 )
 							if( bc === body )
 								continue;
 
+							// TODO: this allocates a new object (array)
 							var aabb1 = bc.aabb.slice(0);
 							aabb1[0] += pc.y;
 							aabb1[1] += pc.x;
 							aabb1[2] += pc.y;
 							aabb1[3] += pc.x;
 
+							// TODO: this allocates a new object (array)
 							var aabb2 = body.aabb.slice(0);
 							aabb2[0] += pos.y;
 							aabb2[1] += pos.x;
@@ -527,7 +529,7 @@ zSquared['2d'] = function( z2 )
 								var m2 = body.mass;
 								var mt = m1 + m2;
 
-								var u1, u2;
+								var u1, u2, term;
 
 								// CoR is a properly a property of a *collision*, 
 								// not an object... we'll just take the average
@@ -537,8 +539,9 @@ zSquared['2d'] = function( z2 )
 								if( pv[0] < 0 )
 								{
 									u1 = vc.x; u2 = vel.x;
-									vc.x = ((m1*u1)+(m2*u2) + (m2*cr) * (u2-u1)) / mt;
-									vel.x = ((m1*u1)+(m2*u2) + (m1*cr) * (u1-u2)) / mt;
+									term = (m1*u1)+(m2*u2);
+									vc.x = (term + (m2*cr) * (u2-u1)) / mt;
+									vel.x = (term + (m1*cr) * (u1-u2)) / mt;
 									bc.blocked_right = true;
 									body.blocked_left = true;
 								}
@@ -546,8 +549,9 @@ zSquared['2d'] = function( z2 )
 								if( pv[0] > 0 )
 								{
 									u1 = vc.x; u2 = vel.x;
-									vc.x = ((m1*u1)+(m2*u2) + (m2*cr) * (u2-u1)) / mt;
-									vel.x = ((m1*u1)+(m2*u2) + (m1*cr) * (u1-u2)) / mt;
+									term = (m1*u1)+(m2*u2);
+									vc.x = (term + (m2*cr) * (u2-u1)) / mt;
+									vel.x = (term + (m1*cr) * (u1-u2)) / mt;
 									bc.blocked_left = true;
 									body.blocked_right = true;
 								}
@@ -555,8 +559,9 @@ zSquared['2d'] = function( z2 )
 								if( pv[1] < 0 )
 								{
 									u1 = vc.y; u2 = vel.y;
-									vc.y = ((m1*u1)+(m2*u2) + (m2*cr) * (u2-u1)) / mt;
-									vel.y = ((m1*u1)+(m2*u2) + (m1*cr) * (u1-u2)) / mt;
+									term = (m1*u1)+(m2*u2);
+									vc.y = (term + (m2*cr) * (u2-u1)) / mt;
+									vel.y = (term + (m1*cr) * (u1-u2)) / mt;
 									bc.blocked_down = true;
 									body.blocked_up = true;
 								}
@@ -564,8 +569,9 @@ zSquared['2d'] = function( z2 )
 								if( pv[1] > 0 )
 								{
 									u1 = vc.y; u2 = vel.y;
-									vc.y = ((m1*u1)+(m2*u2) + (m2*cr) * (u2-u1)) / mt;
-									vel.y = ((m1*u1)+(m2*u2) + (m1*cr) * (u1-u2)) / mt;
+									term = (m1*u1)+(m2*u2);
+									vc.y = (term + (m2*cr) * (u2-u1)) / mt;
+									vel.y = (term + (m1*cr) * (u1-u2)) / mt;
 									bc.blocked_up = true;
 									body.blocked_down = true;
 								}
@@ -582,6 +588,7 @@ zSquared['2d'] = function( z2 )
 					// TODO: friction only makes sense for 'full' (non-AABB)
 					// collisions (using circles, for example)
 
+					// TODO: this allocates a new object (array)
 					var aabb = bc.aabb.slice(0); // [top, left, bottom, right]
 					// add to the entity's position
 					aabb[0] += pc.y;

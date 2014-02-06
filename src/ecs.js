@@ -474,8 +474,12 @@ zSquared.ecs = function( z2 )
 			if( pt === 0 )
 				pt = et;
 			
+			// cap time delta at 1/10th of a second
+			var dt = et - pt;
+			if( dt > 100 )
+				dt = 100;
 			// update the ecs system
-			z2.manager.get().update( et - pt );
+			z2.manager.get().update( dt );
 
 			// next frame
 			pt = et;
