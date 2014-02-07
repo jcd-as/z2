@@ -754,6 +754,7 @@ zSquared.collision = function( z2 )
 	 * @arg {Array} pv (out) Vector (2 element array) for returning penetration (direction and magnitude)
 	 * @returns {boolean} true if collision, false if none
 	 */
+	var _v = new Float64Array( 2 );
 	z2.collideAabbVsCollisionMap = function( b, map, w, h, tw, th, pv )
 	{
 		// get the coordinates of the AABB, 
@@ -774,7 +775,7 @@ zSquared.collision = function( z2 )
 
 		// possible collisions are with tiles from btl to btr and btt to btb
 		// collide with each tile & find maximum penetration in each axis
-		var m = 0, t, v = [0, 0];
+		var m = 0, t;
 		pv[0] = 0;
 		pv[1] = 0;
 		var collision = false;
@@ -795,14 +796,14 @@ zSquared.collision = function( z2 )
 				{
 					var tile_bounds = [ top, left, bottom, right ];
 					// collide vs tile
-					if( z2.collideAabbVsTile( b, tile_bounds, t, v ) )
+					if( z2.collideAabbVsTile( b, tile_bounds, t, _v ) )
 					{
 						collision = true;
 						// combine the penetration
-						if( v[0] && Math.abs(v[0]) > Math.abs(pv[0]) )
-							pv[0] = v[0];
-						if( v[1] && Math.abs(v[1]) > Math.abs(pv[1]) )
-							pv[1] = v[1];
+						if( _v[0] && Math.abs(_v[0]) > Math.abs(pv[0]) )
+							pv[0] = _v[0];
+						if( _v[1] && Math.abs(_v[1]) > Math.abs(pv[1]) )
+							pv[1] = _v[1];
 					}
 				}
 				left += tw;

@@ -90,7 +90,7 @@ zSquared['2d'] = function( z2 )
 	 * @classdesc Helper class for sprite animations */
 	z2.AnimationSet = function()
 	{
-		this.animations = [];
+		this.animations = {};
 		this.cur_animation = null;
 		this._cur_frame = 0;
 		this._frame_time = 0;
@@ -175,54 +175,6 @@ zSquared['2d'] = function( z2 )
 	/////////////////////////////////////////////////////////////////////////
 	// System factories
 	/////////////////////////////////////////////////////////////////////////
-
-	/////////////////////////////////////////////////////////////////////////
-	/** GroupSystem factory function. Creates a System that will operate on a
-	 * group of Entities and apply another System to each of them during update
-	 * requires: group
-	 * optional: ...
-	 * @function z2.createGroupSystem
-	 * @arg {z2.System} sys The System to apply to the members of the group
-	 * @arg {z2.Bitset} mask The mask to use for this system
-	 * @arg {Function} [grpsys] The system to call for the entire
-	 * group's init/onStart/update/onEnd functionality
-	 */
-//	z2.createGroupSystem = function( sys, mask, grpsys )
-//	{
-//		return new z2.System( [z2.groupFactory, mask],
-//		{
-//			init: function()
-//			{
-//				if( grpsys && grpsys.init )
-//					sys.init();
-//			},
-//			onStart: function()
-//			{
-//				if( grpsys && grpsys.onStart )
-//					sys.onStart();
-//			},
-//			update: function( e, dt )
-//			{
-//				if( grpsys )
-//					grpsys.update( e, dt );
-//
-//				// get the group
-//				var rgc = e.getComponent( z2.groupFactory.mask );
-//				var grp = rgc.group;
-//
-//				// update each object in our group
-//				for( var i = 0; i < grp.length; i++ )
-//				{
-//					sys.update( grp[i], dt, e );
-//				}
-//			},
-//			onEnd: function()
-//			{
-//				if( grpsys && grpsys.onEnd )
-//					sys.onEnd();
-//			}
-//		} );
-//	};
 
 	/////////////////////////////////////////////////////////////////////////
 	/** RenderingSystem factory function
@@ -351,18 +303,6 @@ zSquared['2d'] = function( z2 )
 	};
 
 	/////////////////////////////////////////////////////////////////////////
-	/** TransformGroupSystem factory function
-	 * requires: group, transform, position
-	 * optional: size, rotation, scale, center
-	 * @function z2.createTransformGroupSystem
-	 * @arg {z2.System} sys The TransformSystem to apply to this group
-	 */
-//	z2.createTransformGroupSystem = function( sys )
-//	{
-//		return z2.createGroupSystem( sys, z2.transformGroupFactory, sys );
-//	};
-
-	/////////////////////////////////////////////////////////////////////////
 	/** MovementSystem factory function
 	 * requires: position, velocity, transform
 	 * optional: positionConstraints, collisionMap, physicsBody (*required* if
@@ -371,12 +311,13 @@ zSquared['2d'] = function( z2 )
 	 */
 	z2.createMovementSystem = function()
 	{
-		var aabb1 = new Array( 4 );
-		var aabb2 = new Array( 4 );
 		return new z2.System( [z2.positionFactory, z2.velocityFactory],
 		{
-//			aabb1 : new Array( 4 ),
-//			aabb2 : new Array( 4 ),
+			// define these here, access to 'this.foo' generally faster than to
+			// 'foo' captured by closure...
+			aabb1 : new Float64Array( 4 ),
+			aabb2 : new Float64Array( 4 ),
+			pv : new Float64Array( 2 ),
 
 			update: function( e, dt )
 			{
@@ -467,14 +408,12 @@ zSquared['2d'] = function( z2 )
 
 				// collisions:
 
-				var m, pv = [0,0];
+				var m;
 				var collision = false;
 
 				// handle sprite vs sprite collisions
 				if( cgc )
 				{
-					pv = [0,0];
-
 					// TODO: friction only makes sense for 'full' (non-AABB)
 					// collisions (using circles, for example)
 
@@ -496,18 +435,18 @@ zSquared['2d'] = function( z2 )
 								continue;
 
 							// setup the bounding boxes
-							aabb1[0] = bc.aabb[0] + pc.y;
-							aabb1[1] = bc.aabb[1] + pc.x;
-							aabb1[2] = bc.aabb[2] + pc.y;
-							aabb1[3] = bc.aabb[3] + pc.x;
+							this.aabb1[0] = bc.aabb[0] + pc.y;
+							this.aabb1[1] = bc.aabb[1] + pc.x;
+							this.aabb1[2] = bc.aabb[2] + pc.y;
+							this.aabb1[3] = bc.aabb[3] + pc.x;
 
-							aabb2[0] = body.aabb[0] + pos.y;
-							aabb2[1] = body.aabb[1] + pos.x;
-							aabb2[2] = body.aabb[2] + pos.y;
-							aabb2[3] = body.aabb[3] + pos.x;
+							this.aabb2[0] = body.aabb[0] + pos.y;
+							this.aabb2[1] = body.aabb[1] + pos.x;
+							this.aabb2[2] = body.aabb[2] + pos.y;
+							this.aabb2[3] = body.aabb[3] + pos.x;
 
 							// collide
-							m = z2.collideAabbVsAabb( aabb1, aabb2, pv );
+							m = z2.collideAabbVsAabb( this.aabb1, this.aabb2, this.pv );
 
 							// separate the aabb and stop velocity
 							if( m )
@@ -515,8 +454,8 @@ zSquared['2d'] = function( z2 )
 								collision = true;
 
 								// separate
-								pc.x += pv[0];
-								pc.y += pv[1];
+								pc.x += this.pv[0];
+								pc.y += this.pv[1];
 								
 								// m = mass, u = init vel, v = resultant vel
 								// cr = coefficient of restitution
@@ -536,7 +475,7 @@ zSquared['2d'] = function( z2 )
 								var cr = (bc.restitution + body.restitution) / 2;
 
 								// left separation
-								if( pv[0] < 0 )
+								if( this.pv[0] < 0 )
 								{
 									u1 = vc.x; u2 = vel.x;
 									term = (m1*u1)+(m2*u2);
@@ -546,7 +485,7 @@ zSquared['2d'] = function( z2 )
 									body.blocked_left = true;
 								}
 								// right separation
-								if( pv[0] > 0 )
+								if( this.pv[0] > 0 )
 								{
 									u1 = vc.x; u2 = vel.x;
 									term = (m1*u1)+(m2*u2);
@@ -556,7 +495,7 @@ zSquared['2d'] = function( z2 )
 									body.blocked_right = true;
 								}
 								// up separation
-								if( pv[1] < 0 )
+								if( this.pv[1] < 0 )
 								{
 									u1 = vc.y; u2 = vel.y;
 									term = (m1*u1)+(m2*u2);
@@ -566,7 +505,7 @@ zSquared['2d'] = function( z2 )
 									body.blocked_up = true;
 								}
 								// down separation
-								if( pv[1] > 0 )
+								if( this.pv[1] > 0 )
 								{
 									u1 = vc.y; u2 = vel.y;
 									term = (m1*u1)+(m2*u2);
@@ -588,25 +527,25 @@ zSquared['2d'] = function( z2 )
 					// TODO: friction only makes sense for 'full' (non-AABB)
 					// collisions (using circles, for example)
 
-					aabb1[0] = bc.aabb[0] + pc.y;
-					aabb1[1] = bc.aabb[1] + pc.x;
-					aabb1[2] = bc.aabb[2] + pc.y;
-					aabb1[3] = bc.aabb[3] + pc.x;
+					this.aabb1[0] = bc.aabb[0] + pc.y;
+					this.aabb1[1] = bc.aabb[1] + pc.x;
+					this.aabb1[2] = bc.aabb[2] + pc.y;
+					this.aabb1[3] = bc.aabb[3] + pc.x;
 
 					// perform the collision
-					m = z2.collideAabbVsCollisionMap( aabb1, cmc.data, cmc.map.widthInTiles, cmc.map.heightInTiles, cmc.map.tileWidth, cmc.map.tileHeight, pv );
+					m = z2.collideAabbVsCollisionMap( this.aabb1, cmc.data, cmc.map.widthInTiles, cmc.map.heightInTiles, cmc.map.tileWidth, cmc.map.tileHeight, this.pv );
 
 					// separate the aabb and stop velocity
 					if( m )
 					{
 						collision = true;
-						pc.x += pv[0];
-						pc.y += pv[1];
+						pc.x += this.pv[0];
+						pc.y += this.pv[1];
 
 						// set velocity & 'blocked' in direction of collision
 
 						// left
-						if( pv[0] > 0 )
+						if( this.pv[0] > 0 )
 						{
 							vc.x = vc.x * -bc.restitution;
 							bc.blocked_left = true;
@@ -615,7 +554,7 @@ zSquared['2d'] = function( z2 )
 							bc.blocked_down = false;
 						}
 						// right
-						else if( pv[0] < 0 )
+						else if( this.pv[0] < 0 )
 						{
 							vc.x = vc.x * -bc.restitution;
 							bc.blocked_left = true;
@@ -625,7 +564,7 @@ zSquared['2d'] = function( z2 )
 							bc.blocked_down = false;
 						}
 						// top
-						else if( pv[1] > 0 )
+						else if( this.pv[1] > 0 )
 						{
 							vc.y = vc.y * -bc.restitution;
 							bc.blocked_up = true;
@@ -634,7 +573,7 @@ zSquared['2d'] = function( z2 )
 							bc.blocked_down = false;
 						}
 						// bottom
-						else if( pv[1] < 0 )
+						else if( this.pv[1] < 0 )
 						{
 							vc.y = vc.y * -bc.restitution;
 							bc.blocked_down = true;
