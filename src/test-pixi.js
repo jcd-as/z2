@@ -86,8 +86,6 @@ var myScene =
 		// placeholder for sprite entity
 		var spre;
 		// create an input system
-		var sprv = z2.velocityFactory.create( {x: 0, y: 0, maxx: 200, maxy: 500} );
-		//var sprv = z2.velocityFactory.create( {x: 100, y: 0, maxx: 200, maxy: 500} );
 		var input_sys = new z2.System( [player, z2.velocityFactory, z2.physicsBodyFactory],
 		{
 			init: function()
@@ -108,6 +106,9 @@ var myScene =
 
 				// get the physics body
 				var bc = e.getComponent( z2.physicsBodyFactory.mask );
+
+				// get the scale component
+				var sc = e.getComponent( z2.scaleFactory.mask );
 
 				// check keys
 				var left = false;
@@ -136,11 +137,11 @@ var myScene =
 						this.fsm.consumeEvent( 'fall', vc, bc );
 					else if( left )
 					{
-						this.goLeft( vc, bc );
+						this.goLeft( vc, bc, sc );
 					}
 					else if( right )
 					{
-						this.goRight( vc, bc );
+						this.goRight( vc, bc, sc );
 					}
 					else
 					{
@@ -157,18 +158,18 @@ var myScene =
 					if( bc.blocked_down )
 					{
 						z2.playSound( 'land' );
-						this.fsm.consumeEvent( 'land', vc, bc );
+						this.fsm.consumeEvent( 'land', vc, bc, sc );
 					}
 					// can move side to side
 					if( left )
 					{
 						this.facing = 'left';
-						this.goLeft( vc, bc );
+						this.goLeft( vc, bc, sc );
 					}
 					else if( right )
 					{
 						this.facing = 'right';
-						this.goRight( vc, bc );
+						this.goRight( vc, bc, sc );
 					}
 					break;
 				case 'idle':
@@ -177,16 +178,16 @@ var myScene =
 
 					// can walk or jump
 					if( jump )
-						this.fsm.consumeEvent( 'jump', vc, bc );
+						this.fsm.consumeEvent( 'jump', vc, bc, sc );
 					else if( left )
 					{
 						this.facing = 'left';
-						this.fsm.consumeEvent( 'left', vc, bc );
+						this.fsm.consumeEvent( 'left', vc, bc, sc );
 					}
 					else if( right )
 					{
 						this.facing = 'right';
-						this.fsm.consumeEvent( 'right', vc, bc );
+						this.fsm.consumeEvent( 'right', vc, bc, sc );
 					}
 					break;
 				default:
@@ -244,35 +245,39 @@ var myScene =
 				}
 			],
 			// state handlers
-			idle : function( vc, bc )
+			idle : function( vc, bc, sc )
 			{
 				// set animation, facing
 			},
-			walking : function( vc, bc )
+			walking : function( vc, bc, sc )
 			{
 				// set animation, facing
 				if( this.facing == 'left' )
-					this.goLeft( vc, bc );
+					this.goLeft( vc, bc, sc );
 				else if( this.facing == 'right' )
-					this.goRight( vc, bc );
+					this.goRight( vc, bc, sc );
 //				else error
 			},
-			jumping : function( vc, bc )
+			jumping : function( vc, bc, sc )
 			{
 				vc.y = -this.v_vel_inc;
 				// set animation, facing
 			},
-			falling : function( vc, bc )
+			falling : function( vc, bc, sc )
 			{
 				// set animation, facing
 			},
-			goLeft : function( vc, bc )
+			goLeft : function( vc, bc, sc )
 			{
 				vc.x += -this.h_vel_inc;
+				if( sc )
+					sc.sx = -1; 
 			},
-			goRight : function( vc, bc )
+			goRight : function( vc, bc, sc )
 			{
 				vc.x += this.h_vel_inc;
+				if( sc )
+					sc.sx = 1; 
 			},
 		} );
 
@@ -287,7 +292,7 @@ var myScene =
 		// gravity component
 		var gravc = z2.gravityFactory.create( {x: 0, y: 1000} );
 
-		// create an (animated) sprite
+		// create the player sprite
 		var s_img = z2.loader.getAsset( 'man' );
 		var anims = new z2.AnimationSet();
 		anims.add( 'walk', [[0, 250], [1, 250]] );
@@ -296,6 +301,7 @@ var myScene =
 		var sprite = new PIXI.Sprite( stexture );
 		this.view.doc.addChild( sprite );
 		var sprc = z2.spriteFactory.create( {sprite:sprite, animations:anims} );
+		var sprv = z2.velocityFactory.create( {x: 0, y: 0, maxx: 200, maxy: 500} );
 //		var sprp = z2.positionFactory.create( {x: 512, y: 512} );
 		var sprp = z2.positionFactory.create( {x: 1024-64, y: 1024-64} );
 		var sprr = z2.rotationFactory.create( {theta: 0} );
@@ -307,10 +313,12 @@ var myScene =
 		var sprcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
 		var sprpc = z2.positionConstraintsFactory.create( {minx: 16, maxx: this.width-16, miny: 32, maxy: this.height-32} );
 		var sprbody = z2.physicsBodyFactory.create( {aabb:[-32, -15, 32, 15], restitution:1, mass:1, resistance_x:0.95} );
-		anims.play( 'walk' );
+		// collision group for the player to collide against
+		var pcolg = z2.collisionGroupFactory.create( {entities:[spre2]} );
+		// create the entity
+		spre = this.mgr.createEntity( [z2.renderableFactory, gravc, cmc, sprbody, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc, pcolg] );
 
-		// collision group for the enemy to collide against
-		var ecolg = z2.collisionGroupFactory.create( {entities:null} );
+		anims.play( 'walk' );
 
 		// create a non-player sprite
 		var anims2 = new z2.AnimationSet();
@@ -323,18 +331,13 @@ var myScene =
 		var sprc2 = z2.spriteFactory.create( {sprite:sprite2, animations:anims2} );
 		var sprp2 = z2.positionFactory.create( {x: 64, y: 1024-64} );
 		var sprbody2 = z2.physicsBodyFactory.create( {aabb:[-32, -16, 32, 16], restitution:1, mass:1, resistance_x: 0} );
-//		var spre2 = this.mgr.createEntity( [z2.renderableFactory, enemyc, gravc, cmc, sprbody2, sprv2, sprp2, sprsz, sprs, sprcc, sprpc, sprc2, ecolg] );
+		// create the entity
 		var spre2 = this.mgr.createEntity( [z2.renderableFactory, gravc, cmc, sprbody2, sprv2, sprp2, sprsz, sprs, sprcc, sprpc, sprc2] );
 		anims2.play( 'jitter' );
 
-		// collision group for the player to collide against
-		var pcolg = z2.collisionGroupFactory.create( {entities:[spre2]} );
 
-		// create the player sprite
-		spre = this.mgr.createEntity( [z2.renderableFactory, gravc, cmc, sprbody, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc, pcolg] );
-
-		// set the entities for enemy collision group
-		ecolg.entities = [spre];
+		// set the entities for collision groups
+		pcolg.entities = [spre2];
 
 		// follow the player sprite
 //		this.view.follow_mode = z2.FOLLOW_MODE_TIGHT;
@@ -354,7 +357,7 @@ var myScene =
 		this.mgr.addSystem( ms );
 
 //		z2.playSound( 'field', 0, 1, true );
-		z2.playSound( 'logo', 0, 1, true );
+//		z2.playSound( 'logo', 0, 1, true );
 
 		//////////////////
 		// add global handlers for web page controls

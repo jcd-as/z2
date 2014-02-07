@@ -97,13 +97,13 @@ zSquared['2d'] = function( z2 )
 	};
 	/** @property {number} currentFrame Get the index (in the sprite sheet) of
 	 * the current frame to be displayed */
-	Object.defineProperty( z2.AnimationSet.prototype, 'currentFrame',
+	z2.AnimationSet.prototype = 
 	{
-		get: function()
+		get currentFrame()
 		{
 			return this.cur_animation[this._cur_frame][0];
 		}
-	} );
+	};
 	/** Add an animation sequence
 	 * @method z2.AnimationSet#add
 	 * @memberof z2.AnimationSet
