@@ -69,15 +69,23 @@ zSquared.view = function( z2 )
 		this.follow_mode = follow_mode || z2.FOLLOW_MODE_NONE;
 	};
 
-	// set the prototype with getters & setters
-	z2.View.prototype = 
+	/** Update the view for the frame
+	 * @function z2.View.update
+	 */
+	z2.View.prototype.update = function()
 	{
-		// follow_mode
-		get follow_mode()
+		// adjust for follow-mode
+		if( this.follow_mode !== z2.FOLLOW_MODE_NONE )
+			this._follow();
+	};
+
+	Object.defineProperty( z2.View.prototype, 'follow_mode',
+	{
+		get: function()
 		{
 			return this._follow_mode;
 		},
-		set follow_mode( val )
+		set: function( val )
 		{
 			this._follow_mode = val;
 			// TODO: move these calcs to 'follow_mode' property setter
@@ -104,102 +112,8 @@ zSquared.view = function( z2 )
 			// (ie distance from center of view to target)
 			this.hoffs = this.width/2 - this.hbuf;
 			this.voffs = this.height/2 - this.vbuf;
-		},
-
-		// rotation
-		get rotation()
-		{
-			return -this.camera_doc.rotation;
-		},
-		set rotation( val )
-		{
-			this.camera_doc.rotation = -val;
-		},
-
-		// sx
-		get sx()
-		{
-			return this.camera_doc.scale.x;
-		},
-		set sx( val )
-		{
-			this.camera_doc.scale.x = val;
-		},
-
-		// sy
-		get sy()
-		{
-			return this.camera_doc.scale.y;
-		},
-		set sy( val )
-		{
-			this.camera_doc.scale.y = val;
-		},
-
-		// target
-		get target()
-		{
-			return this._target;
-		},
-		set target( val )
-		{
-			this._target = val;
-			// center the view on the target
-			this.doc.position.x = Math.round( -val.x );
-			this.doc.position.y = Math.round( -val.y );
-			// if the view exceeds the scene boundaries, we need to adjust
-			var left = -this.doc.position.x - this.width/2;
-			var right = -this.doc.position.x + this.width/2;
-			var top = -this.doc.position.y - this.height/2;
-			var bottom = -this.doc.position.y + this.height/2;
-			if( left < 0 || right > this.scene.width || top < 0 || bottom > this.scene.height )
-			{
-				// adjust the view so that we're not 'out of bounds'
-				var xoff, yoff;
-				if( left < 0 )
-					xoff = left;
-				else if( right > this.scene.width )
-					xoff = right - this.scene.width;
-				if( top < 0 )
-					yoff = top;
-				else if( bottom > this.scene.height )
-					yoff = bottom - this.scene.height;
-
-				this.doc.position.x += xoff;
-				this.doc.position.y += yoff;
-			}
-		},
-
-		// x
-		get x()
-		{
-			return -this.doc.position.x;
-		},
-		set x( val )
-		{
-			this.doc.position.x = -val;
-		},
-
-		// y
-		get y()
-		{
-			return -this.doc.position.y;
-		},
-		set y( val )
-		{
-			this.doc.position.y = -val;
 		}
-	};
-	
-	/** Update the view for the frame
-	 * @function z2.View.update
-	 */
-	z2.View.prototype.update = function()
-	{
-		// adjust for follow-mode
-		if( this.follow_mode !== z2.FOLLOW_MODE_NONE )
-			this._follow();
-	};
+	} );
 
 	z2.View.prototype._follow = function()
 	{
@@ -263,6 +177,18 @@ zSquared.view = function( z2 )
 			this.doc.position.y = Math.round(-y);
 	};
 
+	Object.defineProperty( z2.View.prototype, 'rotation',
+	{
+		get: function()
+		{
+			return -this.camera_doc.rotation;
+		},
+		set: function( val )
+		{
+			this.camera_doc.rotation = -val;
+		}
+	} );
+
 	/** Set the View scale
 	 * @method z2.View#setScale
 	 * @memberof z2.View
@@ -274,6 +200,29 @@ zSquared.view = function( z2 )
 		this.camera_doc.scale.x = sx;
 		this.camera_doc.scale.y = sy;
 	};
+
+	Object.defineProperty( z2.View.prototype, 'sx',
+	{
+		get: function()
+		{
+			return this.camera_doc.scale.x;
+		},
+		set: function( val )
+		{
+			this.camera_doc.scale.x = val;
+		}
+	} );
+	Object.defineProperty( z2.View.prototype, 'sy',
+	{
+		get: function()
+		{
+			return this.camera_doc.scale.y;
+		},
+		set: function( val )
+		{
+			this.camera_doc.scale.y = val;
+		}
+	} );
 
 	/** Set the (center of) the View position (in the Scene)
 	 * @method z2.View#setPosition
@@ -290,6 +239,65 @@ zSquared.view = function( z2 )
 		this.doc.position.x = x;
 		this.doc.position.y = y;
 	};
+
+	Object.defineProperty( z2.View.prototype, 'target',
+	{
+		get: function()
+		{
+			return this._target;
+		},
+		set: function( val )
+		{
+			this._target = val;
+			// center the view on the target
+			this.doc.position.x = Math.round( -val.x );
+			this.doc.position.y = Math.round( -val.y );
+			// if the view exceeds the scene boundaries, we need to adjust
+			var left = -this.doc.position.x - this.width/2;
+			var right = -this.doc.position.x + this.width/2;
+			var top = -this.doc.position.y - this.height/2;
+			var bottom = -this.doc.position.y + this.height/2;
+			if( left < 0 || right > this.scene.width || top < 0 || bottom > this.scene.height )
+			{
+				// adjust the view so that we're not 'out of bounds'
+				var xoff, yoff;
+				if( left < 0 )
+					xoff = left;
+				else if( right > this.scene.width )
+					xoff = right - this.scene.width;
+				if( top < 0 )
+					yoff = top;
+				else if( bottom > this.scene.height )
+					yoff = bottom - this.scene.height;
+
+				this.doc.position.x += xoff;
+				this.doc.position.y += yoff;
+			}
+		}
+	} );
+
+	Object.defineProperty( z2.View.prototype, 'x',
+	{
+		get: function()
+		{
+			return -this.doc.position.x;
+		},
+		set: function( val )
+		{
+			this.doc.position.x = -val;
+		}
+	} );
+	Object.defineProperty( z2.View.prototype, 'y',
+	{
+		get: function()
+		{
+			return -this.doc.position.y;
+		},
+		set: function( val )
+		{
+			this.doc.position.y = -val;
+		}
+	} );
 
 };
 
