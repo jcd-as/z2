@@ -39,6 +39,7 @@ zSquared.scene = function( z2 )
 		this.view = new z2.View( this, this.canvas.width, this.canvas.height );
 
 		// create rendering system
+		// TODO: let override force_canvas & priority for rendering system?
 		this.force_canvas = false;
 		this.renderer = z2.createRenderingSystem( this.canvas, this.view, this.force_canvas );
 	};

@@ -5,9 +5,6 @@
 // TODO:
 // - Systems onStart & onEnd are called regardless of whether they currently
 // have any (active) entities that update will be called on...
-// - Systems collection (in manager) should be a priority queue so that higher
-// priority items can be added after lower ones (currently it runs them in
-// order, so Systems have to be added in priority order)
 // - test dead/dying lists & removing/adding Entities during main loop
 // - 
 
@@ -65,6 +62,8 @@ zSquared.ecs = function( z2 )
 	 * @class z2#z2.System
 	 * @classdesc Decorating class to create System types
 	 * @constructor
+	 * @arg {number} pri Priority of the System. Systems are run in priority
+	 * order, low to high (0 to [max number])
 	 * @arg {Array} cmps An array of the Components that define the Entities on
 	 * which this System will be called
 	 * @arg {Object} obj The prototype for the System. Must contain the
@@ -77,8 +76,10 @@ zSquared.ecs = function( z2 )
 	 * onStart() - A function that will be called at the beginning of each frame
 	 * onEnd() - A function that will be called at the end of each frame
 	 */
-	z2.System = function( cmps, obj )
+	z2.System = function( priority, cmps, obj )
 	{
+		this.priority = priority;
+
 		// copy properties from the object
 		for( var key in obj )
 		{
@@ -347,12 +348,28 @@ zSquared.ecs = function( z2 )
 				 */
 				addSystem : function( sys )
 				{
+//					systems.push( sys );
+					// perform insertion sort using priority as key
 					systems.push( sys );
+					var i, j, temp;
+					var idx = systems.length-1;
+					while( idx )
+					{
+						i = idx;
+						j = --idx;
+						if( systems[i].priority < systems[j].priority )
+						{
+							temp = systems[i];
+							systems[i] = systems[j];
+							systems[j] = temp;
+						}
+					}
+
 					if( sys.init && typeof( sys.init ) === 'function' )
 						sys.init();
 					// TODO: find all the entities with matching masks and 
 					// assign them to the System
-					for( var i = 0; i < living.length; i++ )
+					for( i = 0; i < living.length; i++ )
 					{
 						sys.addEntityIfMatch( entities[living[i]] );
 					}

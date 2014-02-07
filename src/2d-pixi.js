@@ -186,8 +186,10 @@ zSquared['2d'] = function( z2 )
 	 * @arg {z2.View} view The View object for this transform system
 	 * @arg {boolean} [force_canvas_rendering] If 'true', forces the renderer to
 	 * use 2d Canvas rendering instead of WebGL
+	 * @arg {number} [priority] Priority of system. Override only if you need
+	 * the renderer to NOT run last
 	 */
-	z2.createRenderingSystem = function( canvas, view, force_canvas_rendering )
+	z2.createRenderingSystem = function( canvas, view, force_canvas_rendering, priority )
 	{
 		// TODO: support different widths/heights than the canvas'
 		var renderer;
@@ -198,7 +200,7 @@ zSquared['2d'] = function( z2 )
 
 		var stage = view.scene.stage;
 
-		return new z2.System( [z2.renderableFactory],
+		return new z2.System( Number.MAX_VALUE, [z2.renderableFactory],
 		{
 //			onStart: function()
 //			{
@@ -308,10 +310,11 @@ zSquared['2d'] = function( z2 )
 	 * optional: positionConstraints, collisionMap, physicsBody (*required* if
 	 * there is a collisionMap), gravity, collisionGroup
 	 * @function z2.createMovementSystem
+	 * @arg {number} priority Priority of system (lower = higher priority)
 	 */
-	z2.createMovementSystem = function()
+	z2.createMovementSystem = function( priority )
 	{
-		return new z2.System( [z2.positionFactory, z2.velocityFactory],
+		return new z2.System( priority, [z2.positionFactory, z2.velocityFactory],
 		{
 			// define these here, access to 'this.foo' generally faster than to
 			// 'foo' captured by closure...

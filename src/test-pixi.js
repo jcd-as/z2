@@ -59,7 +59,7 @@ var myScene =
 	{
 		// create an 'enemy' component, for enemy 'AI'
 		var enemyc = z2.createComponentFactory();
-		var enemy_sys = new z2.System( [enemyc, z2.velocityFactory, z2.physicsBodyFactory],
+		var enemy_sys = new z2.System( 100, [enemyc, z2.velocityFactory, z2.physicsBodyFactory],
 		{
 			init: function()
 			{
@@ -80,13 +80,14 @@ var myScene =
 //					vc.x = -100;
 			}
 		} );
+		this.mgr.addSystem( enemy_sys );
 
 		// create a "player control" component
 		var player = z2.createComponentFactory();
 		// placeholder for sprite entity
 		var spre;
 		// create an input system
-		var input_sys = new z2.System( [player, z2.velocityFactory, z2.physicsBodyFactory],
+		var input_sys = new z2.System( 50, [player, z2.velocityFactory, z2.physicsBodyFactory],
 		{
 			init: function()
 			{
@@ -280,6 +281,7 @@ var myScene =
 					sc.sx = 1; 
 			},
 		} );
+		this.mgr.addSystem( input_sys );
 
 		// create a collision map
 		// (for 50-layer perf test:)
@@ -345,15 +347,7 @@ var myScene =
 		this.view.target = sprp;
 
 		// create a movement system
-		var ms = z2.createMovementSystem();
-
-		// add the systems (in order)
-
-		// add our enemy and input systems
-		this.mgr.addSystem( enemy_sys );
-		this.mgr.addSystem( input_sys );
-
-		// movement system
+		var ms = z2.createMovementSystem( 200 );
 		this.mgr.addSystem( ms );
 
 //		z2.playSound( 'field', 0, 1, true );
