@@ -3,7 +3,7 @@
 // asset loader class/module for zed-squared
 //
 // TODO:
-// - support 'base' URL for loading
+// x support 'base' URL for loading
 // - support progress indicator callback
 // - support pre-loads
 // x support text files
@@ -41,6 +41,12 @@ zSquared.loader = function( z2 )
 		json : 'json'
 	};
 
+	var baseUrl = '';
+	var imgBaseUrl = '';
+	var sndBaseUrl = '';
+	var txtBaseUrl = '';
+	var jsonBaseUrl = '';
+
 	// list of queued asset key/url pairs
 	var assetQueue = [];
 	// map of keys to assets
@@ -58,6 +64,7 @@ zSquared.loader = function( z2 )
 	// load an image
 	function loadImage( key, url, onComplete, onError, that )
 	{
+		url = baseUrl + imgBaseUrl + url;
 		var img = new Image();
 		img.onload = function(){ onComplete.call( that, key, img ); };
 		img.onerror = onError;
@@ -67,6 +74,7 @@ zSquared.loader = function( z2 )
 	// load a text file
 	function loadText( key, url, onComplete, onError, that )
 	{
+		url = baseUrl + txtBaseUrl + url;
 		var xhr = new XMLHttpRequest();
 		xhr.open( "GET", url, true );
 		xhr.responseType = "text";
@@ -78,6 +86,7 @@ zSquared.loader = function( z2 )
 	// load a json file
 	function loadJson( key, url, onComplete, onError, that )
 	{
+		url = baseUrl + jsonBaseUrl + url;
 		var xhr = new XMLHttpRequest();
 		xhr.open( "GET", url, true );
 		xhr.responseType = "text";
@@ -94,6 +103,7 @@ zSquared.loader = function( z2 )
 	// load an audio file
 	function loadAudio( key, url, onComplete, onError, that )
 	{
+		url = baseUrl + sndBaseUrl + url;
 		var xhr = new XMLHttpRequest();
 		xhr.open( "GET", url, true );
 		xhr.responseType = "arraybuffer";
@@ -116,6 +126,51 @@ zSquared.loader = function( z2 )
 	 * @namespace z2.loader */
 	z2.loader = 
 	{
+		/** Set base URL
+		 * @method z2.loader#setBaseUrl
+		 * @arg {string} base base URL
+		 */
+		setBaseUrl : function( base )
+		{
+			baseUrl = base;
+		},
+
+		/** Set image base URL
+		 * @method z2.loader#setImageBaseUrl
+		 * @arg {string} base base URL
+		 */
+		setImageBaseUrl : function( base )
+		{
+			imgBaseUrl = base;
+		},
+
+		/** Set audio base URL
+		 * @method z2.loader#setAudioUrl
+		 * @arg {string} base base URL
+		 */
+		setAudioBaseUrl : function( base )
+		{
+			sndBaseUrl = base;
+		},
+
+		/** Set text base URL
+		 * @method z2.loader#setTextBaseUrl
+		 * @arg {string} base base URL
+		 */
+		setTextBaseUrl : function( base )
+		{
+			txtBaseUrl = base;
+		},
+
+		/** Set JSON base URL
+		 * @method z2.loader#setJsonBaseUrl
+		 * @arg {string} base base URL
+		 */
+		setJsonBaseUrl : function( base )
+		{
+			jsonBaseUrl = base;
+		},
+
 		/** Get an asset
 		 * @method z2.loader#getAsset
 		 * @arg {string} key Asset key (friendly name)
@@ -213,7 +268,8 @@ zSquared.loader = function( z2 )
 						if( data.layers[i].type == 'imagelayer' )
 						{
 							remaining++;
-							loadImage( data.layers[i].name, data.lyers[i].image, loaded, failed, that );
+							var path = data.layers[i].name + ".png";
+							loadImage( data.layers[i].name, path, loaded, failed, that );
 						}
 					}
 					// TODO: etc (?)

@@ -70,13 +70,31 @@ zSquared.view = function( z2 )
 	};
 
 	/** Update the view for the frame
-	 * @function z2.View.update
+	 * @function z2.View#update
+	 * @memberof z2.View
 	 */
 	z2.View.prototype.update = function()
 	{
 		// adjust for follow-mode
 		if( this.follow_mode !== z2.FOLLOW_MODE_NONE )
 			this._follow();
+	};
+
+	/** Add a (Pixi DisplayObject) to the view
+	 * @function z2.View#add
+	 * @memberof z2.View
+	 * @arg {Pixi.DisplayObject} obj The object to add
+	 * @arg {boolean} [fixed] Is the object fixed to the camera or not? fixed
+	 * objects do not move (e.g. a HUD or life-meter). default is false
+	 */
+	z2.View.prototype.add = function( obj, fixed )
+	{
+		// TODO: implement fixed objects
+		if( fixed )
+		{
+		}
+		else
+			this.doc.addChild( obj );
 	};
 
 	Object.defineProperty( z2.View.prototype, 'follow_mode',
@@ -260,7 +278,7 @@ zSquared.view = function( z2 )
 			if( left < 0 || right > this.scene.width || top < 0 || bottom > this.scene.height )
 			{
 				// adjust the view so that we're not 'out of bounds'
-				var xoff, yoff;
+				var xoff = 0, yoff = 0;
 				if( left < 0 )
 					xoff = left;
 				else if( right > this.scene.width )

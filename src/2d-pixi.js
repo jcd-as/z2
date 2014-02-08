@@ -92,6 +92,7 @@ zSquared['2d'] = function( z2 )
 	{
 		this.animations = {};
 		this.cur_animation = null;
+		this._playing = null;
 		this._cur_frame = 0;
 		this._frame_time = 0;
 	};
@@ -101,7 +102,19 @@ zSquared['2d'] = function( z2 )
 	{
 		get: function()
 		{
-			return this.cur_animation[this._cur_frame][0];
+			if( this.cur_animation )
+				return this.cur_animation[this._cur_frame][0];
+			else
+				return 0;
+		}
+	} );
+	/** @property {string} playing Get the name (key) of the current
+	 * animation, null if none */
+	Object.defineProperty( z2.AnimationSet.prototype, 'playing',
+	{
+		get: function()
+		{
+			return this._playing;
 		}
 	} );
 	/** Add an animation sequence
@@ -122,6 +135,7 @@ zSquared['2d'] = function( z2 )
 	 */
 	z2.AnimationSet.prototype.play = function( name )
 	{
+		this._playing = name;
 		this.cur_animation = this.animations[name];
 		this._cur_frame = 0;
 		this._frame_time = 0;
@@ -131,6 +145,7 @@ zSquared['2d'] = function( z2 )
 	 */
 	z2.AnimationSet.prototype.stop = function()
 	{
+		this._playing = null;
 		this.cur_animation = null;
 		this._frame_time = 0;
 	};
@@ -219,10 +234,21 @@ zSquared['2d'] = function( z2 )
 						anims = disp.animations;
 				}
 
-				// ... or tile layer
+				// ...or tile layer...
 				if( !disp )
 				{
 					disp = e.getComponent( z2.tileLayerFactory.mask );
+					if( disp )
+					{
+						disp.layer.render( view.x, view.y );
+						return;
+					}
+				}
+
+				// ...or image layer
+				if( !disp )
+				{
+					disp = e.getComponent( z2.imageLayerFactory.mask );
 					if( disp )
 					{
 						disp.layer.render( view.x, view.y );
