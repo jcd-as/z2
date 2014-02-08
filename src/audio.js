@@ -9,7 +9,7 @@ zSquared.audio = function( z2 )
 {
 	"use strict";
 
-//	z2.require( [""] );
+	z2.require( ["time"] );
 
 
 	z2.AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -91,9 +91,9 @@ zSquared.audio = function( z2 )
 		cd.volume = volume;
 		cd.loop = loop;
 		if( cd.paused )
-			cd.start = Date.now() - cd.paused;
+			cd.start = z2.time.now() - cd.paused;
 		else
-			cd.start = Date.now();
+			cd.start = z2.time.now();
 		cd.paused = 0;
 
 		// play
@@ -157,7 +157,7 @@ zSquared.audio = function( z2 )
 		var snd = channels[channel];
 		if( snd && cd.key && !cd.paused )
 		{
-			var t = Date.now() - cd.start;
+			var t = z2.time.now() - cd.start;
 			// handle offset greater than duration
 			// (for looped sounds)
 			t %= (snd.buffer.duration * 1000);
@@ -186,7 +186,7 @@ zSquared.audio = function( z2 )
 			// get the asset
 			var snd = z2.loader.getAsset( cd.key );
 			// reset the start time
-			cd.start = Date.now() - cd.paused;
+			cd.start = z2.time.now() - cd.paused;
 			// play the sound
 			playSound( snd, channel, cd.key, cd.paused / 1000, cd.volume, cd.loop );
 		}

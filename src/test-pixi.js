@@ -286,7 +286,8 @@ var myScene =
 		// create a collision map
 		// (for 50-layer perf test:)
 //		var collisionMap = z2.buildCollisionMap( scene.map.layers[48].data, scene.map.widthInTiles, scene.map.heightInTiles, [0,1,2,3,4] );
-		var collisionMap = z2.buildCollisionMap( this.map.layers[1].data, this.map.widthInTiles, this.map.heightInTiles, [0,1,2,3,4] );
+//		var collisionMap = z2.buildCollisionMap( this.map.layers[1].data, this.map.widthInTiles, this.map.heightInTiles, [0,1,2,3,4] );
+		var collisionMap = this.map.collisionMap;
 
 		// create a collision map component
 		var cmc = z2.collisionMapFactory.create( {map: this.map, data: collisionMap} );
