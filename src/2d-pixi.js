@@ -372,7 +372,7 @@ zSquared['2d'] = function( z2 )
 				var cgc = e.getComponent( z2.collisionGroupFactory.mask );
 
 				// if the object is out of the world bounds, just bail
-				if( game && game.scene && game.scene.map )
+				if( window.game && game.scene && game.scene.map )
 				{
 					// TODO: should we be checking the object's bounds instead
 					// of just its position? (don't want objects stopping while
