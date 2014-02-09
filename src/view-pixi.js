@@ -89,10 +89,9 @@ zSquared.view = function( z2 )
 	 */
 	z2.View.prototype.add = function( obj, fixed )
 	{
-		// TODO: implement fixed objects
+		// implement fixed objects
 		if( fixed )
-		{
-		}
+			this.scene.stage.addChild( obj );
 		else
 			this.doc.addChild( obj );
 	};

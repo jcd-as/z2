@@ -47,12 +47,13 @@ var myScene =
 	load : function()
 	{
 		z2.loader.queueAsset( 'man', 'stylized.png' );
+		z2.loader.queueAsset( 'logo', 'logo.png' );
 		z2.loader.queueAsset( 'field', 'field.mp3' );
 //		z2.loader.queueAsset( 'field', 'field.ogg' );
 		z2.loader.queueAsset( 'land', 'landing.mp3' );
 //		z2.loader.queueAsset( 'land', 'landing.ogg' );
-		z2.loader.queueAsset( 'logo', 'logo.mp3' );
-//		z2.loader.queueAsset( 'logo', 'logo.ogg' );
+//		z2.loader.queueAsset( 'theme', 'logo.mp3' );
+//		z2.loader.queueAsset( 'theme', 'logo.ogg' );
 	},
 
 	create : function()
@@ -302,7 +303,7 @@ var myScene =
 		var sbasetexture = new PIXI.BaseTexture( s_img );
 		var stexture = new PIXI.Texture( sbasetexture );
 		var sprite = new PIXI.Sprite( stexture );
-		this.view.doc.addChild( sprite );
+		this.view.add( sprite );
 		var sprc = z2.spriteFactory.create( {sprite:sprite, animations:anims} );
 		var sprv = z2.velocityFactory.create( {x: 0, y: 0, maxx: 200, maxy: 500} );
 //		var sprp = z2.positionFactory.create( {x: 512, y: 512} );
@@ -330,7 +331,7 @@ var myScene =
 		var stexture2 = new PIXI.Texture( sbasetexture2 );
 		var sprv2 = z2.velocityFactory.create( {x: -100, y: 0, maxx: 200, maxy: 500} );
 		var sprite2 = new PIXI.Sprite( stexture2 );
-		this.view.doc.addChild( sprite2 );
+		this.view.add( sprite2 );
 		var sprc2 = z2.spriteFactory.create( {sprite:sprite2, animations:anims2} );
 		var sprp2 = z2.positionFactory.create( {x: 64, y: 1024-64} );
 		var sprbody2 = z2.physicsBodyFactory.create( {aabb:[-32, -16, 32, 16], restitution:1, mass:1, resistance_x: 0} );
@@ -338,6 +339,20 @@ var myScene =
 		var spre2 = this.mgr.createEntity( [z2.renderableFactory, gravc, cmc, sprbody2, sprv2, sprp2, sprsz, sprs, sprcc, sprpc, sprc2] );
 		anims2.play( 'jitter' );
 
+		// create a 'billboard' image
+		var img = z2.loader.getAsset( 'logo' );
+		var imgc = z2.imageFactory.create( {img:img} );
+		var imgp = z2.positionFactory.create( {x: WIDTH/2, y: HEIGHT/2} );
+		var imgr = z2.rotationFactory.create( {theta: 0} );
+		var imgs = z2.scaleFactory.create( {sx: 1, sy: 1} );
+		var imgsz = z2.sizeFactory.create( {width: 512, height: 384} );
+		var imgcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
+		var imge = this.mgr.createEntity( [z2.rootTransformFactory, imgp, imgr, imgsz, imgs, imgcc, imgc] );
+		var basetexture = new PIXI.BaseTexture( img );
+		var texture = new PIXI.Texture( basetexture );
+		var image = new PIXI.Sprite( texture );
+		image.alpha = 0.25;
+		this.view.add( image, true );
 
 		// set the entities for collision groups
 		pcolg.entities = [spre2];
@@ -352,7 +367,7 @@ var myScene =
 		this.mgr.addSystem( ms );
 
 //		z2.playSound( 'field', 0, 1, true );
-//		z2.playSound( 'logo', 0, 1, true );
+//		z2.playSound( 'theme', 0, 1, true );
 
 		//////////////////
 		// add global handlers for web page controls
