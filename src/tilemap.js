@@ -74,6 +74,9 @@ zSquared.tilemap = function( z2 )
 		// image layers
 		this.imageLayers = [];
 
+		// object groups (arrays of objects)
+		this.objectGroups = [];
+
 		// collision map
 		this.collisionMap = null;
 
@@ -162,7 +165,7 @@ zSquared.tilemap = function( z2 )
 			// load object layers
 			else if( lyr.type == 'objectgroup' )
 			{
-				createObjects( lyr );
+				this.objectGroups.push( createObjects( lyr ) );
 			}
 		}
 	};
@@ -990,6 +993,7 @@ zSquared.tilemap = function( z2 )
 	// function to create objects for a Tiled object layer
 	function createObjects( layer )
 	{
+		var objects = [];
 		// create an entity for each object
 		for( var i = 0; i < layer.objects.length; i++ )
 		{
@@ -1001,8 +1005,9 @@ zSquared.tilemap = function( z2 )
 				console.log( "No factory method found for object type: " + obj.type );
 				continue;
 			}
-			factory( obj );
+			objects.push( factory( obj ) );
 		}
+		return objects;
 	}
 
 

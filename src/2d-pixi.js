@@ -334,7 +334,7 @@ zSquared['2d'] = function( z2 )
 	/** MovementSystem factory function
 	 * requires: position, velocity, transform
 	 * optional: positionConstraints, collisionMap, physicsBody (*required* if
-	 * there is a collisionMap), gravity, collisionGroup
+	 * there is a collisionMap or Group), gravity, collisionGroup
 	 * @function z2.createMovementSystem
 	 * @arg {number} priority Priority of system (lower = higher priority)
 	 */
@@ -450,7 +450,8 @@ zSquared['2d'] = function( z2 )
 					if( entities )
 					{
 						// TODO: optimize! figure out a better way to do this,
-						// it is potentially n^2 behaviour
+						// it is potentially n^2 behaviour (e.g. if we need to
+						// collide two groups together)
 						// (keep a list of already collided sprites?)
 						for( var i = 0; i < entities.length; i++ )
 						{

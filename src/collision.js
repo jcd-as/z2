@@ -16,7 +16,7 @@ zSquared.collision = function( z2 )
 	z2.require( ["math"] );
 
 	/////////////////////////////////////////////////////////////////////////
-	// collision detection routines
+	// collision detection & separation routines
 	/////////////////////////////////////////////////////////////////////////
 	// polygons should be defined with vertices in clockwise order
 	// (so we use left-hand normals)
@@ -571,6 +571,44 @@ zSquared.collision = function( z2 )
 		pv[0] = dx;
 		pv[1] = dy;
 		return overlap;
+	};
+
+
+	/////////////////////////////////////////////////////////////////////////
+	// collision detection-only routines
+	/////////////////////////////////////////////////////////////////////////
+
+	/** Test for collision between two Axis-Aligned Bounding Boxes
+	 * @function z2.testAabbVsAabb
+	 * @arg {Array} p1 (flat) Array of values for aabb 1: top, left, bottom, right
+	 * @arg {Array} p2 (flat) Array of values for aabb 2: top, left, bottom, right
+	 * @returns {boolean} true if collision, or false if no collision
+	 */
+	z2.testAabbVsAabb = function( p1, p2 )
+	{
+		if( p1[0] > p2[2] ||
+			p2[0] > p1[2] ||
+			p1[1] > p2[3] ||
+			p2[1] > p1[3] )
+			return false;
+		else
+			return true;
+	};
+
+	/** Test for collision between two circles
+	 * @function z2.testCircleVsCircle
+	 * @arg {Array} p1 Center of circle 1
+	 * @arg {Number} r1 Radius of circle 1
+	 * @arg {Array} p2 Center of circle 2
+	 * @arg {Number} r2 Radius of circle 2
+	 * @returns {boolean} true if collision, false if none
+	 */
+	z2.testCircleVsCircle = function( p1, r1, p2, r2 )
+	{
+		var dx = p2[0] - p1[0];
+		var dy = p2[1] - p1[1];
+		var dist = Math.sqrt( dx * dx + dy * dy );
+		return r1 + r2 - dist > 0;
 	};
 
 
