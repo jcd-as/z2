@@ -26,8 +26,12 @@ zSquared.input = function( z2 )
 	 */
 	z2.kbd = 
 	{
+		// keys that we're interested in
 		captured: {},
+		// keys that are currently pressed
 		pressed: {},
+		// keys triggering key-up events this frame
+		up: {},
 
 		/** Start watching keyboard events
 		 * @function z2.kbd#start
@@ -59,6 +63,8 @@ zSquared.input = function( z2 )
 					// TODO: track time that key has been pressed
 
 					that.pressed[e.keyCode] = false;
+
+					that.up[e.keyCode] = true;
 				}
 			};
 
@@ -73,6 +79,16 @@ zSquared.input = function( z2 )
 		{
 			document.body.removeEventListener( 'keydown', this._onKeyDown );
 			document.body.removeEventListener( 'keyup', this._onKeyUp );
+		},
+
+		/** Update the 'keyUp' status. In order for keyUp() to work, this needs
+		 * to be called in the game update loop, *after* input is read
+		 * @function z2.kbd#update
+		 */
+		refresh: function()
+		{
+			// clear the key-up list
+			this.up = {};
 		},
 
 		/** Add a key to watch for
@@ -99,10 +115,16 @@ zSquared.input = function( z2 )
 		 */
 		isDown: function( keycode )
 		{
-			if( this.pressed[keycode] )
-				return true;
-			else
-				return false;
+			return this.pressed[keycode];
+		},
+
+		/** Did a key-up event happen this frame for this key?
+		 * @function z2.kbd#keyUp
+		 * @arg {number} keycode The keycode for the key to check
+		 */
+		keyUp: function( keycode )
+		{
+			return this.up[keycode];
 		},
 
 		// keycodes:

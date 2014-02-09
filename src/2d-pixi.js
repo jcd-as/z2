@@ -371,6 +371,16 @@ zSquared['2d'] = function( z2 )
 				// get the collision group (sprite vs sprite collisions)
 				var cgc = e.getComponent( z2.collisionGroupFactory.mask );
 
+				// if the object is out of the world bounds, just bail
+				if( game && game.scene && game.scene.map )
+				{
+					// TODO: should we be checking the object's bounds instead
+					// of just its position? (don't want objects stopping while
+					// still partially visible)
+					if( pc.x > game.scene.map.worldWidth ||
+						pc.y > game.scene.map.worldHeight )
+						return;
+				}
 
 				// get pos constraints
 				var minx = -Number.MAX_VALUE, maxx = Number.MAX_VALUE;
