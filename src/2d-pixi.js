@@ -283,10 +283,12 @@ zSquared['2d'] = function( z2 )
 				// apply the size
 				if( szc )
 				{
+					// TODO: cache values so that we're not re-setting the frame
+					// unnecessarily
+
 					// offset to the image in the sprite strip
-					var w;
-					if( szc ) w = szc.width;
-					else w = spr.width;
+					var w = szc.width;
+					var h = szc.height;
 					var offs;
 					if( anims ) offs = anims.currentFrame * w;
 					else offs = 0;
@@ -295,7 +297,7 @@ zSquared['2d'] = function( z2 )
 					if( anims )
 						anims.update( dt );
 
-					spr.texture.setFrame( new PIXI.Rectangle( offs, 0, w, szc.height ) );
+					spr.texture.setFrame( new PIXI.Rectangle( offs, 0, w, h ) );
 				}
 
 				// apply the transforms to the PIXI sprite
