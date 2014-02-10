@@ -41,7 +41,7 @@ var zSquared = function( opts )
 		},
 
 		/** Main game loop helper. Starts main loop with given fcn.
-		 * @function z2.main
+		 * @function z2#main
 		 * @arg {Function} update Function to be called each frame. Takes a
 		 * single parameter: the elapsed time since the loop was first started
 		 * (the same param that requestAnimationFrame passes)
@@ -58,7 +58,7 @@ var zSquared = function( opts )
 		},
 
 		/** Function to create a canvas object
-		 * @function z2.createCanvas
+		 * @function z2#createCanvas
 		 * @arg {Number} w Canvas width, in pixels
 		 * @arg {Number} h Canvas height, in pixels
 		 * @arg {boolean} [add_to_doc] Should this canvas be added to the
@@ -73,7 +73,21 @@ var zSquared = function( opts )
 			if( add_to_doc )
 				document.body.appendChild( canvas );
 			return canvas;
+		},
+
+		/** Wraps text at 'width' columns
+		 * @function z2#wrapText
+		 * @arg {string} text Text to wrap
+		 * @arg {number} width Column at which to wrap text 
+		 * @returns {string} Wrapped text (input with newlines added)
+		 */
+		wrapText : function( text, width )
+		{
+			width = width || 75;
+			var regex = '.{1,' + width + '}(\\s|$)' + '|\\S+?(\\s|$)';
+			return text.match( RegExp( regex, 'g' ) ).join( '\n' );
 		}
+
 	};
 
 	// return the main (namespace) object
