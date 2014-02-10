@@ -339,7 +339,7 @@ zSquared.ecs = function( z2 )
 
 					// clear the Entity slot
 					entities[idx].clearMask();
-					delete components[idx];
+					components[idx] = {};
 				},
 
 				/** Add a System

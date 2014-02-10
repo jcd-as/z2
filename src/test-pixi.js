@@ -54,6 +54,8 @@ var myScene =
 //		z2.loader.queueAsset( 'land', 'landing.ogg' );
 //		z2.loader.queueAsset( 'theme', 'logo.mp3' );
 //		z2.loader.queueAsset( 'theme', 'logo.ogg' );
+
+		z2.loader.queueAsset( 'font', 'open_sans_italic_20.fnt' );
 	},
 
 	create : function()
@@ -353,6 +355,12 @@ var myScene =
 		var image = new PIXI.Sprite( texture );
 		image.alpha = 0.25;
 		this.view.add( image, true );
+
+		// draw some text
+		var txt = new PIXI.BitmapText( "foobar", {font: 'Open_Sans', align: 'center'} );
+		txt.position.x = WIDTH/2 - txt.width/2;
+		txt.position.y = HEIGHT/2 - txt.height/2;
+		this.view.add( txt, true );
 
 		// set the entities for collision groups
 		pcolg.entities = [spre2];

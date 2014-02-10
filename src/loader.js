@@ -9,6 +9,7 @@
 // x support text files
 // x support json files
 // x support audio files
+// - support bitmap fonts (.fnt files)
 // - use browser type to load appropriate audio files (i.e. ogg for firefox)
 // - 
 
@@ -38,7 +39,10 @@ zSquared.loader = function( z2 )
 		txt : 'text',
 
 		// json files
-		json : 'json'
+		json : 'json',
+
+		// bitmap font files
+		fnt : 'font'
 	};
 
 	var baseUrl = '';
@@ -46,6 +50,7 @@ zSquared.loader = function( z2 )
 	var sndBaseUrl = '';
 	var txtBaseUrl = '';
 	var jsonBaseUrl = '';
+	var fontBaseUrl = '';
 
 	// list of queued asset key/url pairs
 	var assetQueue = [];
@@ -120,6 +125,18 @@ zSquared.loader = function( z2 )
 		xhr.send();
 	}
 
+	// load a bitmap font file
+	// (xml format from http://www.angelcode.com/products/bmfont/)
+	function loadFont( key, url, onComplete, onError, that )
+	{
+		// use Pixi to load the font
+		url = baseUrl + fontBaseUrl + url;
+		var fontsToLoad = [url];
+		var loader = new PIXI.AssetLoader( fontsToLoad );
+		loader.onComplete = onComplete;
+		loader.onError = onError;
+		loader.load();
+	}
 
 	// public module interface:
 	/** Loader namespace
@@ -169,6 +186,15 @@ zSquared.loader = function( z2 )
 		setJsonBaseUrl : function( base )
 		{
 			jsonBaseUrl = base;
+		},
+
+		/** Set font base URL
+		 * @method z2.loader#setFontBaseUrl
+		 * @arg {string} base base URL
+		 */
+		setFontBaseUrl : function( base )
+		{
+			fontBaseUrl = base;
 		},
 
 		/** Get an asset
@@ -312,8 +338,12 @@ zSquared.loader = function( z2 )
 					case 'tiled':
 						loadTiledJson( key, url, loaded, failed, that );
 						break;
+					case 'font':
+						loadFont( key, url, loaded, failed, that );
+						break;
 					case 'unknown':
-						// TODO: impl
+						console.warn( "unknown kind of asset: " + url );
+						failed.call( that );
 						break;
 					}
 				}
