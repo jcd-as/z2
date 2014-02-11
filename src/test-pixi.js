@@ -40,6 +40,9 @@ document.addEventListener( 'pageshow', visibilityChange, false );
 window.onblur = visibilityChange;
 window.onfocus = visibilityChange;
 
+// global 'game' object
+window.game = {};
+
 // create an object defining our scene
 // (load, create and update methods)
 var myScene = 
@@ -56,6 +59,11 @@ var myScene =
 //		z2.loader.queueAsset( 'theme', 'logo.ogg' );
 
 		z2.loader.queueAsset( 'font', 'open_sans_italic_20.fnt' );
+
+		z2.loader.queueAsset( 'left', 'the_source/assets/img/button_left.png' );
+//		z2.loader.queueAsset( 'right', 'the_source/assets/img/button_right.png' );
+//		z2.loader.queueAsset( 'circle', 'the_source/assets/img/button_circle.png' );
+//		z2.loader.queueAsset( 'square', 'the_source/assets/img/button_square.png' );
 	},
 
 	create : function()
@@ -358,9 +366,13 @@ var myScene =
 
 		// draw some text
 		var txt = new PIXI.BitmapText( "foobar", {font: 'Open_Sans', align: 'center'} );
-		txt.position.x = WIDTH/2 - txt.width/2;
-		txt.position.y = HEIGHT/2 - txt.height/2;
+		txt.position.x = WIDTH/2 - txt.textWidth/2;
+		txt.position.y = HEIGHT/2 - txt.textHeight/2;
 		this.view.add( txt, true );
+
+		// add touchscreen buttons
+		z2.touch.init( 5 );
+		z2.touch.addButton( z2.loader.getAsset( 'left' ) );
 
 		// set the entities for collision groups
 		pcolg.entities = [spre2];
@@ -410,6 +422,7 @@ var myScene =
 
 // create a Tiled map scene using our scene definition object
 var scene = new z2.TiledScene( canvas, 'test.json', myScene );
+game.scene = scene;
 
 // start the scene
 scene.start();

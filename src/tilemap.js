@@ -26,8 +26,8 @@ zSquared.tilemap = function( z2 )
 	var RENDER_PIXI_SPR = 2;
 	var RENDER_OPT_PIXI_SPR = 3;
 	var RENDER_PIXI_ALL_SPR = 4;
-//	var render_method = RENDER_PIXI_ALL_SPR;
-	var render_method = RENDER_OPT_PIXI_SPR;
+	var render_method = RENDER_PIXI_ALL_SPR;
+//	var render_method = RENDER_OPT_PIXI_SPR;
 //	var render_method = RENDER_PIXI_SPR;
 //	var render_method = RENDER_OPT_PAGES;
 //	var render_method = RENDER_SIMPLE;
@@ -281,6 +281,7 @@ zSquared.tilemap = function( z2 )
 			// TODO: support more than one tileset
 			this.tileTexture = new PIXI.BaseTexture( map.tilesets[0].tiles );
 			this.doc = new PIXI.DisplayObjectContainer();
+//			this.doc = new PIXI.SpriteBatch();
 
 			this.tileSprites = [];
 			for( var i = 0; i <= map.viewHeightInTiles; i++ )
@@ -317,6 +318,7 @@ zSquared.tilemap = function( z2 )
 			// TODO: support more than one tileset
 			this.tileTexture = new PIXI.BaseTexture( map.tilesets[0].tiles );
 			this.doc = new PIXI.DisplayObjectContainer();
+//			this.doc = new PIXI.SpriteBatch();
 
 			this.tileSprites = [];
 

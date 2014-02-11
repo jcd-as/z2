@@ -65,7 +65,9 @@ module.exports = function (grunt) {
     connect: {
       root: {
         options: {
-          keepalive: true
+          keepalive: true,
+          /* comment this line out to prevent access from other machines: */
+          hostname: '*'
         }
       }
     }

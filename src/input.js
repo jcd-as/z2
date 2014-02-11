@@ -3,14 +3,16 @@
 // input module for zed-squared
 //
 // TODO:
-// - keyboard
-// - events on keypress
-// - track time keys are down
+// x keyboard
+// ? events on keypress ?
+// ? track time keys are down
 // - mouse
 // - touchscreen basics
 // - touchscreen 2d platformer controls (2-way, 2 buttons)
 // - touchscreen 2d overhead controls (4-way, 2 buttons)
 // - touchscreen 'joypad'
+// - 'down' images for touchscreen buttons
+// - 'gutter' between touchscreen buttons ?
 // - 
 
 "use strict";
@@ -20,6 +22,10 @@ zSquared.input = function( z2 )
 //	z2.require( [] );
 
 	// TODO: implement
+
+	/////////////////////////////////////////////////////////////////////////
+	// keyboard functionality
+	/////////////////////////////////////////////////////////////////////////
 
 	/** Keyboard object
 	 * @namespace z2.kbd
@@ -226,6 +232,158 @@ zSquared.input = function( z2 )
 		DELETE: 46,
 		HELP: 47,
 		NUM_LOCK: 144
+	};
+
+
+	/////////////////////////////////////////////////////////////////////////
+	// touchscreen functionality
+	/////////////////////////////////////////////////////////////////////////
+
+	/**
+	/** Touchscreen controls object
+	 * @namespace z2.touch
+	 */
+	var hasTouch = !!('ontouchstart' in window);
+	z2.touch = 
+	{
+		// pixi objects for buttons
+		numButtons : 0,
+		buttons : [],
+		buttonDim : 0,
+
+		buttonsPressed : [],
+
+		start : function( num_buttons )
+		{
+			if( !hasTouch ) return;
+			this.numbuttons = num_buttons;
+			this.buttonDim = game.scene.view.width / num_buttons;
+
+			// our own touch event handling
+			var that = this;
+			this._touchHandler = function( e )
+			{
+				var i;
+				var touches = e.touches ? e.touches : [e];
+
+				// clear all buttons
+				for( i = 0; i < that.buttonsPressed.length; i++ )
+				{
+					that.buttonsPressed[i] = false;
+				}
+
+				// TODO: track button up 'events' too
+				// (track 'wasDown' array)
+
+				// set all buttons
+				for( i = 0; i < touches.length; i++ )
+				{
+					var touch = touches[i];
+					var button = that._getButton( touch );
+					if( button !== -1 )
+						that.buttonsPressed[button] = true;
+				}
+
+				// prevent default 
+				e.preventDefault();
+			};
+			this._getButton = function( touch )
+			{
+				// was this touch inside one of our buttons?
+				for( var i = 0; i < that.buttons.length; i++ )
+				{
+					if( touch.pageX < (i+1) * that.buttonDim )
+						return i;
+				}
+				return -1;
+			};
+
+			// add event listeners
+			game.scene.canvas.addEventListener( 'touchstart', this._touchHandler, false );
+			game.scene.canvas.addEventListener( 'touchend', this._touchHandler, false );
+			game.scene.canvas.addEventListener( 'touchmove', this._touchHandler, false );
+			game.scene.canvas.addEventListener( 'touchcancel', this._touchHandler, false );
+		},
+
+		addButton : function( image )
+		{
+			if( !hasTouch ) return;
+			
+			// if we're not passed an image, make an 'empty' button
+			if( !image )
+			{
+				this.buttons.push( null );
+				this.buttonsPressed.push( false );
+				return;
+			}
+
+			var idx = this.buttons.length;
+			
+			var basetexture = new PIXI.BaseTexture( image );
+			var texture = new PIXI.Texture( basetexture );
+			var button = new PIXI.Sprite( texture );
+
+			button.position.x = idx * this.buttonDim;
+			button.position.y = game.scene.view.height - this.buttonDim;
+			button.width = this.buttonDim;
+			button.height = this.buttonDim;
+
+			button.alpha = 0.25;
+
+			// add it to the view
+			game.scene.view.add( button, true );
+
+			this.buttons.push( button );
+			this.buttonsPressed.push( false );
+		},
+
+		isButtonDown : function( index )
+		{
+			if( !hasTouch ) return false;
+			return !!this.buttonsPressed[index];
+		},
+
+		hideButtons : function()
+		{
+			if( !hasTouch ) return;
+
+			for( var i = 0; i < this.buttons.length; i++ )
+			{
+				this.buttons[i].visible = false;
+			}
+		},
+
+		showButtons : function()
+		{
+			if( !hasTouch ) return;
+
+			for( var i = 0; i < this.buttons.length; i++ )
+			{
+				this.buttons[i].visible = false;
+			}
+		},
+
+		stop : function()
+		{
+			if( !hasTouch ) return;
+
+			// remove event listeners
+			game.scene.canvas.removeEventListener( 'touchstart', this._touchHandler );
+			game.scene.canvas.removeEventListener( 'touchend', this._touchHandler );
+			game.scene.canvas.removeEventListener( 'touchmove', this._touchHandler );
+			game.scene.canvas.removeEventListener( 'touchcancel', this._touchHandler );
+
+			// remove all the Pixi items
+			for( var i = 0; i < this.buttons.length; i++ )
+				game.scene.view.remove( this.buttons[i] );
+
+			// reset fields
+			this.buttons = null;
+			this.buttonsPressed = null;
+			this.numButtons = 0;
+			this.buttonDim = 0;
+		},
+
 	};
 };
 
