@@ -58,11 +58,8 @@ zSquared['2d'] = function( z2 )
 	/** Component Factory for 2d radius */
 	z2.radiusFactory = z2.createComponentFactory( {radius:0} );
 
-	/** Component Factory for 2d transform */
-	z2.transformFactory = z2.createComponentFactory( {xform: null, scene_x: 0, scene_y:0} );
-
 	/** Component Factory for root (non-grouped) 2d transforms*/
-	z2.rootTransformFactory = z2.createComponentFactory();
+//	z2.rootTransformFactory = z2.createComponentFactory();
 
 	/** Component Factory for 2d (animated) sprite */
 	z2.spriteFactory = z2.createComponentFactory( {sprite: null, width: 0, animations: null } );
@@ -70,17 +67,15 @@ zSquared['2d'] = function( z2 )
 	/** Component Factory for groups */
 	z2.groupFactory = z2.createComponentFactory( {group: []} );
 
-	/** Component Factory for 2d rendering groups */
-	z2.renderGroupFactory = z2.createComponentFactory();
-
-	/** Component Factory for 2d transform groups */
-	z2.transformGroupFactory = z2.createComponentFactory();
-
 	/** Component Factory for physics body (AABB bounds, mass, etc) */
-	z2.physicsBodyFactory = z2.createComponentFactory( {aabb:null, restitution: 0, mass:1, resistance_x: 0, resistance_y: 0, blocked_top: false, blocked_left:false, blocked_down:false, blocked_right:false} );
+	z2.physicsBodyFactory = z2.createComponentFactory( {aabb:null, restitution: 0, mass:1, blocked_top: false, blocked_left:false, blocked_down:false, blocked_right:false} );
 
 	/** Component Factory for 2d gravity */
 	z2.gravityFactory = z2.createComponentFactory( {x: 0, y: 0} );
+
+	/** Component Factory for 2d resistance (resistance to movement e.g. air
+	 * resistance, friction, etc) */
+	z2.resistanceFactory = z2.createComponentFactory( {x: 0, y: 0} );
 
 	/** Component Factory for sprite vs sprite collision */
 	z2.collisionGroupFactory = z2.createComponentFactory( {entities:null} );
@@ -324,6 +319,8 @@ zSquared['2d'] = function( z2 )
 					spr.anchor.x = cc.cx;
 					spr.anchor.y = cc.cy;
 				}
+
+				// TODO: check if in View & mark visible 'false' if not
 			},
 			onEnd: function()
 			{
@@ -334,7 +331,7 @@ zSquared['2d'] = function( z2 )
 
 	/////////////////////////////////////////////////////////////////////////
 	/** MovementSystem factory function
-	 * requires: position, velocity, transform
+	 * requires: position, velocity
 	 * optional: positionConstraints, collisionMap, physicsBody (*required* if
 	 * there is a collisionMap or Group), gravity, collisionGroup
 	 * @function z2.createMovementSystem
@@ -360,6 +357,9 @@ zSquared['2d'] = function( z2 )
 
 				// get the gravity component
 				var gc = e.getComponent( z2.gravityFactory.mask );
+
+				// get the resistance component
+				var rc = e.getComponent( z2.resistanceFactory.mask );
 
 				// get the pos constraints component
 				var pcc = e.getComponent( z2.positionConstraintsFactory.mask );
@@ -452,192 +452,199 @@ zSquared['2d'] = function( z2 )
 				var m;
 				var collision = false;
 
-				// handle sprite vs sprite collisions
-				if( cgc )
+				// if we have a physics body, handle collision-related things
+				if( bc )
 				{
-					// TODO: friction only makes sense for 'full' (non-AABB)
-					// collisions (using circles, for example)
-
-					var entities = cgc.entities;
-					if( entities )
+					// handle sprite vs sprite collisions
+					if( cgc )
 					{
-						// TODO: optimize! figure out a better way to do this,
-						// it is potentially n^2 behaviour (e.g. if we need to
-						// collide two groups together)
-						// (keep a list of already collided sprites?)
-						for( var i = 0; i < entities.length; i++ )
+						// TODO: friction only makes sense for 'full' (non-AABB)
+						// collisions (using circles, for example)
+
+						var entities = cgc.entities;
+						if( entities )
 						{
-							var ent = entities[i];
-							var body = ent.getComponent( z2.physicsBodyFactory.mask );
-							var pos = ent.getComponent( z2.positionFactory.mask );
-							var vel = ent.getComponent( z2.velocityFactory.mask );
-
-							// don't collide against self
-							if( bc === body )
-								continue;
-
-							// setup the bounding boxes
-							this.aabb1[0] = bc.aabb[0] + pc.y;
-							this.aabb1[1] = bc.aabb[1] + pc.x;
-							this.aabb1[2] = bc.aabb[2] + pc.y;
-							this.aabb1[3] = bc.aabb[3] + pc.x;
-
-							this.aabb2[0] = body.aabb[0] + pos.y;
-							this.aabb2[1] = body.aabb[1] + pos.x;
-							this.aabb2[2] = body.aabb[2] + pos.y;
-							this.aabb2[3] = body.aabb[3] + pos.x;
-
-							// collide
-							m = z2.collideAabbVsAabb( this.aabb1, this.aabb2, this.pv );
-
-							// separate the aabb and stop velocity
-							if( m )
+							// TODO: optimize! figure out a better way to do this,
+							// it is potentially n^2 behaviour (e.g. if we need to
+							// collide two groups together)
+							// (keep a list of already collided sprites?)
+							for( var i = 0; i < entities.length; i++ )
 							{
-								collision = true;
+								var ent = entities[i];
+								var body = ent.getComponent( z2.physicsBodyFactory.mask );
+								var pos = ent.getComponent( z2.positionFactory.mask );
+								var vel = ent.getComponent( z2.velocityFactory.mask );
 
-								// separate
-								pc.x += this.pv[0];
-								pc.y += this.pv[1];
-								
-								// m = mass, u = init vel, v = resultant vel
-								// cr = coefficient of restitution
-								// from wikipedia:
-								// (http://en.wikipedia.org/wiki/Coefficient_of_restitution#Speeds_after_impact)
-								// v1 = [(m1)(u1) + (m2)(u2) + (m2)(cr)(u2-u1)] / (m1+m2)
-								// v2 = [(m1)(u1) + (m2)(u2) + (m1)(cr)(u1-u2)] / (m1+m2)
+								// don't collide against self
+								if( bc === body )
+									continue;
 
-								var m1 = bc.mass;
-								var m2 = body.mass;
-								var mt = m1 + m2;
+								// setup the bounding boxes
+								this.aabb1[0] = bc.aabb[0] + pc.y;
+								this.aabb1[1] = bc.aabb[1] + pc.x;
+								this.aabb1[2] = bc.aabb[2] + pc.y;
+								this.aabb1[3] = bc.aabb[3] + pc.x;
 
-								var u1, u2, term;
+								this.aabb2[0] = body.aabb[0] + pos.y;
+								this.aabb2[1] = body.aabb[1] + pos.x;
+								this.aabb2[2] = body.aabb[2] + pos.y;
+								this.aabb2[3] = body.aabb[3] + pos.x;
 
-								// CoR is a properly a property of a *collision*, 
-								// not an object... we'll just take the average
-								var cr = (bc.restitution + body.restitution) / 2;
+								// collide
+								m = z2.collideAabbVsAabb( this.aabb1, this.aabb2, this.pv );
 
-								// left separation
-								if( this.pv[0] < 0 )
+								// separate the aabb and stop velocity
+								if( m )
 								{
-									u1 = vc.x; u2 = vel.x;
-									term = (m1*u1)+(m2*u2);
-									vc.x = (term + (m2*cr) * (u2-u1)) / mt;
-									vel.x = (term + (m1*cr) * (u1-u2)) / mt;
-									bc.blocked_right = true;
-									body.blocked_left = true;
-								}
-								// right separation
-								if( this.pv[0] > 0 )
-								{
-									u1 = vc.x; u2 = vel.x;
-									term = (m1*u1)+(m2*u2);
-									vc.x = (term + (m2*cr) * (u2-u1)) / mt;
-									vel.x = (term + (m1*cr) * (u1-u2)) / mt;
-									bc.blocked_left = true;
-									body.blocked_right = true;
-								}
-								// up separation
-								if( this.pv[1] < 0 )
-								{
-									u1 = vc.y; u2 = vel.y;
-									term = (m1*u1)+(m2*u2);
-									vc.y = (term + (m2*cr) * (u2-u1)) / mt;
-									vel.y = (term + (m1*cr) * (u1-u2)) / mt;
-									bc.blocked_down = true;
-									body.blocked_up = true;
-								}
-								// down separation
-								if( this.pv[1] > 0 )
-								{
-									u1 = vc.y; u2 = vel.y;
-									term = (m1*u1)+(m2*u2);
-									vc.y = (term + (m2*cr) * (u2-u1)) / mt;
-									vel.y = (term + (m1*cr) * (u1-u2)) / mt;
-									bc.blocked_up = true;
-									body.blocked_down = true;
+									collision = true;
+
+									// separate
+									pc.x += this.pv[0];
+									pc.y += this.pv[1];
+									
+									// m = mass, u = init vel, v = resultant vel
+									// cr = coefficient of restitution
+									// from wikipedia:
+									// (http://en.wikipedia.org/wiki/Coefficient_of_restitution#Speeds_after_impact)
+									// v1 = [(m1)(u1) + (m2)(u2) + (m2)(cr)(u2-u1)] / (m1+m2)
+									// v2 = [(m1)(u1) + (m2)(u2) + (m1)(cr)(u1-u2)] / (m1+m2)
+
+									var m1 = bc.mass;
+									var m2 = body.mass;
+									var mt = m1 + m2;
+
+									var u1, u2, term;
+
+									// CoR is a properly a property of a *collision*, 
+									// not an object... we'll just take the average
+									var cr = (bc.restitution + body.restitution) / 2;
+
+									// left separation
+									if( this.pv[0] < 0 )
+									{
+										u1 = vc.x; u2 = vel.x;
+										term = (m1*u1)+(m2*u2);
+										vc.x = (term + (m2*cr) * (u2-u1)) / mt;
+										vel.x = (term + (m1*cr) * (u1-u2)) / mt;
+										bc.blocked_right = true;
+										body.blocked_left = true;
+									}
+									// right separation
+									if( this.pv[0] > 0 )
+									{
+										u1 = vc.x; u2 = vel.x;
+										term = (m1*u1)+(m2*u2);
+										vc.x = (term + (m2*cr) * (u2-u1)) / mt;
+										vel.x = (term + (m1*cr) * (u1-u2)) / mt;
+										bc.blocked_left = true;
+										body.blocked_right = true;
+									}
+									// up separation
+									if( this.pv[1] < 0 )
+									{
+										u1 = vc.y; u2 = vel.y;
+										term = (m1*u1)+(m2*u2);
+										vc.y = (term + (m2*cr) * (u2-u1)) / mt;
+										vel.y = (term + (m1*cr) * (u1-u2)) / mt;
+										bc.blocked_down = true;
+										body.blocked_up = true;
+									}
+									// down separation
+									if( this.pv[1] > 0 )
+									{
+										u1 = vc.y; u2 = vel.y;
+										term = (m1*u1)+(m2*u2);
+										vc.y = (term + (m2*cr) * (u2-u1)) / mt;
+										vel.y = (term + (m1*cr) * (u1-u2)) / mt;
+										bc.blocked_up = true;
+										body.blocked_down = true;
+									}
 								}
 							}
 						}
 					}
-				}
 
-				// handle collision with collision map
-				if( cmc )
-				{
-					// TODO: non-AABB collision body??
-
-					// TODO: friction only makes sense for 'full' (non-AABB)
-					// collisions (using circles, for example)
-
-					this.aabb1[0] = bc.aabb[0] + pc.y;
-					this.aabb1[1] = bc.aabb[1] + pc.x;
-					this.aabb1[2] = bc.aabb[2] + pc.y;
-					this.aabb1[3] = bc.aabb[3] + pc.x;
-
-					// perform the collision
-					m = z2.collideAabbVsCollisionMap( this.aabb1, cmc.data, cmc.map.widthInTiles, cmc.map.heightInTiles, cmc.map.tileWidth, cmc.map.tileHeight, this.pv );
-
-					// separate the aabb and stop velocity
-					if( m )
+					// handle collision with collision map
+					if( cmc )
 					{
-						collision = true;
-						pc.x += this.pv[0];
-						pc.y += this.pv[1];
+						// TODO: non-AABB collision body??
 
-						// set velocity & 'blocked' in direction of collision
+						// TODO: friction only makes sense for 'full' (non-AABB)
+						// collisions (using circles, for example)
 
-						// left
-						if( this.pv[0] > 0 )
+						this.aabb1[0] = bc.aabb[0] + pc.y;
+						this.aabb1[1] = bc.aabb[1] + pc.x;
+						this.aabb1[2] = bc.aabb[2] + pc.y;
+						this.aabb1[3] = bc.aabb[3] + pc.x;
+
+						// perform the collision
+						m = z2.collideAabbVsCollisionMap( this.aabb1, cmc.data, cmc.map.widthInTiles, cmc.map.heightInTiles, cmc.map.tileWidth, cmc.map.tileHeight, this.pv );
+
+						// separate the aabb and stop velocity
+						if( m )
 						{
-							vc.x = vc.x * -bc.restitution;
-							bc.blocked_left = true;
-							bc.blocked_right = false;
-							bc.blocked_up = false;
-							bc.blocked_down = false;
+							collision = true;
+							pc.x += this.pv[0];
+							pc.y += this.pv[1];
+
+							// set velocity & 'blocked' in direction of collision
+
+							// left
+							if( this.pv[0] > 0 )
+							{
+								vc.x = vc.x * -bc.restitution;
+								bc.blocked_left = true;
+								bc.blocked_right = false;
+								bc.blocked_up = false;
+								bc.blocked_down = false;
+							}
+							// right
+							else if( this.pv[0] < 0 )
+							{
+								vc.x = vc.x * -bc.restitution;
+								bc.blocked_left = true;
+								bc.blocked_right = true;
+								bc.blocked_left = false;
+								bc.blocked_up = false;
+								bc.blocked_down = false;
+							}
+							// top
+							else if( this.pv[1] > 0 )
+							{
+								vc.y = vc.y * -bc.restitution;
+								bc.blocked_up = true;
+								bc.blocked_left = false;
+								bc.blocked_right = false;
+								bc.blocked_down = false;
+							}
+							// bottom
+							else if( this.pv[1] < 0 )
+							{
+								vc.y = vc.y * -bc.restitution;
+								bc.blocked_down = true;
+								bc.blocked_left = false;
+								bc.blocked_right = false;
+								bc.blocked_up = false;
+							}
 						}
-						// right
-						else if( this.pv[0] < 0 )
-						{
-							vc.x = vc.x * -bc.restitution;
-							bc.blocked_left = true;
-							bc.blocked_right = true;
-							bc.blocked_left = false;
-							bc.blocked_up = false;
-							bc.blocked_down = false;
-						}
-						// top
-						else if( this.pv[1] > 0 )
-						{
-							vc.y = vc.y * -bc.restitution;
-							bc.blocked_up = true;
-							bc.blocked_left = false;
-							bc.blocked_right = false;
-							bc.blocked_down = false;
-						}
-						// bottom
-						else if( this.pv[1] < 0 )
-						{
-							vc.y = vc.y * -bc.restitution;
-							bc.blocked_down = true;
-							bc.blocked_left = false;
-							bc.blocked_right = false;
-							bc.blocked_up = false;
-						}
+					}
+
+					// no collision, un-set blocked status
+					if( !collision )
+					{
+						bc.blocked_left = false;
+						bc.blocked_right = false;
+						bc.blocked_up = false;
+						bc.blocked_down = false;
 					}
 				}
 
-				// no collision, un-set blocked status
-				if( !collision )
-				{
-					bc.blocked_left = false;
-					bc.blocked_right = false;
-					bc.blocked_up = false;
-					bc.blocked_down = false;
-				}
-
 				// apply basic "air resistance" friction-like component
-				vc.x *= 1 - bc.resistance_x * idt;
-				vc.y *= 1 - bc.resistance_y * idt;
+				if( rc )
+				{
+					vc.x *= 1 - rc.x * idt;
+					vc.y *= 1 - rc.y * idt;
+				}
 
 				// gravity? apply second half after changing position
 				// (see www.niksula.cs.hut.fi/~hkankaan/Homepages/gravity.html) 

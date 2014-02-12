@@ -6,9 +6,6 @@
 // - can we separate the need for the view from the map? (this would allow
 // the same map to (conceptually anyway) have different views. e.g. a main view
 // and a 'minimap' view
-// - BUG (?): if you have a layer that scrolls out of bounds (like a
-// parallax foreground layer that moves much faster than the 'main' layer),
-// probably the layer should just STOP moving (i.e. just 'stick' at the edge)
 // - 
 
 

@@ -322,15 +322,16 @@ var myScene =
 //		var sprr = z2.rotationFactory.create( {theta: z2.math.d2r(10)} );
 		// reverse sprite facing
 //		var sprs = z2.scaleFactory.create( {sx: -1, sy: 1} );
+		var sprres = z2.resistanceFactory.create( {x: 0.95} );
 		var sprs = z2.scaleFactory.create( {sx: 1, sy: 1} );
 		var sprsz = z2.sizeFactory.create( {width: 64, height: 64} );
 		var sprcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
 		var sprpc = z2.positionConstraintsFactory.create( {minx: 16, maxx: this.width-16, miny: 32, maxy: this.height-32} );
-		var sprbody = z2.physicsBodyFactory.create( {aabb:[-32, -15, 32, 15], restitution:1, mass:1, resistance_x:0.95} );
+		var sprbody = z2.physicsBodyFactory.create( {aabb:[-32, -15, 32, 15], restitution:1, mass:1} );
 		// collision group for the player to collide against
 		var pcolg = z2.collisionGroupFactory.create( {entities:[spre2]} );
 		// create the entity
-		spre = this.mgr.createEntity( [z2.renderableFactory, gravc, cmc, sprbody, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc, pcolg] );
+		spre = this.mgr.createEntity( [z2.renderableFactory, gravc, cmc, sprbody, player, sprv, sprp, sprr, sprsz, sprs, sprcc, sprpc, sprc, pcolg, sprres] );
 
 		anims.play( 'walk' );
 
@@ -357,7 +358,7 @@ var myScene =
 		var imgs = z2.scaleFactory.create( {sx: 1, sy: 1} );
 		var imgsz = z2.sizeFactory.create( {width: 512, height: 384} );
 		var imgcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
-		var imge = this.mgr.createEntity( [z2.rootTransformFactory, imgp, imgr, imgsz, imgs, imgcc, imgc] );
+		var imge = this.mgr.createEntity( [imgp, imgr, imgsz, imgs, imgcc, imgc] );
 		var basetexture = new PIXI.BaseTexture( img );
 		var texture = new PIXI.Texture( basetexture );
 		var image = new PIXI.Sprite( texture );
@@ -401,11 +402,11 @@ var myScene =
 		};
 		window.updateResistanceX = function( value )
 		{
-			sprbody.resistance_x = value;
+			sprres.x = value;
 		};
 		window.updateResistanceY = function( value )
 		{
-			sprbody.resistance_y = value;
+			sprres.y = value;
 		};
 		window.updateGravity = function( value )
 		{
