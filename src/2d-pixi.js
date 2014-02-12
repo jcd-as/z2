@@ -217,9 +217,10 @@ zSquared['2d'] = function( z2 )
 
 		return new z2.System( Number.MAX_VALUE, [z2.renderableFactory],
 		{
-//			onStart: function()
-//			{
-//			},
+			onStart: function()
+			{
+				view.update();
+			},
 			update: function( e, dt )
 			{
 				// get the image...
@@ -326,7 +327,6 @@ zSquared['2d'] = function( z2 )
 			},
 			onEnd: function()
 			{
-				view.update();
 				renderer.render( stage );
 			}
 		} );

@@ -9,8 +9,6 @@
 // - BUG (?): if you have a layer that scrolls out of bounds (like a
 // parallax foreground layer that moves much faster than the 'main' layer),
 // probably the layer should just STOP moving (i.e. just 'stick' at the edge)
-// - BUG: several pixels of blank screen show when you scroll around (in
-// most/all(?) render methods)
 // - 
 
 

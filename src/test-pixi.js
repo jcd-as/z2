@@ -371,7 +371,7 @@ var myScene =
 		this.view.add( txt, true );
 
 		// add touchscreen buttons
-		z2.touch.init( 5 );
+		z2.touch.start( 5 );
 		z2.touch.addButton( z2.loader.getAsset( 'left' ) );
 
 		// set the entities for collision groups
