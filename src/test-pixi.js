@@ -385,24 +385,26 @@ var myScene =
 			// is the emitter on?
 			on: true,
 			// is this a 'burst' emitter? (fires all particles, then turns off)
-			burst: true,
+			burst: false,
 			// how many particles are released at a time?
-			quantity: 5000, 
+			quantity: 10000, 
 			// how often (in ms) are particles released?
-			period: 5000,
+			period: 3000,
 			// how long to wait before the first release of particles?
-			delay: 3000,
+			delay: 1000,
 			// width of the emitter (in pixels)
-			width: 0,
+			width: 100,
 			// height of the emitter (in pixels)
-			height: 0,
+			height: 100,
 			// min/max particle speeds (chosen at random in this range)
-			minParticleSpeedX: -10, maxParticleSpeedX: 10,
-			minParticleSpeedY: -10, maxParticleSpeedY: 10,
+			minParticleSpeedX: -50, maxParticleSpeedX: 50,
+			minParticleSpeedY: -50, maxParticleSpeedY: 50,
 			// min/max particle rotation (chosen at random in this range)
 			minRotation: 0, maxRotation: 180,
+			// min/max particle alpha transparency
+			minAlpha: 0.1, maxAlpha: 0.4,
 			// min/max particle lifespan (in ms)
-			minLifespan: 30000, maxLifespan: 30000,
+			minLifespan: 10000, maxLifespan: 10000,
 		} );
 		var empos = z2.positionFactory.create( {x: 700, y: 800} );
 		var eme = this.mgr.createEntity( 
@@ -429,8 +431,8 @@ var myScene =
 		var es = z2.createEmitterSystem( this.view, 'firefly', 8 );
 		this.mgr.addSystem( es );
 		// create a particle system to go with it
-		var ps = z2.createParticleSystem( this.view );
-		this.mgr.addSystem( ps );
+//		var ps = z2.createParticleSystem( this.view );
+//		this.mgr.addSystem( ps );
 
 		// create a movement system
 		var ms = z2.createMovementSystem( 200 );

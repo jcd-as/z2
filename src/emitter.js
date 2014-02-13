@@ -2,9 +2,9 @@
 // Copyright 2013 Joshua C Shepard
 // Components and Systems for particle emitter for 2d games
 // TODO:
-// - keep cache of particles & recycle them IF we're not in burst mode and the
-// particles have lifespans (needed? entities are already created from a
-// cache, but there IS overhead associated with creating a new Entity...)
+// - use re-usable Pixi Sprite pool too
+// - gravity & resistance
+// - infinite lifespans
 // - ability to use animations and/or random frames from image
 // -
 
@@ -42,12 +42,41 @@ zSquared.emitter = function( z2 )
 			minParticleSpeedY: 0, maxParticleSpeedY: 0,
 			// min/max particle rotation (chosen at random in this range)
 			minRotation: 0, maxRotation: 0,
+			// min/max alpha transparency
+			minAlpha: 1, maxAlpha: 1,
 			// min/max particle lifespan (in ms)
 			minLifespan: 0, maxLifespan: 0,
 		} );
 
-	/** Component Factory for particle: lifespan */
-	z2.particleFactory = z2.createComponentFactory( {life:0, _born:0} );
+	/////////////////////////////////////////////////////////////////////////
+	// Particle class
+	/////////////////////////////////////////////////////////////////////////
+	/** Particle class
+	 * @class z2#Particle
+	 * @constructor
+	 * @arg {PIXI.Sprite} sprite The Pixi Sprite for this type of particle
+	 * @arg {Number} width The width of the sprite image, in pixels
+	 * @arg {Number} x The X coordinate
+	 * @arg {Number} y The Y coordinate
+	 * @arg {Number} vel_x X velocity
+	 * @arg {Number} vel_y Y velocity
+	 * @arg {Number} theta Rotation angle
+	 * @arg {Number} alpha alpha transparency (0 to 1)
+	 * @arg {Number} lifespan Lifespan of the particle, in ms
+	 */
+	function Particle( sprite, width, x, y, vel_x, vel_y, theta, alpha, lifespan )
+	{
+		this.sprite = sprite;
+		sprite.position.x = x || 0;
+		sprite.position.y = y || 0;
+		sprite.texture.setFrame( new PIXI.Rectangle( 0, 0, width, sprite.height ) );
+		this.velX = vel_x || 0;
+		this.velY = vel_y || 0;
+		sprite.rotation = theta || 0;
+		sprite.alpha = alpha || 1;
+		this._born = z2.time.now();
+		this.lifespan = lifespan || 0;
+	}
 
 
 	/////////////////////////////////////////////////////////////////////////
@@ -58,7 +87,7 @@ zSquared.emitter = function( z2 )
 	/** EmitterSystem factory function
 	 * requires: emitter, position
 	 * optional: 
-	 * @function z2.createEmitterSystem
+	 * @function z2#createEmitterSystem
 	 * @arg {z2.View} view The view object to which the particles will be added
 	 * // TODO: should we be getting the image key/width etc from a component?
 	 * @arg {string} img_key The key for the image to use
@@ -73,20 +102,65 @@ zSquared.emitter = function( z2 )
 		{
 			timer : null,
 			img : null,
-			onStart: function()
+			particles : [],
+			openSlots : [],
+			texture : null,
+//			sprites : [],
+			sb : null,
+			init: function()
 			{
 				this.img = z2.loader.getAsset( img_key );
 				// TODO: random frame(s) from image??
+
+				var basetexture = new PIXI.BaseTexture( this.img );
+				this.texture = new PIXI.Texture( basetexture );
+				this.sb = new PIXI.SpriteBatch();
+				view.doc.addChild( this.sb );
 			},
+//			onStart: function()
+//			{
+//			},
 			update: function( e, dt )
 			{
+				var i;
 				var em = e.getComponent( z2.emitterFactory );
-				var pos = e.getComponent( z2.positionFactory );
 
 				// have we been initialized yet??
 				if( !this.timer )
 					this.timer = z2.time.now() + em.delay - em.period;
 
+				// update existing particles
+				for( i = 0; i < this.particles.length; i++ )
+				{
+					var p = this.particles[i];
+					if( !p )
+						continue;
+
+					// if it's lifetime is at an end, destroy this entity
+					if( z2.time.now() >= p._born + p.lifespan )
+					{
+						// remove the sprite from Pixi
+						this.sb.removeChild( p.sprite );
+
+						// remove the entity from the particle array
+						this.openSlots.push( i );
+						this.particles[i] = null;
+
+						continue;
+					}
+
+					// otherwise update its position
+
+					// dt factor
+					var idt = dt / 1000;
+
+					// TODO: gravity & resistance
+
+					p.sprite.position.x += p.velX * idt;
+					p.sprite.position.y += p.velY * idt;
+				}
+
+				// fire more particles, if needed
 				if( em.on )
 				{
 					// is it time to emit particles
@@ -96,92 +170,52 @@ zSquared.emitter = function( z2 )
 						if( em.burst )
 							em.on = false;
 
+						var pos = e.getComponent( z2.positionFactory );
+
 						this.timer = z2.time.now();
 
 						// fire particles
-						for( var i = 0; i < em.quantity; i++ )
+						for( i = 0; i < em.quantity; i++ )
 						{
 							// TODO: randomize animation / frames ???
 
-							var basetexture = new PIXI.BaseTexture( this.img );
-							var texture = new PIXI.Texture( basetexture );
-							var sprite = new PIXI.Sprite( texture );
-							var spr = z2.spriteFactory.create( {sprite:sprite, width:img_width} );
-							view.add( spr.sprite );
+							var sprite = new PIXI.Sprite( this.texture );
+							this.sb.addChild( sprite );
+							
+							var particle = new Particle( sprite, img_width,
+								// x
+								z2.random( pos.x, pos.x + em.width ),
+								// y
+								z2.random( pos.y, pos.y + em.height ),
+								// velocity x
+								z2.random( em.minParticleSpeedX, em.maxParticleSpeedX ),
+								// velocity y
+								z2.random( em.minParticleSpeedY, em.maxParticleSpeedY ),
+								// rotation
+								z2.random( em.minRotation, em.maxRotation ),
+								// alpha
+								z2.random( em.minAlpha, em.maxAlpha ),
+								// lifespan
+								z2.random( em.minLifespan, em.maxLifespan, Math.round )
+							);
 
-							// create our particle Entity
-							var particle = z2.manager.get().createEntity(
-							[
-								// renderable!
-								z2.renderableFactory,
-								// create a location
-								z2.positionFactory.create(
-								{
-									x: z2.random( pos.x, pos.x + em.width ),
-									y: z2.random( pos.y, pos.y + em.height )
-								} ),
-								// create a particle
-								z2.particleFactory.create( 
-								{
-									life: z2.random( em.minLifespan, em.maxLifespan, Math.round ),
-									_born: z2.time.now()
-								} ),
-								// create a velocity
-								z2.velocityFactory.create( 
-								{
-									x: z2.random( em.minParticleSpeedX, em.maxParticleSpeedX ),
-									y: z2.random( em.minParticleSpeedY, em.maxParticleSpeedY )
-								} ),
-								// create a rotation
-								z2.rotationFactory.create(
-								{
-									theta: z2.random( em.minRotation, em.maxRotation )
-								} ),
-								// use the sprite we created
-								spr
-							] );
+							// find or create a slot for the particle
+							if( this.openSlots.length > 0 )
+							{
+								var slot = this.openSlots.pop();
+								this.particles[slot] = particle;
+							}
+							else
+								this.particles.push( particle );
 						}
 					}
 				}
 			},
-			onEnd : function()
-			{
-			}
+//			onEnd : function()
+//			{
+//			}
 		} );
 
-	};
-
-	/////////////////////////////////////////////////////////////////////////
-	/** ParticleSystem factory function
-	 * requires: particle
-	 * optional: position size, velocity, rotation, scale, center, gravity
-	 * @function z2.createParticleSystem
-	 * @arg {z2.View} view The view to which the particles belong
-	 * @arg {number} [priority] Priority of system.
-	 */
-	z2.createParticleSystem = function( view, priority )
-	{
-		if( priority === undefined )
-			priority = 65;
-		return new z2.System( priority, [z2.particleFactory],
-		{
-			update: function( e, dt )
-			{
-				// get the particle component
-				var pc = e.getComponent( z2.particleFactory );
-				
-				// if it's lifetime is at an end, destroy this entity
-				if( z2.time.now() >= pc._born + pc.life )
-				{
-					// remove the sprite from Pixi
-					var spr = e.getComponent( z2.spriteFactory );
-					view.remove( spr.sprite );
-
-					// remove the entity from the ECS manager
-					z2.manager.get().removeEntity( e );
-				}
-			}
-		} );
 	};
 
 };
