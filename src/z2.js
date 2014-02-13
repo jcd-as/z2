@@ -86,6 +86,28 @@ var zSquared = function( opts )
 			width = width || 75;
 			var regex = '.{1,' + width + '}(\\s|$)' + '|\\S+?(\\s|$)';
 			return text.match( RegExp( regex, 'g' ) ).join( '\n' );
+		},
+
+		/** Generate a random number within bounds
+		 * @function z2#random
+		 * @arg {number} min minimum value to generate
+		 * @arg {number} max maximum value to generate
+		 * @arg {Function} mod Function to be applied to result prior to
+		 * returning (e.g. pass 'Math.round' to get a number rounded to an
+		 * integer value)
+		 * @returns {number} random number in [min,max] range
+		 */
+		random : function( min, max, round )
+		{
+			var val;
+			if( min === max )
+				val = min;
+			else
+				val = (Math.random() * (max - min)) + min;
+			if( round )
+				return round( (Math.random() * (max - min)) + min );
+			else
+				return val;
 		}
 
 	};

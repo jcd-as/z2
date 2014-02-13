@@ -34,6 +34,9 @@ zSquared['2d'] = function( z2 )
 	/** Component Factory for 2d fill type */
 //	z2.fillFactory = z2.createComponentFactory( {fill: '#ffffff'} );
 
+	/** Component to indicate whether an entity is active of not */
+	z2.activeFactory = z2.createComponentFactory( {active:true} );
+
 	/** Component Factory for 2d position */
 	z2.positionFactory = z2.createComponentFactory( {x: 0, y: 0} );
 
@@ -190,7 +193,7 @@ zSquared['2d'] = function( z2 )
 	/** RenderingSystem factory function
 	 * requires: renderable
 	 * optional: image, sprite, tileLayer, size, rotation, scale, center
-	 * (MUST be an image or sprite or nothing can be rendered)
+	 * (MUST be an image, sprite or tilelayer or nothing can be rendered)
 	 * @function z2.createRenderingSystem
 	 * @arg {Canvas} canvas The HTML5 canvas to draw to
 	 * @arg {z2.View} view The View object for this transform system
@@ -219,13 +222,13 @@ zSquared['2d'] = function( z2 )
 			update: function( e, dt )
 			{
 				// get the image...
-				var disp = e.getComponent( z2.imageFactory.mask );
+				var disp = e.getComponent( z2.imageFactory );
 
 				// ...or sprite...
 				var anims;
 				if( !disp )
 				{
-					disp = e.getComponent( z2.spriteFactory.mask );
+					disp = e.getComponent( z2.spriteFactory );
 					if( disp )
 						anims = disp.animations;
 				}
@@ -233,7 +236,7 @@ zSquared['2d'] = function( z2 )
 				// ...or tile layer...
 				if( !disp )
 				{
-					disp = e.getComponent( z2.tileLayerFactory.mask );
+					disp = e.getComponent( z2.tileLayerFactory );
 					if( disp )
 					{
 						disp.layer.render( view.x, view.y );
@@ -244,7 +247,7 @@ zSquared['2d'] = function( z2 )
 				// ...or image layer
 				if( !disp )
 				{
-					disp = e.getComponent( z2.imageLayerFactory.mask );
+					disp = e.getComponent( z2.imageLayerFactory );
 					if( disp )
 					{
 						disp.layer.render( view.x, view.y );
@@ -257,44 +260,55 @@ zSquared['2d'] = function( z2 )
 					return;
 
 				// get the position component
-				var pc = e.getComponent( z2.positionFactory.mask );
+				var pc = e.getComponent( z2.positionFactory );
 				var x = pc.x;
 				var y = pc.y;
 
 				// get the size component
-				var szc = e.getComponent( z2.sizeFactory.mask );
+				var szc = e.getComponent( z2.sizeFactory );
 
 				// get the rotation component
-				var rc = e.getComponent( z2.rotationFactory.mask );
+				var rc = e.getComponent( z2.rotationFactory );
 
 				// get the scale component
-				var sc = e.getComponent( z2.scaleFactory.mask );
+				var sc = e.getComponent( z2.scaleFactory );
 
 				// get the center point
-				var cc = e.getComponent( z2.centerFactory.mask );
+				var cc = e.getComponent( z2.centerFactory );
 
 				// get the PIXI sprite
 				var spr = disp.sprite;
 
-				// apply the size
+				var w, h, offs;
+
+				// set the texture frame, taking animation into account
+
+				// TODO: cache values so that we're not re-setting the frame
+				// unnecessarily
 				if( szc )
 				{
-					// TODO: cache values so that we're not re-setting the frame
-					// unnecessarily
-
-					// offset to the image in the sprite strip
-					var w = szc.width;
-					var h = szc.height;
-					var offs;
-					if( anims ) offs = anims.currentFrame * w;
-					else offs = 0;
-					
-					// update the current frame & image
-					if( anims )
-						anims.update( dt );
-
-					spr.texture.setFrame( new PIXI.Rectangle( offs, 0, w, h ) );
+					w = szc.width;
+					h = szc.height;
 				}
+				else
+				{
+					// sprites have width, images don't
+					if( disp.width )
+						w = disp.width;
+					else
+						w = spr.width;
+					h = spr.height;
+				}
+				// offset to the image in the sprite strip
+				if( anims ) offs = anims.currentFrame * w;
+				else offs = 0;
+					
+				// update the current frame & image
+				if( anims )
+					anims.update( dt );
+
+				spr.texture.setFrame( new PIXI.Rectangle( offs, 0, w, h ) );
+
 
 				// apply the transforms to the PIXI sprite
 
@@ -350,30 +364,40 @@ zSquared['2d'] = function( z2 )
 			update: function( e, dt )
 			{
 				// get the position component
-				var pc = e.getComponent( z2.positionFactory.mask );
+				var pc = e.getComponent( z2.positionFactory );
 
 				// get the velocity component
-				var vc = e.getComponent( z2.velocityFactory.mask );
+				var vc = e.getComponent( z2.velocityFactory );
 
 				// get the gravity component
-				var gc = e.getComponent( z2.gravityFactory.mask );
+				var gc = e.getComponent( z2.gravityFactory );
 
 				// get the resistance component
-				var rc = e.getComponent( z2.resistanceFactory.mask );
+				var rc = e.getComponent( z2.resistanceFactory );
 
 				// get the pos constraints component
-				var pcc = e.getComponent( z2.positionConstraintsFactory.mask );
+				var pcc = e.getComponent( z2.positionConstraintsFactory );
 
 				// get the collision map component
-				var cmc = e.getComponent( z2.collisionMapFactory.mask );
+				var cmc = e.getComponent( z2.collisionMapFactory );
 
 				// get the physics body
-				var bc = e.getComponent( z2.physicsBodyFactory.mask );
+				var bc = e.getComponent( z2.physicsBodyFactory );
 
 				// get the collision group (sprite vs sprite collisions)
-				var cgc = e.getComponent( z2.collisionGroupFactory.mask );
+				var cgc = e.getComponent( z2.collisionGroupFactory );
+
+				// get the 'active' component
+				var ac = e.getComponent( z2.activeFactory );
+
+				// TODO: get the 'visible' component
+
+				// not active? bail
+				if( ac && !ac.active )
+					return;
 
 				// if the object is out of the world bounds, just bail
+				// TODO: set visible to false too? (so PIXI won't render)
 				if( window.game && game.scene && game.scene.map )
 				{
 					// TODO: should we be checking the object's bounds instead
@@ -471,9 +495,9 @@ zSquared['2d'] = function( z2 )
 							for( var i = 0; i < entities.length; i++ )
 							{
 								var ent = entities[i];
-								var body = ent.getComponent( z2.physicsBodyFactory.mask );
-								var pos = ent.getComponent( z2.positionFactory.mask );
-								var vel = ent.getComponent( z2.velocityFactory.mask );
+								var body = ent.getComponent( z2.physicsBodyFactory );
+								var pos = ent.getComponent( z2.positionFactory );
+								var vel = ent.getComponent( z2.velocityFactory );
 
 								// don't collide against self
 								if( bc === body )

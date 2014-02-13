@@ -26,6 +26,7 @@ zSquared.ecs = function( z2 )
 	z2.createComponentFactory = (function()
 	{
 		var next_bit = 0;
+		var next_type_id = 0;
 		return function( obj )
 		{
 			if( next_bit > z2.MAX_BITSET_BITS )
@@ -33,8 +34,10 @@ zSquared.ecs = function( z2 )
 			
 			var mask = new z2.Bitset( z2.DEFAULT_BITSET_LENGTH );
 			mask.setBit( next_bit++ );
+			var type_id = next_type_id++;
 			return {
 				mask : mask,
+				typeId : type_id,
 				create : function( overrides )
 				{
 					// TODO: set directly on a new object instead of on the 
@@ -51,6 +54,7 @@ zSquared.ecs = function( z2 )
 							o[key] = overrides[key];
 					}
 					o.mask = mask;
+					o.typeId = type_id;
 					return o;
 				}
 			};
@@ -102,7 +106,7 @@ zSquared.ecs = function( z2 )
 	{
 		var i = this.entities.indexOf( e );
 		if( i !== -1 )
-			this.entities.splice( i );
+			this.entities.splice( i, 1 );
 	};
 	// check to see if an entity should be operated on by this System, and add
 	// it to our collection if so
@@ -123,7 +127,7 @@ zSquared.ecs = function( z2 )
 		{
 			var i = this.entities.indexOf( e );
 			if( i !== -1 )
-				this.entities.splice( i );
+				this.entities.splice( i, 1 );
 		}
 	};
 	z2.System.prototype.onUpdate = function ( dt )
@@ -150,11 +154,11 @@ zSquared.ecs = function( z2 )
 	/** Return the Entity's Component with a given mask
 	 * @method z2.Entity#getComponent
 	 * @memberof z2.Entity
-	 * @arg {z2.Bitset} mask The mask of the Component to retrieve
+	 * @arg {z2.ComponentFactory} cmp The Factory of the Component to retrieve
 	 */
-	z2.Entity.prototype.getComponent = function( mask )
+	z2.Entity.prototype.getComponent = function( cmp )
 	{
-		return z2.manager.get().getComponent( this.id, mask );
+		return z2.manager.get().getComponent( this.id, cmp );
 	};
 	/** Clear mask
 	 * @method z2.Entity#clearMask
@@ -210,22 +214,17 @@ zSquared.ecs = function( z2 )
 	/** Remove a Component from the Entity
 	 * @method z2.Entity#removeComponent
 	 * @memberof z2.Entity
-	 * @arg {Component} c The Component to remove, or its mask (Bitset)
+	 * @arg {Component} c The Component to remove
 	 */
 	z2.Entity.prototype.removeComponent = function( c )
 	{
-		var mask;
-		if( c instanceof z2.Bitset )
-			mask = c;
-		else
-			mask = c.mask;
-		// remove the Component to the list
-		z2.manager.get().unsetComponent( this.id, mask );
+		z2.manager.get().unsetComponent( this.id, c );
 		// reset our mask
 		this.resetMask();
 		// update Systems
 		z2.manager.get().updateSystems( this );
 	};
+
 
 	/** Manager class (singleton) for the Entity-Component-System framework
 	 * @namespace
@@ -263,6 +262,38 @@ zSquared.ecs = function( z2 )
 			// array of systems
 			var systems = [];
 
+			var getNextAvailableEntity = function()
+			{
+				var i;
+				// do we have any empty slots?
+				var slot = -1;
+				// if not, extend our array
+				if( dead.length === 0 )
+				{
+					// double the number of entities we can store
+					var old_len = entities.length;
+					entities.length *= 2;
+					for( i = old_len; i < entities.length; i++ )
+					{
+						entities[i] = new z2.Entity( i );
+						components[i] = {};
+						dead.push( i );
+					}
+					slot = dead[dead.length-1];
+				}
+				// if so, get the Entity there and set its components
+				else
+				{
+					slot = dead[dead.length-1];
+					dead.pop();
+				}
+
+				var e = entities[slot];
+				living.push( slot );
+
+				return e;
+			};
+
 			// public data/functionality:
 			return {
 				/** Create an Entity with the given component set
@@ -273,32 +304,8 @@ zSquared.ecs = function( z2 )
 				 */
 				createEntity : function( cmps )
 				{
-					var i;
-					// do we have any empty slots?
-					var slot = -1;
-					// if not, extend our array
-					if( dead.length === 0 )
-					{
-						// double the number of entities we can store
-						var old_len = entities.length;
-						entities.length *= 2;
-						for( i = old_len; i < entities.length; i++ )
-						{
-							entities[i] = new z2.Entity( i );
-							components[i] = {};
-							dead[i] = i;
-						}
-						slot = entities.length - 1;
-					}
-					// if so, get the Entity there and set its components
-					else
-					{
-						slot = dead.length - 1;
-						dead.pop();
-					}
-
-					var e = entities[slot];
-					living.push( slot );
+					// get the next available entity from our slots
+					var e = getNextAvailableEntity();
 
 					// add the components and create the mask for this Entity
 					if( cmps )
@@ -342,13 +349,37 @@ zSquared.ecs = function( z2 )
 					components[idx] = {};
 				},
 
+				/** Create a copy of an Entity
+				 * @method z2.manager#copyEntity
+				 * @memberof z2.manager
+				 * @arg {z2.Entity} e The Entity to copy from
+				 * @returns {z2.Entity} A copy of this Entity, wih a new ID
+				 */
+				copyEntity : function( e )
+				{
+					// get the next available entity from our slots
+					var copy = getNextAvailableEntity();
+
+					// add the components and create the mask for this Entity
+					var cmps = getComponents( e.id );
+					copy.setComponents( cmps );
+
+					// find all the Systems with matching masks and add 
+					// this Entity to them
+					for( i = 0; i < systems.length; i++ )
+					{
+						systems[i].addEntityIfMatch( copy );
+					}
+
+					return copy;
+				},
+
 				/** Add a System
 				 * @method z2.manager#addSystem
 				 * @arg {z2.System} sys The System to add
 				 */
 				addSystem : function( sys )
 				{
-//					systems.push( sys );
 					// perform insertion sort using priority as key
 					systems.push( sys );
 					var i, j, temp;
@@ -393,11 +424,11 @@ zSquared.ecs = function( z2 )
 				/** Get a Component
 				 * @method z2.manager#getComponent
 				 * @arg {number} id Id of the Entity whose Component we want
-				 * @arg {z2.Bitset} mask Mask of the Component we want
+				 * @arg {z2.ComponentFactory} cmp The Factory of the Component we want
 				 */
-				getComponent : function( id, mask )
+				getComponent : function( id, cmp )
 				{
-					return components[id][mask.key];
+					return components[id][cmp.typeId];
 				},
 
 				/** Set a Component
@@ -407,17 +438,17 @@ zSquared.ecs = function( z2 )
 				 */
 				setComponent : function( id, cmp )
 				{
-					components[id][cmp.mask.key] = cmp;
+					components[id][cmp.typeId] = cmp;
 				},
 
 				/** Unset (remove) a Component
 				 * @method z2.manager#unsetComponent
 				 * @arg {number} id Id of the Entity whose Component we're un-setting
-				 * @arg {z2.Bitset} mask The mask of the Component we're un-setting
+				 * @arg {z2.ComponentFactory} cmp The Factory or Component we're un-setting
 				 */
-				unsetComponent : function( id, mask )
+				unsetComponent : function( id, cmp )
 				{
-					delete components[id][mask.key];
+					delete components[id][cmp.typeId];
 				},
 
 				/** Get the Components for a given Entity

@@ -76,7 +76,7 @@ var input_sys = new z2.System( [player],
 //		console.log( "input: update called" );
 
 		// get the velocity component
-		var vc = e.getComponent( z2.velocityFactory.mask );
+		var vc = e.getComponent( z2.velocityFactory );
 
 		if( z2.kbd.isDown( z2.kbd.SPACEBAR ) )
 		{
@@ -89,7 +89,7 @@ var input_sys = new z2.System( [player],
 				{
 					// turn vel off
 					vel_on = false;
-					spre.removeComponent( z2.velocityFactory.mask );
+					spre.removeComponent( z2.velocityFactory );
 				}
 				else
 				{

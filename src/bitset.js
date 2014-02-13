@@ -24,7 +24,6 @@ zSquared.bitset = function( z2 )
 			this.data = 0;
 		else
 			this.data = new Uint32Array( this.length );
-		this.key = this._generateKey();
 	};
 	/** Reset to zero
 	 * @method z2.Bitset#clear
@@ -41,7 +40,6 @@ zSquared.bitset = function( z2 )
 				this.data[i] = 0;
 			}
 		}
-		this.key = this._generateKey();
 	};
 
 	/**
@@ -68,7 +66,6 @@ zSquared.bitset = function( z2 )
 			this.data[dw] |= (1 << n);
 		}
 
-		this.key = this._generateKey();
 	};
 	/**
 	 * @method z2.Bitset#setBits
@@ -99,7 +96,6 @@ zSquared.bitset = function( z2 )
 			}
 		}
 
-		this.key = this._generateKey();
 	};
 	/** See if any bits match
 	 * @method z2.Bitset#matchAny
@@ -155,23 +151,6 @@ zSquared.bitset = function( z2 )
 		}
 	};
 
-	z2.Bitset.prototype._generateKey = function()
-	{
-		// TODO: generate better keys
-		if( this.length === 1 )
-			return '' + this.data;
-		else
-		{
-			var key = '';
-			for( var i = this.length-1; i >= 0 ; i-- )
-			{
-				key += this.data[i];
-				if( i > 0 )
-					key += '-';
-			}
-			return key;
-		}
-	};
 };
 
 
