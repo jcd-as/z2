@@ -461,7 +461,7 @@ var myScene =
 
 	},
 
-	update : function( dt )
+	destroy : function()
 	{
 	}
 };

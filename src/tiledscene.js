@@ -18,20 +18,17 @@ zSquared.tiledscene = function( z2 )
 	 * @constructor
 	 * @arg {string} url The asset URL for the Tiled level (e.g. 'level.json')
 	 * @arg {Object} scene An object defining the functions for the scene: load,
-	 * create and update
+	 * create and destroy
 	 */
 	z2.TiledScene = function( url, scene )
 	{
 		this.load = scene.load || function() {};
 		this.create = scene.create || function() {};
-		this.update = scene.update || function(dt) {};
+		this.destroy = scene.destroy || function() {};
 
 		this.map = null;
 		this.width = 0;
 		this.height = 0;
-
-		// get the ecs manager
-		this.mgr = z2.manager.get();
 
 		// queue the Tiled map json
 		z2.loader.queueAsset( 'level', url, 'tiled' );
@@ -48,6 +45,15 @@ zSquared.tiledscene = function( z2 )
 
 		// start the loader
 		z2.loader.load( this._start, this );
+	};
+
+	/** Stop the scene
+	 * @method z2.TiledScene#stop
+	 * @memberof z2.TiledScene
+	 */
+	z2.TiledScene.prototype.stop = function()
+	{
+		this.destroy();
 	};
 
 	z2.TiledScene.prototype._loadMap = function( tiled )
@@ -67,6 +73,9 @@ zSquared.tiledscene = function( z2 )
 	z2.TiledScene.prototype._start = function()
 	{
 		var json = z2.loader.getAsset( 'level' );
+
+		// get the ecs manager
+		this.mgr = z2.manager.get();
 
 		this._loadMap( json );
 

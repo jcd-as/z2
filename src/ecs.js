@@ -506,6 +506,10 @@ zSquared.ecs = function( z2 )
 				if( !instance )
 					instance = init();
 				return instance;
+			},
+			reset : function()
+			{
+				instance = null;
 			}
 		};
 	})();
