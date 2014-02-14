@@ -211,7 +211,7 @@ zSquared['2d'] = function( z2 )
 		else
 			renderer = PIXI.autoDetectRenderer( canvas.width, canvas.height, canvas );
 
-		var stage = view.scene.stage;
+		var stage = game.stage;
 
 		return new z2.System( Number.MAX_VALUE, [z2.renderableFactory],
 		{

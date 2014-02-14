@@ -19,22 +19,20 @@ var HEIGHT = 384;
 var z2 = zSquared();
 
 // require z2 modules
-z2.require( ["loader", "input", "tiledscene", "audio", "statemachine", "emitter"] );
+z2.require( ["loader", "input", "game", "tiledscene", "audio", "statemachine", "emitter"] );
  
 // create a canvas
 var canvas = z2.createCanvas( WIDTH, HEIGHT, true );
 
 // global set-up stuff
-// TODO: move this to a "game" class??
-var paused = false;
 var visibilityChange = function( event )
 {
-	if( paused === false && (event.type == 'pagehide' || event.type == 'blur' || document.hidden === true || document.webkitHidden === true))
-		paused = true;
+	if( game.paused === false && (event.type == 'pagehide' || event.type == 'blur' || document.hidden === true || document.webkitHidden === true))
+		game.paused = true;
 	else
-		paused = false;
+		game.paused = false;
 
-	if( paused )
+	if( game.paused )
 		z2.pauseSounds();
 	else
 		z2.resumeSounds();
@@ -47,7 +45,8 @@ window.onblur = visibilityChange;
 window.onfocus = visibilityChange;
 
 // global 'game' object
-window.game = {};
+var force_canvas = false;
+var game = new z2.Game( canvas, force_canvas );
 
 // create an object defining our scene
 // (load, create and update methods)
@@ -56,7 +55,7 @@ var myScene =
 	load : function()
 	{
 		z2.loader.queueAsset( 'man', 'stylized.png' );
-		z2.loader.queueAsset( 'firefly', 'firefly.png' );
+		z2.loader.queueAsset( 'firefly', 'firefly.png', 'spritesheet', 8, 8 );
 		z2.loader.queueAsset( 'logo', 'logo.png' );
 		z2.loader.queueAsset( 'field', 'field.mp3' );
 //		z2.loader.queueAsset( 'field', 'field.ogg' );
@@ -320,7 +319,7 @@ var myScene =
 		var sbasetexture = new PIXI.BaseTexture( s_img );
 		var stexture = new PIXI.Texture( sbasetexture );
 		var sprite = new PIXI.Sprite( stexture );
-		this.view.add( sprite );
+		game.view.add( sprite );
 		var sprc = z2.spriteFactory.create( {sprite:sprite, width: 64, animations:anims} );
 		var sprv = z2.velocityFactory.create( {x: 0, y: 0, maxx: 200, maxy: 500} );
 //		var sprp = z2.positionFactory.create( {x: 512, y: 512} );
@@ -349,7 +348,7 @@ var myScene =
 		var stexture2 = new PIXI.Texture( sbasetexture2 );
 		var sprite2 = new PIXI.Sprite( stexture2 );
 		var sprv2 = z2.velocityFactory.create( {x: -100, y: 0, maxx: 200, maxy: 500} );
-		this.view.add( sprite2 );
+		game.view.add( sprite2 );
 		var sprc2 = z2.spriteFactory.create( {sprite:sprite2, width:64, animations:anims2} );
 		var sprp2 = z2.positionFactory.create( {x: 64, y: 1024-64} );
 		var sprbody2 = z2.physicsBodyFactory.create( {aabb:[-32, -16, 32, 16], restitution:1, mass:1, resistance_x: 0} );
@@ -368,7 +367,7 @@ var myScene =
 		var texture = new PIXI.Texture( basetexture );
 		var image = new PIXI.Sprite( texture );
 		image.alpha = 0.25;
-		this.view.add( image, true );
+		game.view.add( image, true );
 		var imgc = z2.imageFactory.create( {sprite:image} );
 		var imge = this.mgr.createEntity( [z2.renderableFactory, imgp, imgr, imgsz, imgs, imgcc, imgc] );
 
@@ -376,7 +375,7 @@ var myScene =
 		var txt = new PIXI.BitmapText( "foobar", {font: 'Open_Sans', align: 'center'} );
 		txt.position.x = WIDTH/2 - txt.textWidth/2;
 		txt.position.y = HEIGHT/2 - txt.textHeight/2;
-		this.view.add( txt, true );
+		game.view.add( txt, true );
 
 		// create an emitter
 		//
@@ -422,13 +421,12 @@ var myScene =
 		pcolg.entities = [spre2];
 
 		// follow the player sprite
-//		this.view.follow_mode = z2.FOLLOW_MODE_TIGHT;
-		this.view.follow_mode = z2.FOLLOW_MODE_PLATFORMER;
-		this.view.target = sprp;
+		game.view.follow_mode = z2.FOLLOW_MODE_PLATFORMER;
+		game.view.target = sprp;
 
 
 		// create an emitter system
-		var es = z2.createEmitterSystem( this.view, 'firefly', 8 );
+		var es = z2.createEmitterSystem( game.view, 'firefly' );
 		this.mgr.addSystem( es );
 
 		// create a movement system
@@ -470,7 +468,7 @@ var myScene =
 
 
 // create a Tiled map scene using our scene definition object
-var scene = new z2.TiledScene( canvas, 'test.json', myScene );
+var scene = new z2.TiledScene( 'test.json', myScene );
 game.scene = scene;
 
 // start the scene
@@ -483,7 +481,7 @@ function mainloop( et )
 	stats.begin();
 	// TODO: problem with this is that ecsUpdate calculates the time delta, so
 	// by intercepting here the dt doesn't get updated properly
-	if( !paused )
+	if( !game.paused )
 		z2.ecsUpdate( et );
 	stats.end();
 }

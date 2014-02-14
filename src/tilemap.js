@@ -297,7 +297,7 @@ zSquared.tilemap = function( z2 )
 			this.renderTexture = new PIXI.RenderTexture( this.canvasWidth, this.canvasHeight );
 			this.renderTexture.setFrame( this.frame );
 			this.sprite = new PIXI.Sprite( this.renderTexture );
-			map.view.scene.stage.addChild( this.sprite );
+			game.stage.addChild( this.sprite );
 			map.view.add( this.sprite );
 
 			this._prevTx = -1;
