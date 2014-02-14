@@ -76,6 +76,21 @@ zSquared.loader = function( z2 )
 		img.src = url;
 	}
 
+	// load a simple spritesheet (image + sprite width & height)
+	function loadSpritesheetImage( key, url, width, height, onComplete, onError, that )
+	{
+		url = baseUrl + imgBaseUrl + url;
+		var img = new Image();
+		img.onload = function()
+		{
+//			onComplete.call( that, key, img);
+			var ss = {image: img, width: width, height: height};
+			onComplete.call( that, key, ss);
+		};
+		img.onerror = onError;
+		img.src = url;
+	}
+
 	// load a text file
 	function loadText( key, url, onComplete, onError, that )
 	{
@@ -232,10 +247,16 @@ zSquared.loader = function( z2 )
 		 * @arg {string} [type] Type of asset. Use for assets that would
 		 * otherwise be treated as a more generic type (e.g. 'tiled' to override 
 		 * 'json')
+		 * @arg {any} [extras] Any extra arguments required:
+		 *  - spritesheet images require sprite width & height
 		 */
 		queueAsset: function( key, url, type )
 		{
-			assetQueue.push( [key, url, type] );
+			var extras = Array.prototype.slice.call( arguments, 3 );
+			if( extras )
+				assetQueue.push( [key, url, type, extras] );
+			else
+				assetQueue.push( [key, url, type] );
 		},
 
 		/** Start the load (asynchronous)
@@ -317,6 +338,9 @@ zSquared.loader = function( z2 )
 				var type = data[2];
 				if( !type )
 					type = getAssetTypeFromUrl( url );
+				var extras;
+				if( data.length > 3 )
+					extras = data[3];
 				// don't reload assets
 				if( assets[key] )
 					loaded( key, assets[key] );
@@ -326,6 +350,9 @@ zSquared.loader = function( z2 )
 					{
 					case 'image':
 						loadImage( key, url, loaded, failed, that );
+						break;
+					case 'spritesheet':
+						loadSpritesheetImage( key, url, extras[0], extras[1], loaded, failed, that );
 						break;
 					case 'audio':
 						loadAudio( key, url, loaded, failed, that );

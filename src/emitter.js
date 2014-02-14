@@ -5,7 +5,7 @@
 // - use re-usable Pixi Sprite pool too
 // - gravity & resistance
 // - infinite lifespans
-// - ability to use animations and/or random frames from image
+// - ability to use animations instead of just frames
 // -
 
 zSquared.emitter = function( z2 )
@@ -37,6 +37,8 @@ zSquared.emitter = function( z2 )
 			width: 0,
 			// height of the emitter (in pixels)
 			height: 0,
+			// array of frames to be selected from
+			frames: null,
 			// min/max particle speeds (chosen at random in this range)
 			minParticleSpeedX: 0, maxParticleSpeedX: 0,
 			minParticleSpeedY: 0, maxParticleSpeedY: 0,
@@ -56,6 +58,7 @@ zSquared.emitter = function( z2 )
 	 * @constructor
 	 * @arg {PIXI.Sprite} sprite The Pixi Sprite for this type of particle
 	 * @arg {Number} width The width of the sprite image, in pixels
+	 * @arg {Number} frame The spritesheet frame (index) in the spritesheet
 	 * @arg {Number} x The X coordinate
 	 * @arg {Number} y The Y coordinate
 	 * @arg {Number} vel_x X velocity
@@ -64,12 +67,12 @@ zSquared.emitter = function( z2 )
 	 * @arg {Number} alpha alpha transparency (0 to 1)
 	 * @arg {Number} lifespan Lifespan of the particle, in ms
 	 */
-	function Particle( sprite, width, x, y, vel_x, vel_y, theta, alpha, lifespan )
+	function Particle( sprite, width, frame, x, y, vel_x, vel_y, theta, alpha, lifespan )
 	{
 		this.sprite = sprite;
 		sprite.position.x = x || 0;
 		sprite.position.y = y || 0;
-		sprite.texture.setFrame( new PIXI.Rectangle( 0, 0, width, sprite.height ) );
+		sprite.texture.setFrame( new PIXI.Rectangle( frame * width, 0, width, sprite.height ) );
 		this.velX = vel_x || 0;
 		this.velY = vel_y || 0;
 		sprite.rotation = theta || 0;
@@ -89,19 +92,17 @@ zSquared.emitter = function( z2 )
 	 * optional: 
 	 * @function z2#createEmitterSystem
 	 * @arg {z2.View} view The view object to which the particles will be added
-	 * // TODO: should we be getting the image key/width etc from a component?
-	 * @arg {string} img_key The key for the image to use
-	 * @arg {number} img_width The width of the frames in the image
+	 * @arg {string} key The asset key for the spritesheet to use
 	 * @arg {number} [priority] Priority of system.
 	 */
-	z2.createEmitterSystem = function( view, img_key, img_width, priority )
+	z2.createEmitterSystem = function( view, key, priority )
 	{
 		if( priority === undefined )
 			priority = 70;
 		return new z2.System( priority, [z2.emitterFactory, z2.positionFactory],
 		{
 			timer : null,
-			img : null,
+			spritesheet : null,
 			particles : [],
 			openSlots : [],
 			animated : false,
@@ -111,10 +112,8 @@ zSquared.emitter = function( z2 )
 			sb : null,
 			init: function()
 			{
-				this.img = z2.loader.getAsset( img_key );
-				// TODO: random frame(s) from image??
-
-				this.basetexture = new PIXI.BaseTexture( this.img );
+				this.spritesheet = z2.loader.getAsset( key );
+				this.basetexture = new PIXI.BaseTexture( this.spritesheet.image );
 				// if we're not animated, all particles can share the same texture
 				if( !this.animated )
 					this.texture = new PIXI.Texture( this.basetexture );
@@ -182,7 +181,7 @@ zSquared.emitter = function( z2 )
 						// fire particles
 						for( i = 0; i < em.quantity; i++ )
 						{
-							// TODO: randomize animation / frames ???
+							// TODO: randomize animation ???
 
 							var sprite;
 							// if we're animated, we need a separate texture for
@@ -198,8 +197,15 @@ zSquared.emitter = function( z2 )
 								sprite = new PIXI.Sprite( this.texture );
 							}
 							this.sb.addChild( sprite );
+
+							var frame = 0;
+							if( em.frames )
+								frame = em.frames[z2.random( 0, em.frames.length-1, Math.round )];
 							
-							var particle = new Particle( sprite, img_width,
+							var particle = new Particle(
+								sprite, 
+								this.spritesheet.width,
+								frame,
 								// x
 								z2.random( pos.x, pos.x + em.width ),
 								// y
