@@ -286,7 +286,8 @@ zSquared.loader = function( z2 )
 					for( var i = 0; i < data.tilesets.length; i++ )
 					{
 						remaining++;
-						loadImage( data.tilesets[i].name, data.tilesets[i].image, loaded, failed, that );
+						var img_url = data.tilesets[i].image.split( '/' ).slice( -1 )[0];
+						loadImage( data.tilesets[i].name, img_url, loaded, failed, that );
 					}
 					// imagelayer images
 					for( i = 0; i < data.layers.length; i++ )

@@ -430,9 +430,6 @@ var myScene =
 		// create an emitter system
 		var es = z2.createEmitterSystem( this.view, 'firefly', 8 );
 		this.mgr.addSystem( es );
-		// create a particle system to go with it
-//		var ps = z2.createParticleSystem( this.view );
-//		this.mgr.addSystem( ps );
 
 		// create a movement system
 		var ms = z2.createMovementSystem( 200 );

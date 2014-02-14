@@ -104,7 +104,9 @@ zSquared.emitter = function( z2 )
 			img : null,
 			particles : [],
 			openSlots : [],
+			animated : false,
 			texture : null,
+			basetexture : null,
 //			sprites : [],
 			sb : null,
 			init: function()
@@ -112,9 +114,12 @@ zSquared.emitter = function( z2 )
 				this.img = z2.loader.getAsset( img_key );
 				// TODO: random frame(s) from image??
 
-				var basetexture = new PIXI.BaseTexture( this.img );
-				this.texture = new PIXI.Texture( basetexture );
+				this.basetexture = new PIXI.BaseTexture( this.img );
+				// if we're not animated, all particles can share the same texture
+				if( !this.animated )
+					this.texture = new PIXI.Texture( this.basetexture );
 				this.sb = new PIXI.SpriteBatch();
+//				this.sb = new PIXI.DisplayObjectContainer();
 				view.doc.addChild( this.sb );
 			},
 //			onStart: function()
@@ -179,7 +184,19 @@ zSquared.emitter = function( z2 )
 						{
 							// TODO: randomize animation / frames ???
 
-							var sprite = new PIXI.Sprite( this.texture );
+							var sprite;
+							// if we're animated, we need a separate texture for
+							// each particle, because they'll have different
+							// frames
+							if( this.animated )
+							{
+								var texture = new PIXI.Texture( this.basetexture );
+								sprite = new PIXI.Sprite( texture );
+							}
+							else
+							{
+								sprite = new PIXI.Sprite( this.texture );
+							}
 							this.sb.addChild( sprite );
 							
 							var particle = new Particle( sprite, img_width,
