@@ -51,6 +51,7 @@ zSquared.view = function( z2 )
 		// PIXI display object container for scene / world space
 		this.doc = new PIXI.DisplayObjectContainer();
 		this.camera_doc.addChild( this.doc );
+		game.stage.addChild( this.camera_doc );
 		// PIXI display object container for objects 'fixed to the camera'
 		this.fixed = new PIXI.DisplayObjectContainer();
 		game.stage.addChild( this.fixed );

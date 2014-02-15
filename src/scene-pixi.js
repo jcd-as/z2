@@ -17,11 +17,12 @@ zSquared.scene = function( z2 )
 	 * @arg {number} width Width of the scene, in pixels
 	 * @arg {number} height Height of the scene, in pixels
 	 * @arg {Object} scene An object defining the functions for the scene: load,
-	 * create and destroy
+	 * init, create and destroy
 	 */
 	z2.Scene = function( width, height, scene )
 	{
 		this.load = scene.load || function() {};
+		this.init = scene.init || function() {};
 		this.create = scene.create || function() {};
 		this.destroy = scene.destroy || function() {};
 
@@ -70,6 +71,9 @@ zSquared.scene = function( z2 )
 	{
 		// get the ecs manager (force it to init)
 		z2.manager.get();
+
+		// init the scene
+		this.init();
 
 		// create the objects for the scene
 		this.create();

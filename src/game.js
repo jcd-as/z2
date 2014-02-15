@@ -33,9 +33,6 @@ zSquared.game = function( z2 )
 
 		// create a view with some default values
 		this.view = new z2.View( this.canvas.width, this.canvas.height );
-
-		// add the view (camera) to the stage
-		this.stage.addChild( game.view.camera_doc );
 	};
 
 };
