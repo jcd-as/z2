@@ -51,6 +51,9 @@ zSquared.view = function( z2 )
 		// PIXI display object container for scene / world space
 		this.doc = new PIXI.DisplayObjectContainer();
 		this.camera_doc.addChild( this.doc );
+		// PIXI display object container for objects 'fixed to the camera'
+		this.fixed = new PIXI.DisplayObjectContainer();
+		game.stage.addChild( this.fixed );
 		// position in scene / world space
 		var px = x || 0;
 		var py = y || 0;
@@ -89,7 +92,7 @@ zSquared.view = function( z2 )
 	z2.View.prototype.add = function( obj, fixed )
 	{
 		if( fixed )
-			game.stage.addChild( obj );
+			this.fixed.addChild( obj );
 		else
 			this.doc.addChild( obj );
 	};
@@ -104,9 +107,25 @@ zSquared.view = function( z2 )
 	z2.View.prototype.remove = function( obj, fixed )
 	{
 		if( fixed )
-			game.stage.removeChild( obj );
+			this.fixed.removeChild( obj );
 		else
 			this.doc.removeChild( obj );
+	};
+
+	/** Remove all (Pixi DisplayObjects) from the view
+	 * @function z2.View#clear
+	 * @memberof z2.View
+	 */
+	z2.View.prototype.clear = function()
+	{
+		game.stage.removeChild( this.fixed );
+		this.fixed = new PIXI.DisplayObjectContainer();
+		game.stage.addChild( this.fixed );
+		do
+		{
+			this.doc.removeChild( this.doc.children[0] );
+		}
+		while( game.view.doc.children.length > 0 );
 	};
 
 	Object.defineProperty( z2.View.prototype, 'follow_mode',

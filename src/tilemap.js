@@ -181,11 +181,11 @@ zSquared.tilemap = function( z2 )
 
 	/** Start the scene running
 	 * @method z2.TileMap#start
-	 * @arg {z2.Manager} mgr The ECS Manager object
 	 */
-	z2.TileMap.prototype.start = function( mgr )
+	z2.TileMap.prototype.start = function()
 	{
 		var i;
+		var mgr = z2.manager.get();
 
 		// create Entities for the TileLayers
 		for( i = 0; i < this.layers.length; i++ )

@@ -53,7 +53,25 @@ zSquared.tiledscene = function( z2 )
 	 */
 	z2.TiledScene.prototype.stop = function()
 	{
+		// clear the view (& thus Pixi)
+		game.view.clear();
+
+		// reset the ecs system
+		z2.manager.reset();
+
+		// tear-down the scene
 		this.destroy();
+	};
+
+	/** Re-start a scene
+	 * @method z2.TiledScene#restart
+	 * @memberof z2.TileScene
+	 */
+	z2.TiledScene.prototype.restart = function()
+	{
+		this.stop();
+		game.view.scene = null;
+		this._start();
 	};
 
 	z2.TiledScene.prototype._loadMap = function( tiled )
@@ -64,7 +82,7 @@ zSquared.tiledscene = function( z2 )
 		this.height = this.map.worldHeight;
 
 		// start this tile map / level
-		this.map.start( this.mgr );
+		this.map.start();
 
 		// TODO: call a method to setScene ?
 		game.view.scene = this;
@@ -74,13 +92,17 @@ zSquared.tiledscene = function( z2 )
 	{
 		var json = z2.loader.getAsset( 'level' );
 
-		// get the ecs manager
-		this.mgr = z2.manager.get();
+		// get the ecs manager (force it to init)
+		z2.manager.get();
 
 		this._loadMap( json );
 
 		// create the objects for the scene
 		this.create();
+
+		// create rendering system
+		this.renderer = z2.createRenderingSystem( game.canvas, game.view, game.force_canvas );
+		z2.manager.get().addSystem( this.renderer );
 	};
 };
 

@@ -48,6 +48,12 @@ window.onfocus = visibilityChange;
 var force_canvas = false;
 var game = new z2.Game( canvas, force_canvas );
 
+// create a "player control" component
+var player = z2.createComponentFactory();
+
+// create an 'enemy' component, for enemy 'AI'
+var enemyc = z2.createComponentFactory();
+
 // create an object defining our scene
 // (load, create and update methods)
 var myScene = 
@@ -74,8 +80,6 @@ var myScene =
 
 	create : function()
 	{
-		// create an 'enemy' component, for enemy 'AI'
-		var enemyc = z2.createComponentFactory();
 		var enemy_sys = new z2.System( 100, [enemyc, z2.velocityFactory, z2.physicsBodyFactory],
 		{
 			init: function()
@@ -97,10 +101,8 @@ var myScene =
 //					vc.x = -100;
 			}
 		} );
-		this.mgr.addSystem( enemy_sys );
+		z2.manager.get().addSystem( enemy_sys );
 
-		// create a "player control" component
-		var player = z2.createComponentFactory();
 		// placeholder for sprite entity
 		var spre;
 		// create an input system
@@ -116,9 +118,16 @@ var myScene =
 				z2.kbd.addKey( z2.kbd.UP );
 				z2.kbd.addKey( z2.kbd.LEFT );
 				z2.kbd.addKey( z2.kbd.RIGHT );
+				z2.kbd.addKey( z2.kbd.SPACEBAR );
 			},
 			update: function( e, dt )
 			{
+				if( z2.kbd.isDown( z2.kbd.SPACEBAR ) )
+				{
+					game.scene.restart();
+					return;
+				}
+
 				// get the velocity component
 				var vc = e.getComponent( z2.velocityFactory );
 
@@ -298,7 +307,7 @@ var myScene =
 					sc.sx = 1; 
 			},
 		} );
-		this.mgr.addSystem( input_sys );
+		z2.manager.get().addSystem( input_sys );
 
 		// create a collision map
 		// (for 50-layer perf test:)
@@ -337,7 +346,7 @@ var myScene =
 		// collision group for the player to collide against
 		var pcolg = z2.collisionGroupFactory.create( {entities:[spre2]} );
 		// create the entity
-		spre = this.mgr.createEntity( [z2.renderableFactory, gravc, cmc, sprbody, player, sprv, sprp, sprr, /*sprsz,*/ sprs, sprcc, sprpc, sprc, pcolg, sprres] );
+		spre = z2.manager.get().createEntity( [z2.renderableFactory, gravc, cmc, sprbody, player, sprv, sprp, sprr, /*sprsz,*/ sprs, sprcc, sprpc, sprc, pcolg, sprres] );
 
 		anims.play( 'walk' );
 
@@ -353,7 +362,7 @@ var myScene =
 		var sprp2 = z2.positionFactory.create( {x: 64, y: 1024-64} );
 		var sprbody2 = z2.physicsBodyFactory.create( {aabb:[-32, -16, 32, 16], restitution:1, mass:1, resistance_x: 0} );
 		// create the entity
-		var spre2 = this.mgr.createEntity( [z2.renderableFactory, gravc, cmc, sprbody2, sprv2, sprp2, /*sprsz,*/ sprs, sprcc, sprpc, sprc2] );
+		var spre2 = z2.manager.get().createEntity( [z2.renderableFactory, gravc, cmc, sprbody2, sprv2, sprp2, /*sprsz,*/ sprs, sprcc, sprpc, sprc2] );
 		anims2.play( 'jitter' );
 
 		// create a 'billboard' image
@@ -369,7 +378,7 @@ var myScene =
 		image.alpha = 0.25;
 		game.view.add( image, true );
 		var imgc = z2.imageFactory.create( {sprite:image} );
-		var imge = this.mgr.createEntity( [z2.renderableFactory, imgp, imgr, imgsz, imgs, imgcc, imgc] );
+		var imge = z2.manager.get().createEntity( [z2.renderableFactory, imgp, imgr, imgsz, imgs, imgcc, imgc] );
 
 		// draw some text
 		var txt = new PIXI.BitmapText( "foobar", {font: 'Open_Sans', align: 'center'} );
@@ -406,7 +415,7 @@ var myScene =
 			minLifespan: 10000, maxLifespan: 10000,
 		} );
 		var empos = z2.positionFactory.create( {x: 700, y: 800} );
-		var eme = this.mgr.createEntity( 
+		var eme = z2.manager.get().createEntity( 
 		[
 			emc,
 			empos
@@ -414,8 +423,8 @@ var myScene =
 		
 
 		// add touchscreen buttons
-		z2.touch.start( 5 );
-		z2.touch.addButton( z2.loader.getAsset( 'left' ) );
+//		z2.touch.start( 5 );
+//		z2.touch.addButton( z2.loader.getAsset( 'left' ) );
 
 		// set the entities for collision groups
 		pcolg.entities = [spre2];
@@ -427,11 +436,11 @@ var myScene =
 
 		// create an emitter system
 		var es = z2.createEmitterSystem( game.view, 'firefly' );
-		this.mgr.addSystem( es );
+		z2.manager.get().addSystem( es );
 
 		// create a movement system
 		var ms = z2.createMovementSystem( 200 );
-		this.mgr.addSystem( ms );
+		z2.manager.get().addSystem( ms );
 
 //		z2.playSound( 'field', 0, 1, true );
 //		z2.playSound( 'theme', 0, 1, true );

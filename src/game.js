@@ -36,10 +36,6 @@ zSquared.game = function( z2 )
 
 		// add the view (camera) to the stage
 		this.stage.addChild( game.view.camera_doc );
-
-		// create rendering system
-		this.renderer = z2.createRenderingSystem( this.canvas, this.view, this.force_canvas );
-		z2.manager.get().addSystem( this.renderer );
 	};
 
 };

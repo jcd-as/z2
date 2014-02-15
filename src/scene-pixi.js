@@ -48,13 +48,28 @@ zSquared.scene = function( z2 )
 	 */
 	z2.Scene.prototype.stop = function()
 	{
+		// reset the ecs system
+		z2.manager.reset();
+
+		// tear-down the scene
 		this.destroy();
+	};
+
+
+	/** Re-start a scene
+	 * @method z2.Scene#restart
+	 * @memberof z2.Scene
+	 */
+	z2.Scene.prototype.restart = function()
+	{
+		this.stop();
+		this._start();
 	};
 
 	z2.Scene.prototype._start = function()
 	{
-		// get the ecs manager
-		this.mgr = z2.manager.get();
+		// get the ecs manager (force it to init)
+		z2.manager.get();
 
 		// create the objects for the scene
 		this.create();
