@@ -108,6 +108,22 @@ var zSquared = function( opts )
 				return round( (Math.random() * (max - min)) + min );
 			else
 				return val;
+		},
+
+		/** Find an item in an array by 'name' property
+		 * @function z2#findByName
+		 * @arg {array} array Array in which to find object
+		 * @arg {string} name
+		 * @returns item with given name
+		 */
+		findByName : function( array, name )
+		{
+			for( var i = 0; i < array.length; i++ )
+			{
+				if( array[i].name && array[i].name === name )
+					return array[i];
+			}
+			return null;
 		}
 
 	};

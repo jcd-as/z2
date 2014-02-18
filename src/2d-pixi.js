@@ -197,21 +197,13 @@ zSquared['2d'] = function( z2 )
 	 * @function z2.createRenderingSystem
 	 * @arg {Canvas} canvas The HTML5 canvas to draw to
 	 * @arg {z2.View} view The View object for this transform system
-	 * @arg {boolean} [force_canvas_rendering] If 'true', forces the renderer to
-	 * use 2d Canvas rendering instead of WebGL
 	 * @arg {number} [priority] Priority of system. Override only if you need
 	 * the renderer to NOT run last
 	 */
 	z2.createRenderingSystem = function( canvas, view, force_canvas_rendering, priority )
 	{
-		// TODO: support different widths/heights than the canvas'
-		var renderer;
-		if( force_canvas_rendering )
-			renderer = new PIXI.CanvasRenderer( canvas.width, canvas.height, canvas );
-		else
-			renderer = PIXI.autoDetectRenderer( canvas.width, canvas.height, canvas );
-
 		var stage = game.stage;
+		var renderer = game.renderer;
 
 		return new z2.System( Number.MAX_VALUE, [z2.renderableFactory],
 		{

@@ -6,7 +6,9 @@
 // - can we separate the need for the view from the map? (this would allow
 // the same map to (conceptually anyway) have different views. e.g. a main view
 // and a 'minimap' view
-// - 
+// - BUG: TileLayer.forceDirty() does NOT work for RENDER_OPT_PAGES renderer!
+// - BUG: TileLayer.forceDirty() on RENDER_PIXI_ALL_SPR causes layer to be
+// brought to the front of all the layers & sprites
 
 
 zSquared.tilemap = function( z2 )
@@ -73,7 +75,9 @@ zSquared.tilemap = function( z2 )
 		this.objectGroups = [];
 
 		// collision map
+		this.solidTiles = [];
 		this.collisionMap = null;
+		this.collisionMapComponent = null;
 
 		// Tile layer Entities
 		this.layerEntities = [];
@@ -129,6 +133,10 @@ zSquared.tilemap = function( z2 )
 			this.tilesets.push( tileset );
 		}
 
+		// build the list of solid tiles
+		// TODO: support multiple tilesets
+		this._buildSolidTileList( map.tilesets[0] );
+
 		var l;
 
 		// load each layer
@@ -137,19 +145,19 @@ zSquared.tilemap = function( z2 )
 			var lyr = map.layers[i];
 			if( lyr.type == 'tilelayer' )
 			{
-				// if the layer is visible, create a tile layer for it
-				if( lyr.visible )
-				{
-					l = new z2.TileLayer( this );
-					l.load( lyr );
-					if( lyr.name === main_layer )
-						this.mainLayer = l;
-					this.layers.push( l );
-				}
+				// create a tile layer
+				l = new z2.TileLayer( this );
+				l.load( lyr );
+				if( lyr.name === main_layer )
+					this.mainLayer = l;
+				l.visible = lyr.visible;
+				this.layers.push( l );
 				// if the layer is solid, create the collision map from it
 				if( lyr.properties && lyr.properties.solid )
-					// TODO: support multiple tilesets
-					this._buildCollisionMap( lyr.data, map.tilesets[0] );
+				{
+					l.solid = true;
+					this._buildCollisionMap( lyr.data );
+				}
 			}
 			// load image layers
 			else if( lyr.type == 'imagelayer' )
@@ -165,18 +173,39 @@ zSquared.tilemap = function( z2 )
 		}
 	};
 
-	z2.TileMap.prototype._buildCollisionMap = function( data, tileset )
+	z2.TileMap.prototype._buildSolidTileList = function( tileset )
 	{
 		// TODO: support multiple tilesets
-		var solid_tiles = [];
 		for( var key in tileset.tileproperties )
 		{
 			if( !tileset.tileproperties.hasOwnProperty( key ) )
 				continue;
 			if( tileset.tileproperties[key].solid )
-				solid_tiles.push( +key );
+				this.solidTiles.push( +key );
 		}
-		this.collisionMap = z2.buildCollisionMap( data, this.widthInTiles, this.heightInTiles, solid_tiles );
+	};
+
+	z2.TileMap.prototype._buildCollisionMap = function( data )
+	{
+		this.collisionMap = z2.buildCollisionMap( data, this.widthInTiles, this.heightInTiles, this.solidTiles );
+	};
+
+	z2.TileMap.prototype._updateObjectCollisionMaps = function()
+	{
+		for( var i = 0; i < this.objectGroups.length; i++ )
+		{
+			var grp = this.objectGroups[i];
+			for( var j = 0; j < grp.length; j++ )
+			{
+				var obj = grp[j];
+				var cmc = obj.getComponent( z2.collisionMapFactory );
+				if( cmc )
+				{
+					cmc.map = this;
+					cmc.data = this.collisionMap;
+				}
+			}
+		}
 	};
 
 	/** Start the scene running
@@ -231,6 +260,8 @@ zSquared.tilemap = function( z2 )
 		// reference to the TileMap that contains the layer
 		this.map = map;
 
+		this.solid = false;
+
 		// the factor by which the movement (scrolling) of this layer differs
 		// from the "main" map. e.g. '2' would be twice as fast, '0.5' would be
 		// half as fast
@@ -238,7 +269,7 @@ zSquared.tilemap = function( z2 )
 		this.scrollFactorY = 1;
 
 		if( render_method == RENDER_SIMPLE || render_method == RENDER_OPT_PAGES )
-		{	
+		{
 			if( render_method == RENDER_SIMPLE )
 			{
 				// create a canvas for this layer to be drawn on
@@ -294,7 +325,8 @@ zSquared.tilemap = function( z2 )
 					this.doc.addChild( spr );
 				}
 			}
-			this.renderTexture = new PIXI.RenderTexture( this.canvasWidth, this.canvasHeight );
+//			this.renderTexture = new PIXI.RenderTexture( this.canvasWidth, this.canvasHeight );
+			this.renderTexture = new PIXI.RenderTexture( this.canvasWidth, this.canvasHeight, game.renderer );
 			this.renderTexture.setFrame( this.frame );
 			this.sprite = new PIXI.Sprite( this.renderTexture );
 			game.stage.addChild( this.sprite );
@@ -330,6 +362,7 @@ zSquared.tilemap = function( z2 )
 	{
 		// tiles data
 		this.data = lyr.data;
+		this.name = lyr.name;
 		if( lyr.properties )
 		{
 			this.scrollFactorX = lyr.properties.scrollFactorX ? +lyr.properties.scrollFactorX : 1;
@@ -337,41 +370,82 @@ zSquared.tilemap = function( z2 )
 		}
 		if( render_method === RENDER_PIXI_ALL_SPR )
 		{
-			// TODO: support more than one tileset
-			var tileset = this.map.tilesets[0];
-			// create & set-up all the tile sprites
-			for( var i = 0; i <= this.map.heightInTiles; i++ )
-			{
-				for( var j = 0; j <= this.map.widthInTiles; j++ )
-				{
-					var tile = this.data[i * this.map.widthInTiles + j];
-					// '0' tiles in Tiled are *empty*
-					if( tile )
-					{
-						tile--;
-						var texture = new PIXI.Texture( this.tileTexture );
-						var spr = new PIXI.Sprite( texture );
-						spr.position.x = j * this.map.tileWidth;
-						spr.position.y = i * this.map.tileHeight;
-						spr.i = i;
-						spr.j = j;
-						var tile_y = 0 | (tile / tileset.widthInTiles);
-						var tile_x = tile - (tile_y * tileset.widthInTiles);
-						texture.frame.x = tile_x * this.map.tileWidth;
-						texture.frame.y = tile_y * this.map.tileHeight;
-						texture.frame.width = this.map.tileWidth;
-						texture.frame.height = this.map.tileHeight;
+			this._createSpritesForPixiAllSpr();
+		}
+	};
 
-						this.tileSprites.push( spr );
-						this.doc.addChild( spr );
-					}
+	z2.TileLayer.prototype._createSpritesForPixiAllSpr = function()
+	{
+		// TODO: support more than one tileset
+		var tileset = this.map.tilesets[0];
+		// create & set-up all the tile sprites
+		for( var i = 0; i <= this.map.heightInTiles; i++ )
+		{
+			for( var j = 0; j <= this.map.widthInTiles; j++ )
+			{
+				var tile = this.data[i * this.map.widthInTiles + j];
+				// '0' tiles in Tiled are *empty*
+				if( tile )
+				{
+					tile--;
+					var texture = new PIXI.Texture( this.tileTexture );
+					var spr = new PIXI.Sprite( texture );
+					spr.position.x = j * this.map.tileWidth;
+					spr.position.y = i * this.map.tileHeight;
+					spr.i = i;
+					spr.j = j;
+					var tile_y = 0 | (tile / tileset.widthInTiles);
+					var tile_x = tile - (tile_y * tileset.widthInTiles);
+					texture.frame.x = tile_x * this.map.tileWidth;
+					texture.frame.y = tile_y * this.map.tileHeight;
+					texture.frame.width = this.map.tileWidth;
+					texture.frame.height = this.map.tileHeight;
+
+					this.tileSprites.push( spr );
+					this.doc.addChild( spr );
 				}
 			}
 		}
 	};
 
+	/** Force the entire layer to be re-drawn in the next frame
+	 * @method z2.TileLayer#forceDirty
+	 */
+	z2.TileLayer.prototype.forceDirty = function()
+	{
+		switch( render_method )
+		{
+			case RENDER_SIMPLE:
+				break;
+			case RENDER_OPT_PAGES:
+				// TODO: this does NOT work!
+				// set flag
+//				this._prev_x = NaN;
+				this._prev_x = Number.MIN_VALUE;
+				this._prev_y = Number.MIN_VALUE;
+				break;
+			case RENDER_PIXI_SPR:
+				break;
+			case RENDER_OPT_PIXI_SPR:
+				break;
+			case RENDER_PIXI_ALL_SPR:
+				// re-gen all sprites
+				game.view.remove( this.doc );
+				this.doc = new PIXI.DisplayObjectContainer();
+//				this.doc = new PIXI.SpriteBatch();
+				game.view.add( this.doc );
+				this.tileSprites = [];
+				this._createSpritesForPixiAllSpr();
+				break;
+		}
+	};
+
 	z2.TileLayer.prototype.renderCanvasNaive = function( viewx, viewy )
 	{
+		this.sprite.visible = this.visible;
+		if( !this.visible )
+			return;
+
 		// TODO: dirty checks - don't draw if not dirty
 
 		// draw the tiles onto the canvas
@@ -446,6 +520,10 @@ zSquared.tilemap = function( z2 )
 
 	z2.TileLayer.prototype.renderCanvasOpt = function( viewx, viewy )
 	{
+		this.sprite.visible = this.visible;
+		if( !this.visible )
+			return;
+
 		// TODO: dirty checks - don't draw if not dirty
 
 		// cache some vars for performance
@@ -732,6 +810,10 @@ zSquared.tilemap = function( z2 )
 
 	z2.TileLayer.prototype.renderPixiRT = function( viewx, viewy )
 	{
+		this.sprite.visible = this.visible;
+		if( !this.visible )
+			return;
+
 		// TODO: dirty checks - don't draw if not dirty
 
 		// view.x/y is the *center* not upper left
@@ -799,6 +881,10 @@ zSquared.tilemap = function( z2 )
 
 	z2.TileLayer.prototype.renderPixiRTOpt = function( viewx, viewy )
 	{
+		this.sprite.visible = this.visible;
+		if( !this.visible )
+			return;
+
 		// TODO: dirty checks - don't draw if not dirty
 
 		// cache some vars for performance
@@ -888,6 +974,10 @@ zSquared.tilemap = function( z2 )
 	// offscreen tiles 'visible=false' & set parent transform for view (camera)
 	z2.TileLayer.prototype.renderPixiSpr = function( viewx, viewy )
 	{
+		this.doc.visible = this.visible;
+		if( !this.visible )
+			return;
+
 		var tx, ty;		// tile positions in the data map
 
 		// view.x/y is the *center* not upper left
@@ -951,6 +1041,8 @@ zSquared.tilemap = function( z2 )
 		// get the image asset
 		var img = z2.loader.getAsset( lyr.name );
 
+		this.visible = lyr.visible;
+
 		// Pixi stuff
 		this.baseTexture = new PIXI.BaseTexture( img );
 		this.texture = new PIXI.Texture( this.baseTexture );
@@ -976,6 +1068,8 @@ zSquared.tilemap = function( z2 )
 
 	z2.ImageLayer.prototype.render = function( viewx, viewy )
 	{
+		this.sprite.visible = this.visible;
+
 		// view.x/y is the *center* not upper left
 		var vx = viewx - this.map.viewWidth/2;
 		var vy = viewy - this.map.viewHeight/2;

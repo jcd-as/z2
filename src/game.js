@@ -28,6 +28,12 @@ zSquared.game = function( z2 )
 
 		window.game = this;
 
+		// TODO: support different widths/heights than the canvas'
+		if( force_canvas )
+			this.renderer = new PIXI.CanvasRenderer( canvas.width, canvas.height, canvas );
+		else
+			this.renderer = PIXI.autoDetectRenderer( canvas.width, canvas.height, canvas );
+
 		// create a Pixi stage for everything to be drawn on
 		this.stage = new PIXI.Stage( 0x800000 );
 
