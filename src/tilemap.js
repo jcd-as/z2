@@ -6,7 +6,6 @@
 // - can we separate the need for the view from the map? (this would allow
 // the same map to (conceptually anyway) have different views. e.g. a main view
 // and a 'minimap' view
-// - BUG: TileLayer.forceDirty() does NOT work for RENDER_OPT_PAGES renderer!
 // -
 
 
@@ -22,10 +21,10 @@ zSquared.tilemap = function( z2 )
 	var RENDER_PIXI_SPR = 2;
 	var RENDER_OPT_PIXI_SPR = 3;
 	var RENDER_PIXI_ALL_SPR = 4;
-	var render_method = RENDER_PIXI_ALL_SPR;
+//	var render_method = RENDER_PIXI_ALL_SPR;
 //	var render_method = RENDER_OPT_PIXI_SPR;
 //	var render_method = RENDER_PIXI_SPR;
-//	var render_method = RENDER_OPT_PAGES;
+	var render_method = RENDER_OPT_PAGES;
 //	var render_method = RENDER_SIMPLE;
 
 	/** Tile map class
@@ -459,9 +458,10 @@ zSquared.tilemap = function( z2 )
 			case RENDER_OPT_PAGES:
 				// TODO: this does NOT work!
 				// set flag
-//				this._prev_x = NaN;
-				this._prev_x = Number.MIN_VALUE;
-				this._prev_y = Number.MIN_VALUE;
+				this._prev_x = NaN;
+				this._prev_y = NaN;
+//				this._prev_x = Number.MIN_VALUE;
+//				this._prev_y = Number.MIN_VALUE;
 				break;
 			case RENDER_PIXI_SPR:
 				break;
@@ -605,6 +605,7 @@ zSquared.tilemap = function( z2 )
 		{
 			// clear canvas
 			this.context.clearRect( 0, 0, this.canvasWidth, this.canvasHeight );
+			this.backContext.clearRect( 0, 0, this.canvasWidth, this.canvasHeight );
 
 			// have to draw all the tiles...
 			xoffs = 0; yoffs = 0;
