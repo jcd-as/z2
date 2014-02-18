@@ -22,9 +22,9 @@ zSquared.tilemap = function( z2 )
 	var RENDER_OPT_PIXI_SPR = 3;
 	var RENDER_PIXI_ALL_SPR = 4;
 //	var render_method = RENDER_PIXI_ALL_SPR;
-//	var render_method = RENDER_OPT_PIXI_SPR;
+	var render_method = RENDER_OPT_PIXI_SPR;
 //	var render_method = RENDER_PIXI_SPR;
-	var render_method = RENDER_OPT_PAGES;
+//	var render_method = RENDER_OPT_PAGES;
 //	var render_method = RENDER_SIMPLE;
 
 	/** Tile map class
@@ -456,16 +456,14 @@ zSquared.tilemap = function( z2 )
 			case RENDER_SIMPLE:
 				break;
 			case RENDER_OPT_PAGES:
-				// TODO: this does NOT work!
 				// set flag
 				this._prev_x = NaN;
-				this._prev_y = NaN;
-//				this._prev_x = Number.MIN_VALUE;
-//				this._prev_y = Number.MIN_VALUE;
 				break;
 			case RENDER_PIXI_SPR:
 				break;
 			case RENDER_OPT_PIXI_SPR:
+				// set flag
+				this._prev_tx = NaN;
 				break;
 			case RENDER_PIXI_ALL_SPR:
 				// update tile sprites
