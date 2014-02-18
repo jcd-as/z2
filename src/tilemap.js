@@ -359,7 +359,7 @@ zSquared.tilemap = function( z2 )
 	z2.TileLayer.prototype.load = function( lyr, ts )
 	{
 		// tiles data
-		this.data = lyr.data;
+		this.data = lyr.data.slice();
 		this.name = lyr.name;
 		if( lyr.properties )
 		{
