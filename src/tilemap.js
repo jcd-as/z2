@@ -7,8 +7,7 @@
 // the same map to (conceptually anyway) have different views. e.g. a main view
 // and a 'minimap' view
 // - BUG: TileLayer.forceDirty() does NOT work for RENDER_OPT_PAGES renderer!
-// - BUG: TileLayer.forceDirty() on RENDER_PIXI_ALL_SPR causes layer to be
-// brought to the front of all the layers & sprites
+// -
 
 
 zSquared.tilemap = function( z2 )
@@ -381,6 +380,7 @@ zSquared.tilemap = function( z2 )
 		// create & set-up all the tile sprites
 		for( var i = 0; i <= this.map.heightInTiles; i++ )
 		{
+			this.tileSprites.push( [] );
 			for( var j = 0; j <= this.map.widthInTiles; j++ )
 			{
 				var tile = this.data[i * this.map.widthInTiles + j];
@@ -401,8 +401,47 @@ zSquared.tilemap = function( z2 )
 					texture.frame.width = this.map.tileWidth;
 					texture.frame.height = this.map.tileHeight;
 
-					this.tileSprites.push( spr );
+					this.tileSprites[i][j] = spr;
 					this.doc.addChild( spr );
+				}
+			}
+		}
+	};
+	z2.TileLayer.prototype._updateSpritesForPixiAllSpr = function()
+	{
+		// TODO: support more than one tileset
+		var tileset = this.map.tilesets[0];
+		// create & set-up all the tile sprites
+		for( var i = 0; i <= this.map.heightInTiles; i++ )
+		{
+			for( var j = 0; j <= this.map.widthInTiles; j++ )
+			{
+				var tile = this.data[i * this.map.widthInTiles + j];
+				var spr = this.tileSprites[i][j];
+				// '0' tiles in Tiled are *empty*
+				if( tile )
+				{
+					// if we have a tile, but no sprite, create a sprite
+					if( !spr )
+					{
+						spr = new PIXI.Sprite( new PIXI.Texture( this.tileTexture ) );
+						this.doc.addChild( spr );
+					}
+					// otherwise use the existing sprite
+					tile--;
+					var texture = spr.texture;
+					spr.position.x = j * this.map.tileWidth;
+					spr.position.y = i * this.map.tileHeight;
+					spr.i = i;
+					spr.j = j;
+					var tile_y = 0 | (tile / tileset.widthInTiles);
+					var tile_x = tile - (tile_y * tileset.widthInTiles);
+					var frame = texture.frame;
+					frame.x = tile_x * this.map.tileWidth;
+					frame.y = tile_y * this.map.tileHeight;
+					frame.width = this.map.tileWidth;
+					frame.height = this.map.tileHeight;
+					texture.setFrame( frame );
 				}
 			}
 		}
@@ -429,13 +468,8 @@ zSquared.tilemap = function( z2 )
 			case RENDER_OPT_PIXI_SPR:
 				break;
 			case RENDER_PIXI_ALL_SPR:
-				// re-gen all sprites
-				game.view.remove( this.doc );
-				this.doc = new PIXI.DisplayObjectContainer();
-//				this.doc = new PIXI.SpriteBatch();
-				game.view.add( this.doc );
-				this.tileSprites = [];
-				this._createSpritesForPixiAllSpr();
+				// update tile sprites
+				this._updateSpritesForPixiAllSpr();
 				break;
 		}
 	};
@@ -992,14 +1026,17 @@ zSquared.tilemap = function( z2 )
 		for( var count = 0; count < this.tileSprites.length; count++ )
 		{
 			var spr = this.tileSprites[count];
-			var i = spr.i;
-			var j = spr.j;
-			// if the sprite is on-screen
-			if( j >= tx && j <= txend &&
-				i >= ty && i <= tyend )
-				spr.visible = true;
-			else
-				spr.visible = false;
+			if( spr )
+			{
+				var i = spr.i;
+				var j = spr.j;
+				// if the sprite is on-screen
+				if( j >= tx && j <= txend &&
+					i >= ty && i <= tyend )
+					spr.visible = true;
+				else
+					spr.visible = false;
+			}
 		}
 		
 		// move the doc (group) to viewx, viewy
