@@ -3,6 +3,7 @@
 // Scene class for Tiled-created maps
 //
 // TODO:
+// - BUG: restarting a level doesn't re-display touch controls
 // - 
 //
 

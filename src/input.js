@@ -257,7 +257,7 @@ zSquared.input = function( z2 )
 		{
 			if( !hasTouch ) return;
 			this.numbuttons = num_buttons;
-			this.buttonDim = game.scene.view.width / num_buttons;
+			this.buttonDim = game.view.width / num_buttons;
 
 			// our own touch event handling
 			var that = this;
@@ -299,10 +299,10 @@ zSquared.input = function( z2 )
 			};
 
 			// add event listeners
-			game.scene.canvas.addEventListener( 'touchstart', this._touchHandler, false );
-			game.scene.canvas.addEventListener( 'touchend', this._touchHandler, false );
-			game.scene.canvas.addEventListener( 'touchmove', this._touchHandler, false );
-			game.scene.canvas.addEventListener( 'touchcancel', this._touchHandler, false );
+			game.canvas.addEventListener( 'touchstart', this._touchHandler, false );
+			game.canvas.addEventListener( 'touchend', this._touchHandler, false );
+			game.canvas.addEventListener( 'touchmove', this._touchHandler, false );
+			game.canvas.addEventListener( 'touchcancel', this._touchHandler, false );
 		},
 
 		addButton : function( image )
@@ -324,14 +324,14 @@ zSquared.input = function( z2 )
 			var button = new PIXI.Sprite( texture );
 
 			button.position.x = idx * this.buttonDim;
-			button.position.y = game.scene.view.height - this.buttonDim;
+			button.position.y = game.view.height - this.buttonDim;
 			button.width = this.buttonDim;
 			button.height = this.buttonDim;
 
 			button.alpha = 0.25;
 
 			// add it to the view
-			game.scene.view.add( button, true );
+			game.view.add( button, true );
 
 			this.buttons.push( button );
 			this.buttonsPressed.push( false );
@@ -368,14 +368,14 @@ zSquared.input = function( z2 )
 			if( !hasTouch ) return;
 
 			// remove event listeners
-			game.scene.canvas.removeEventListener( 'touchstart', this._touchHandler );
-			game.scene.canvas.removeEventListener( 'touchend', this._touchHandler );
-			game.scene.canvas.removeEventListener( 'touchmove', this._touchHandler );
-			game.scene.canvas.removeEventListener( 'touchcancel', this._touchHandler );
+			game.canvas.removeEventListener( 'touchstart', this._touchHandler );
+			game.canvas.removeEventListener( 'touchend', this._touchHandler );
+			game.canvas.removeEventListener( 'touchmove', this._touchHandler );
+			game.canvas.removeEventListener( 'touchcancel', this._touchHandler );
 
 			// remove all the Pixi items
 			for( var i = 0; i < this.buttons.length; i++ )
-				game.scene.view.remove( this.buttons[i] );
+				game.view.remove( this.buttons[i] );
 
 			// reset fields
 			this.buttons = null;

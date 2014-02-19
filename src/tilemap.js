@@ -22,9 +22,9 @@ zSquared.tilemap = function( z2 )
 	var RENDER_OPT_PIXI_SPR = 3;
 	var RENDER_PIXI_ALL_SPR = 4;
 //	var render_method = RENDER_PIXI_ALL_SPR;
-	var render_method = RENDER_OPT_PIXI_SPR;
+//	var render_method = RENDER_OPT_PIXI_SPR;
 //	var render_method = RENDER_PIXI_SPR;
-//	var render_method = RENDER_OPT_PAGES;
+	var render_method = RENDER_OPT_PAGES;
 //	var render_method = RENDER_SIMPLE;
 
 	/** Tile map class
