@@ -6,6 +6,8 @@
 // - can we separate the need for the view from the map? (this would allow
 // the same map to (conceptually anyway) have different views. e.g. a main view
 // and a 'minimap' view
+// - RENDER_PIXI_ALL_SPR: track previous x/y & only set visible flags when we 
+// have scrolled out of a tile boundary (ala RENDER_OPT_PIXI_SPR)
 // -
 
 
@@ -15,16 +17,27 @@ zSquared.tilemap = function( z2 )
 
 	z2.require( ["ecs", "loader"] );
 
-	// different ways to render the tile maps
+	// different ways to render the tile maps:
+	// 'naive' renderer, draws all on-screen tiles on a Canvas each frame
 	var RENDER_SIMPLE = 0;
+	// optimized version of above, uses two canvases, only redraws tiles that
+	// have scrolled onto the screen since last frame, copies the rest of the
+	// screen
 	var RENDER_OPT_PAGES = 1;
+	// renders using a Pixi sprite for each tile that is on-screen, collected in
+	// a Pixi DisplayObjectContainer which is drawn at the appropriate offset
 	var RENDER_PIXI_SPR = 2;
+	// optimized version of above, only resets all the tile frames when we've
+	// scrolled out of tile bounds
 	var RENDER_OPT_PIXI_SPR = 3;
+	// 'brute force' WebGL method: one Pixi Sprite per tile in the entire world
+	// (not just the screen), set visible flag on them if they are on-screen
 	var RENDER_PIXI_ALL_SPR = 4;
+
 //	var render_method = RENDER_PIXI_ALL_SPR;
-//	var render_method = RENDER_OPT_PIXI_SPR;
+	var render_method = RENDER_OPT_PIXI_SPR;
 //	var render_method = RENDER_PIXI_SPR;
-	var render_method = RENDER_OPT_PAGES;
+//	var render_method = RENDER_OPT_PAGES;
 //	var render_method = RENDER_SIMPLE;
 
 	/** Tile map class
@@ -323,18 +336,17 @@ zSquared.tilemap = function( z2 )
 					this.doc.addChild( spr );
 				}
 			}
-//			this.renderTexture = new PIXI.RenderTexture( this.canvasWidth, this.canvasHeight );
-			this.renderTexture = new PIXI.RenderTexture( this.canvasWidth, this.canvasHeight, game.renderer );
-			this.renderTexture.setFrame( this.frame );
-			this.sprite = new PIXI.Sprite( this.renderTexture );
-			game.stage.addChild( this.sprite );
-			map.view.add( this.sprite );
+			map.view.add( this.doc );
 
 			this._prevTx = -1;
 			this._prevTy = 0;
 		}
 		else if( render_method == RENDER_PIXI_ALL_SPR )
 		{
+			// vars for tracking the previous frame position
+			this._prev_tx = NaN;
+			this._prev_ty = NaN;
+
 			// TODO: we shouldn't be doing this if the layer is not visible...
 			this.canvasWidth = map.viewWidth;
 			this.canvasHeight = map.viewHeight;
@@ -841,9 +853,9 @@ zSquared.tilemap = function( z2 )
 		this.sprite.position.y = 0 | (viewy - this.map.viewHeight/2);
 	};
 
-	z2.TileLayer.prototype.renderPixiRT = function( viewx, viewy )
+	z2.TileLayer.prototype.renderPixiSpr = function( viewx, viewy )
 	{
-		this.sprite.visible = this.visible;
+		this.doc.visible = this.visible;
 		if( !this.visible )
 			return;
 
@@ -902,19 +914,16 @@ zSquared.tilemap = function( z2 )
 			}
 		}
 
-		// render the tile sprites' doc to the render texture
-		// (clearing the render texture first)
+		// set the DOC position
 		var px = -(x - (orig_tx * this.map.tileWidth));
 		var py = -(y - (orig_ty * this.map.tileHeight));
-		this.renderTexture.render( this.doc, {x:px,y:py}, true );
-
-		this.sprite.position.x = 0 | (viewx - this.map.viewWidth/2);
-		this.sprite.position.y = 0 | (viewy - this.map.viewHeight/2);
+		this.doc.position.x = 0 | (viewx - this.map.viewWidth/2)+px;
+		this.doc.position.y = 0 | (viewy - this.map.viewHeight/2)+py;
 	};
 
-	z2.TileLayer.prototype.renderPixiRTOpt = function( viewx, viewy )
+	z2.TileLayer.prototype.renderPixiSprOpt = function( viewx, viewy )
 	{
-		this.sprite.visible = this.visible;
+		this.doc.visible = this.visible;
 		if( !this.visible )
 			return;
 
@@ -944,12 +953,12 @@ zSquared.tilemap = function( z2 )
 		// TODO: support more than one tileset
 		tileset = this.map.tilesets[0];
 
-		var mapWidth = this.map.widthInTiles;
-		var mapHeight = this.map.heightInTiles;
-
 		// do we need to set all the tile's u/v values?
 		if( tx !== this._prev_tx || ty !== this._prev_ty )
 		{
+			var mapWidth = this.map.widthInTiles;
+			var mapHeight = this.map.heightInTiles;
+
 			// set the frame for each tile sprite
 			for( i = 0; i <= this.map.viewHeightInTiles; i++, ty++ )
 			{
@@ -995,18 +1004,19 @@ zSquared.tilemap = function( z2 )
 		this._prev_tx = orig_tx;
 		this._prev_ty = orig_ty;
 
-		// set the offset into the render texture
-		var px = -(x - (orig_tx * this.map.tileWidth));
-		var py = -(y - (orig_ty * this.map.tileHeight));
-		this.renderTexture.render( this.doc, {x:px,y:py}, true );
-		this.sprite.position.x = 0 | (viewx - this.map.viewWidth/2);
-		this.sprite.position.y = 0 | (viewy - this.map.viewHeight/2);
+		// set the DOC position
+		var px = -(x - (orig_tx * tw));
+		var py = -(y - (orig_ty * th));
+		this.doc.position.x = 0 | (viewx - this.map.viewWidth/2)+px;
+		this.doc.position.y = 0 | (viewy - this.map.viewHeight/2)+py;
 	};
 
 	// "brute force" renderer - one sprite for each tile in each layer, mark
 	// offscreen tiles 'visible=false' & set parent transform for view (camera)
-	z2.TileLayer.prototype.renderPixiSpr = function( viewx, viewy )
+	z2.TileLayer.prototype.renderPixiAllSpr = function( viewx, viewy )
 	{
+		// TODO: track previous x/y & only set visible flags when we have
+		// scrolled out of a tile boundary
 		this.doc.visible = this.visible;
 		if( !this.visible )
 			return;
@@ -1021,20 +1031,24 @@ zSquared.tilemap = function( z2 )
 		var txend = tx + this.map.viewWidthInTiles;
 		var tyend = ty + this.map.viewHeightInTiles;
 
-		// set the visibility of all the tile sprites
-		for( var count = 0; count < this.tileSprites.length; count++ )
+		// do we need to set all the tile's u/v values?
+		if( tx !== this._prev_tx || ty !== this._prev_ty )
 		{
-			var spr = this.tileSprites[count];
-			if( spr )
+			// set the visibility of all the tile sprites
+			for( var count = 0; count < this.tileSprites.length; count++ )
 			{
-				var i = spr.i;
-				var j = spr.j;
-				// if the sprite is on-screen
-				if( j >= tx && j <= txend &&
-					i >= ty && i <= tyend )
-					spr.visible = true;
-				else
-					spr.visible = false;
+				var spr = this.tileSprites[count];
+				if( spr )
+				{
+					var i = spr.i;
+					var j = spr.j;
+					// if the sprite is on-screen
+					if( j >= tx && j <= txend &&
+						i >= ty && i <= tyend )
+						spr.visible = true;
+					else
+						spr.visible = false;
+				}
 			}
 		}
 		
@@ -1056,11 +1070,11 @@ zSquared.tilemap = function( z2 )
 	else if( render_method === RENDER_OPT_PAGES )
 		z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderCanvasOpt;
 	else if( render_method === RENDER_PIXI_SPR )
-		z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderPixiRT;
-	else if( render_method === RENDER_OPT_PIXI_SPR )
-		z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderPixiRTOpt;
-	else if( render_method === RENDER_PIXI_ALL_SPR )
 		z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderPixiSpr;
+	else if( render_method === RENDER_OPT_PIXI_SPR )
+		z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderPixiSprOpt;
+	else if( render_method === RENDER_PIXI_ALL_SPR )
+		z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderPixiAllSpr;
 
 
 	/** Tile map image layer class
