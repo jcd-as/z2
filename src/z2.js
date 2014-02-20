@@ -63,15 +63,21 @@ var zSquared = function( opts )
 		 * @arg {Number} h Canvas height, in pixels
 		 * @arg {boolean} [add_to_doc] Should this canvas be added to the
 		 * document?
+		 * @arg {DOM Element} [parent] Parent element in DOM
 		 * @returns {Canvas} The Canvas object
 		 */
-		createCanvas : function( w, h, add_to_doc )
+		createCanvas : function( w, h, parent, add_to_doc )
 		{
 			var canvas = document.createElement( 'canvas' );
 			canvas.width = w;
 			canvas.height = h;
 			if( add_to_doc )
-				document.body.appendChild( canvas );
+			{
+				if( parent )
+					parent.appendChild( canvas );
+				else
+					document.body.appendChild( canvas );
+			}
 			return canvas;
 		},
 

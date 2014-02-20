@@ -52,7 +52,6 @@ zSquared.audio = function( z2 )
 	{
 		for( var i = 0; i < channels.length; i++ )
 		{
-//			if( !channels[i] )
 			if( !channel_data[i].key )
 				return i;
 		}
@@ -100,7 +99,7 @@ zSquared.audio = function( z2 )
 		src.start( 0, offset );
 
 		// set a timeout to remove from this channel
-		channel_data[channel].timeout = setTimeout( function() { delete channels[channel]; }, src.buffer.duration * 1000 );
+		channel_data[channel].timeout = setTimeout( function() { delete channels[channel]; resetChannelData( channel ); }, src.buffer.duration * 1000 );
 	}
 
 	/** Play a sound 

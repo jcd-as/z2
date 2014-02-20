@@ -392,11 +392,23 @@ zSquared['2d'] = function( z2 )
 				// TODO: set visible to false too? (so PIXI won't render)
 				if( window.game && game.scene && game.scene.map )
 				{
-					// TODO: should we be checking the object's bounds instead
-					// of just its position? (don't want objects stopping while
-					// still partially visible)
-					if( pc.x > game.scene.map.worldWidth ||
-						pc.y > game.scene.map.worldHeight )
+					var width = 0, height = 0;
+					// if we have a size component, use it
+					var szc = e.getComponent( z2.sizeFactory );
+					if( szc )
+					{
+						width = szc.width;
+						height = szc.height;
+					}
+					// otherwise, if we have a physics body, use it
+					else if( bc )
+					{
+						width = bc.aabb[3] - bc.aabb[1];
+						height = bc.aabb[2] - bc.aabb[0];
+					}
+
+					if( pc.x - width > game.scene.map.worldWidth ||
+						pc.y - height > game.scene.map.worldHeight )
 						return;
 				}
 

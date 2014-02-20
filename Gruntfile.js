@@ -26,6 +26,9 @@ module.exports = function (grunt) {
 		'src/collision.js',
 		'src/tilemap.js',
 		'src/tiledscene.js',
+		'src/emitter.js',
+		'src/game.js',
+		'src/device.js',
         'src/.js'
       ]
     },

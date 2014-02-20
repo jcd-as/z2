@@ -6,6 +6,7 @@
 // - gravity & resistance
 // - infinite lifespans
 // - ability to use animations instead of just frames
+// - should be able to 'trickle' particles in...
 // -
 
 zSquared.emitter = function( z2 )
