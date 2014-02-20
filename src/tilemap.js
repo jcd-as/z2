@@ -15,7 +15,7 @@ zSquared.tilemap = function( z2 )
 {
 	"use strict";
 
-	z2.require( ["ecs", "loader"] );
+	z2.require( ["ecs", "loader", "device"] );
 
 	// different ways to render the tile maps:
 	// 'naive' renderer, draws all on-screen tiles on a Canvas each frame
@@ -34,8 +34,9 @@ zSquared.tilemap = function( z2 )
 	// (not just the screen), set visible flag on them if they are on-screen
 	var RENDER_PIXI_ALL_SPR = 4;
 
+	var render_method;
 //	var render_method = RENDER_PIXI_ALL_SPR;
-	var render_method = RENDER_OPT_PIXI_SPR;
+//	var render_method = RENDER_OPT_PIXI_SPR;
 //	var render_method = RENDER_PIXI_SPR;
 //	var render_method = RENDER_OPT_PAGES;
 //	var render_method = RENDER_SIMPLE;
@@ -60,6 +61,16 @@ zSquared.tilemap = function( z2 )
 	 */
 	z2.TileMap = function( view )
 	{
+		// if the render method hasn't been set already, 
+		// make a best guess
+		if( render_method === undefined )
+		{
+			if( z2.device.webGL )
+				render_method = RENDER_OPT_PIXI_SPR;
+			else
+				render_method = RENDER_OPT_PAGES;
+		}
+
 		// view dimensions
 		// (size for the layers' canvases)
 		this.view = view;
@@ -281,6 +292,18 @@ zSquared.tilemap = function( z2 )
 	 */
 	z2.TileLayer = function( map, visible )
 	{
+		// set the render method to the appropriate internal method
+		if( render_method === RENDER_SIMPLE )
+			z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderCanvasNaive;
+		else if( render_method === RENDER_OPT_PAGES )
+			z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderCanvasOpt;
+		else if( render_method === RENDER_PIXI_SPR )
+			z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderPixiSpr;
+		else if( render_method === RENDER_OPT_PIXI_SPR )
+			z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderPixiSprOpt;
+		else if( render_method === RENDER_PIXI_ALL_SPR )
+			z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderPixiAllSpr;
+
 		// reference to the TileMap that contains the layer
 		this.map = map;
 
@@ -1073,21 +1096,21 @@ zSquared.tilemap = function( z2 )
 		this.doc.position.y = 0 | (vy - (vy * this.scrollFactorY));
 	};
 
-	/** Render the tilemap to its canvas
+	/** Render the tilemap layer to its canvas
 	 * @method z2.TileLayer#render
 	 * @arg {Number} viewx The x-coordinate that the view is centered on
 	 * @arg {Number} viewy The y-coordinate that the view is centered on
 	 */
-	if( render_method === RENDER_SIMPLE )
-		z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderCanvasNaive;
-	else if( render_method === RENDER_OPT_PAGES )
-		z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderCanvasOpt;
-	else if( render_method === RENDER_PIXI_SPR )
-		z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderPixiSpr;
-	else if( render_method === RENDER_OPT_PIXI_SPR )
-		z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderPixiSprOpt;
-	else if( render_method === RENDER_PIXI_ALL_SPR )
-		z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderPixiAllSpr;
+//	if( render_method === RENDER_SIMPLE )
+//		z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderCanvasNaive;
+//	else if( render_method === RENDER_OPT_PAGES )
+//		z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderCanvasOpt;
+//	else if( render_method === RENDER_PIXI_SPR )
+//		z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderPixiSpr;
+//	else if( render_method === RENDER_OPT_PIXI_SPR )
+//		z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderPixiSprOpt;
+//	else if( render_method === RENDER_PIXI_ALL_SPR )
+//		z2.TileLayer.prototype.render = z2.TileLayer.prototype.renderPixiAllSpr;
 
 
 	/** Tile map image layer class
