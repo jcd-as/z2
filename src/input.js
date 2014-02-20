@@ -7,8 +7,8 @@
 // ? events on keypress ?
 // ? track time keys are down
 // - mouse
-// - touchscreen basics
-// - touchscreen 2d platformer controls (2-way, 2 buttons)
+// x touchscreen basics
+// x touchscreen 2d platformer controls (2-way, 2 buttons)
 // - touchscreen 2d overhead controls (4-way, 2 buttons)
 // - touchscreen 'joypad'
 // - 'down' images for touchscreen buttons
@@ -266,6 +266,31 @@ zSquared.input = function( z2 )
 				var i;
 				var touches = e.touches ? e.touches : [e];
 
+				if( !touches )
+					return;
+
+				// get x & y offsets of our canvas
+				var offsetX, offsetY;
+				if( touches.length > 0 )
+				{
+					offsetX = touches[0].offsetX;
+					offsetY = touches[0].offsetY;
+					if( offsetX === undefined )
+					{
+						var tox = 0;
+						var toy = 0;
+						var curElem = game.canvas;
+						do
+						{
+							tox += curElem.offsetLeft;
+							toy += curElem.offsetTop;
+						}
+						while( curElem = curElem.offsetParent );
+						offsetX = tox;
+						offsetY = toy;
+					}
+				}
+
 				// clear all buttons
 				for( i = 0; i < that.buttonsPressed.length; i++ )
 				{
@@ -279,7 +304,8 @@ zSquared.input = function( z2 )
 				for( i = 0; i < touches.length; i++ )
 				{
 					var touch = touches[i];
-					var button = that._getButton( touch );
+//					var button = that._getButton( touch );
+					var button = that._getButton( touch, offsetX );
 					if( button !== -1 )
 						that.buttonsPressed[button] = true;
 				}
@@ -287,12 +313,13 @@ zSquared.input = function( z2 )
 				// prevent default 
 				e.preventDefault();
 			};
-			this._getButton = function( touch )
+			this._getButton = function( touch, offsetX )
 			{
 				// was this touch inside one of our buttons?
 				for( var i = 0; i < that.buttons.length; i++ )
 				{
-					if( touch.pageX < (i+1) * that.buttonDim )
+//					if( touch.pageX < (i+1) * that.buttonDim )
+					if( (touch.pageX - offsetX) < (i+1) * that.buttonDim )
 						return i;
 				}
 				return -1;

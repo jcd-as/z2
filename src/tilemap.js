@@ -1051,8 +1051,9 @@ zSquared.tilemap = function( z2 )
 	// offscreen tiles 'visible=false' & set parent transform for view (camera)
 	z2.TileLayer.prototype.renderPixiAllSpr = function( viewx, viewy )
 	{
-		// TODO: track previous x/y & only set visible flags when we have
-		// scrolled out of a tile boundary
+		// TODO: use previous tile x/y to only set visible flags of the tiles
+		// that have scrolled on/off of the screen
+
 		this.doc.visible = this.visible;
 		if( !this.visible )
 			return;

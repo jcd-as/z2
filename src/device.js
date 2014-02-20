@@ -16,7 +16,7 @@ zSquared.device = function( z2 )
 	// browsers
 	var arora, chrome, epiphany, firefox, mobileSafari, ie, ieVersion, midori, opera, safari, silk, trident, tridentVersion;
 	// browser 'extra'
-	var webApp, cocoonJS, ejecta;
+	var webApp, cocoonJS, ejecta, crosswalk;
 	// operating systems
 	var android, chromeOS, iOS, linux, macOS, windows;
 	// features
@@ -66,6 +66,10 @@ zSquared.device = function( z2 )
 
         if( typeof window.ejecta !== "undefined" )
             ejecta = true;
+
+		// Crosswalk (Intel XDK canvas for android) 
+		if( /Crosswalk/.test(ua) )
+			crosswalk = true;
 
 		// os
 		if( /Android/.test( ua ) )
@@ -136,6 +140,7 @@ zSquared.device = function( z2 )
 		webApp : webApp,
 	   	cocoonJS : cocoonJS,
 	   	ejecta : ejecta,
+		crosswalk : crosswalk,
 		// operating systems
 		android : android,
 	   	chromeOS : chromeOS,
