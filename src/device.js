@@ -11,7 +11,8 @@ zSquared.device = function( z2 )
 
 //	z2.require( ["time"] );
 
-
+	// device
+	var desktop, mobile;
 	// browsers
 	var arora, chrome, epiphany, firefox, mobileSafari, ie, ieVersion, midori, opera, safari, silk, trident, tridentVersion;
 	// browser 'extra'
@@ -37,8 +38,10 @@ zSquared.device = function( z2 )
 		else if (/Mobile Safari/.test(ua))
 			mobileSafari = true;
 		else if (/MSIE (\d+\.\d+);/.test(ua))
+		{
 			ie = true;
 			ieVersion = parseInt(RegExp.$1, 10);
+		}
 		else if (/Midori/.test(ua))
 			midori = true;
 		else if (/Opera/.test(ua))
@@ -80,6 +83,7 @@ zSquared.device = function( z2 )
 
 		if (windows || macOS || (linux && silk === false))
 			desktop = true;
+		mobile = !desktop;
 
 		// features
 		webAudio = !!(window['webkitAudioContext'] || window['AudioContext']); 
@@ -111,6 +115,9 @@ zSquared.device = function( z2 )
 
 	z2.device = 
 	{
+		// device
+		desktop : desktop,
+		mobile : mobile,
 		// browsers
 		arora : arora,
 		chrome : chrome,
@@ -124,7 +131,7 @@ zSquared.device = function( z2 )
 	   	safari : safari,
 	   	silk : silk,
 	   	trident : trident,
-	   	tridentVersion : tridentVersion;
+	   	tridentVersion : tridentVersion,
 		// browser 'extra'
 		webApp : webApp,
 	   	cocoonJS : cocoonJS,

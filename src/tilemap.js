@@ -40,6 +40,19 @@ zSquared.tilemap = function( z2 )
 //	var render_method = RENDER_OPT_PAGES;
 //	var render_method = RENDER_SIMPLE;
 
+	z2.renderers = 
+	{
+		RENDER_SIMPLE : RENDER_SIMPLE,
+		RENDER_OPT_PAGES : RENDER_OPT_PAGES,
+		RENDER_PIXI_SPR : RENDER_PIXI_SPR,
+		RENDER_OPT_PIXI_SPR : RENDER_OPT_PIXI_SPR,
+		RENDER_PIXI_ALL_SPR : RENDER_PIXI_ALL_SPR
+	};
+	z2.setRenderMethod = function( rm )
+	{
+		render_method = rm;
+	};
+
 	/** Tile map class
 	 * @class z2.TileMap
 	 * @constructor
