@@ -11,6 +11,10 @@ zSquared.time = function( z2 )
 
 //	z2.require( [] );
 
+	// the total time the game has been on pause
+	var _totalPaused = 0;
+	var _pauseStart = 0;
+
 	/** Time namespace object
 	 * @namespace z2.time
 	 */
@@ -21,7 +25,17 @@ zSquared.time = function( z2 )
 		 */
 		now : function()
 		{
-			return Date.now();
+			return Date.now() - _totalPaused;
+		},
+
+		pause : function()
+		{
+			_pauseStart = Date.now();
+		},
+
+		resume : function()
+		{
+			_totalPaused += Date.now() - _pauseStart;
 		}
 	};
 

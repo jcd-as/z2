@@ -143,8 +143,10 @@ zSquared.bitset = function( z2 )
 				console.error( "Array argument to Bitset.setBits of incorrect length" );
 			for( var i = 0; i < bits.length; i++ )
 			{
-				var match = this.data[i] & bits.data[i];
-				if( match !== this.data[i] )
+				// (handle overflow by casting to 32 bit integer [OR'ing with 0]
+				// before and after AND)
+				var match = (0 | this.data[i]) & (0 | bits.data[i]);
+				if( match !== (0 | this.data[i]) )
 					return false;
 			}
 			return true;

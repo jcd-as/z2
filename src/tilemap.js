@@ -67,6 +67,7 @@ zSquared.tilemap = function( z2 )
 		{
 			if( z2.device.webGL )
 				render_method = RENDER_OPT_PIXI_SPR;
+//				render_method = RENDER_PIXI_ALL_SPR;
 			else
 				render_method = RENDER_OPT_PAGES;
 		}
@@ -390,8 +391,8 @@ zSquared.tilemap = function( z2 )
 
 			// TODO: support more than one tileset
 			this.tileTexture = new PIXI.BaseTexture( map.tilesets[0].tiles );
-			this.doc = new PIXI.DisplayObjectContainer();
-//			this.doc = new PIXI.SpriteBatch();
+//			this.doc = new PIXI.DisplayObjectContainer();
+			this.doc = new PIXI.SpriteBatch();
 
 			this.tileSprites = [];
 

@@ -22,7 +22,7 @@ var z2 = zSquared();
 z2.require( ["loader", "input", "game", "tiledscene", "audio", "statemachine", "emitter"] );
  
 // create a canvas
-var canvas = z2.createCanvas( WIDTH, HEIGHT, true );
+var canvas = z2.createCanvas( WIDTH, HEIGHT, null, true );
 
 // global set-up stuff
 var visibilityChange = function( event )
@@ -311,9 +311,9 @@ var myScene =
 
 		// create a collision map
 		// (for 50-layer perf test:)
-//		var collisionMap = z2.buildCollisionMap( scene.map.layers[48].data, scene.map.widthInTiles, scene.map.heightInTiles, [0,1,2,3,4] );
+		var collisionMap = z2.buildCollisionMap( scene.map.layers[48].data, scene.map.widthInTiles, scene.map.heightInTiles, [0,1,2,3,4] );
 //		var collisionMap = z2.buildCollisionMap( this.map.layers[1].data, this.map.widthInTiles, this.map.heightInTiles, [0,1,2,3,4] );
-		var collisionMap = this.map.collisionMap;
+//		var collisionMap = this.map.collisionMap;
 
 		// create a collision map component
 		var cmc = z2.collisionMapFactory.create( {map: this.map, data: collisionMap} );
@@ -435,8 +435,8 @@ var myScene =
 
 
 		// create an emitter system
-		var es = z2.createEmitterSystem( game.view, 'firefly' );
-		z2.manager.get().addSystem( es );
+//		var es = z2.createEmitterSystem( game.view, 'firefly' );
+//		z2.manager.get().addSystem( es );
 
 		// create a movement system
 		var ms = z2.createMovementSystem( 200 );
