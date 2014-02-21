@@ -304,7 +304,6 @@ zSquared.input = function( z2 )
 				for( i = 0; i < touches.length; i++ )
 				{
 					var touch = touches[i];
-//					var button = that._getButton( touch );
 					var button = that._getButton( touch, offsetX );
 					if( button !== -1 )
 						that.buttonsPressed[button] = true;
@@ -318,8 +317,11 @@ zSquared.input = function( z2 )
 				// was this touch inside one of our buttons?
 				for( var i = 0; i < that.buttons.length; i++ )
 				{
-//					if( touch.pageX < (i+1) * that.buttonDim )
-					if( (touch.pageX - offsetX) < (i+1) * that.buttonDim )
+					// strip the 'px;' off of the css width & convert to number
+					var cssw = +game.canvas.style.width.slice(0,-2);
+					var d = game.canvas.width / cssw;
+					var px = (touch.pageX - offsetX) * d;
+					if( px < (i+1) * that.buttonDim )
 						return i;
 				}
 				return -1;
