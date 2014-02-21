@@ -90,9 +90,9 @@ zSquared.audio = function( z2 )
 		cd.volume = volume;
 		cd.loop = loop;
 		if( cd.paused )
-			cd.start = z2.time.now() - cd.paused;
+			cd.start = z2.time.system() - cd.paused;
 		else
-			cd.start = z2.time.now();
+			cd.start = z2.time.system();
 		cd.paused = 0;
 
 		// play
@@ -156,7 +156,7 @@ zSquared.audio = function( z2 )
 		var snd = channels[channel];
 		if( snd && cd.key && !cd.paused )
 		{
-			var t = z2.time.now() - cd.start;
+			var t = z2.time.system() - cd.start;
 			// handle offset greater than duration
 			// (for looped sounds)
 			t %= (snd.buffer.duration * 1000);
@@ -185,7 +185,7 @@ zSquared.audio = function( z2 )
 			// get the asset
 			var snd = z2.loader.getAsset( cd.key );
 			// reset the start time
-			cd.start = z2.time.now() - cd.paused;
+			cd.start = z2.time.system() - cd.paused;
 			// play the sound
 			playSound( snd, channel, cd.key, cd.paused / 1000, cd.volume, cd.loop );
 		}

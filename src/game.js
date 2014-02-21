@@ -40,6 +40,35 @@ zSquared.game = function( z2 )
 
 		// create a view with some default values
 		this.view = new z2.View( this.canvas.width, this.canvas.height );
+
+		// setup handlers for visibility change events (pause game when focus is
+		// lost)
+		this.paused = false;
+		var that = this;
+		var visibilityChange = function( event )
+		{
+			if( that.paused === false && (event.type == 'pagehide' || event.type == 'blur' || document.hidden === true || document.webkitHidden === true))
+				that.paused = true;
+			else
+				that.paused = false;
+
+			if( that.paused )
+			{
+				z2.time.pause();
+				z2.pauseSounds();
+			}
+			else
+			{
+				z2.resumeSounds();
+				z2.time.resume();
+			}
+		};
+		document.addEventListener( 'visibilitychange', visibilityChange, false );
+		document.addEventListener( 'webkitvisibilitychange', visibilityChange, false );
+		document.addEventListener( 'pagehide', visibilityChange, false );
+		document.addEventListener( 'pageshow', visibilityChange, false );
+		window.onblur = visibilityChange;
+		window.onfocus = visibilityChange;
 	};
 
 };

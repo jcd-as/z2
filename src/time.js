@@ -20,7 +20,7 @@ zSquared.time = function( z2 )
 	 */
 	z2.time = 
 	{
-		/** Get the current system time
+		/** Get the current game time
 		 * @function z2.time#now
 		 */
 		now : function()
@@ -28,11 +28,26 @@ zSquared.time = function( z2 )
 			return Date.now() - _totalPaused;
 		},
 
+		/** Get the current system time 
+		 * (does NOT account for time spent paused)
+		 * @function z2.time#system
+		 */
+		system : function()
+		{
+			return Date.now();
+		},
+
+		/** Pause - stop counting game time
+		 * @function z2.time#pause
+		 */
 		pause : function()
 		{
 			_pauseStart = Date.now();
 		},
 
+		/** Resume - re-start counting game time
+		 * @function z2.time#resume
+		 */
 		resume : function()
 		{
 			_totalPaused += Date.now() - _pauseStart;
