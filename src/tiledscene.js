@@ -55,6 +55,12 @@ zSquared.tiledscene = function( z2 )
 	 */
 	z2.TiledScene.prototype.stop = function()
 	{
+		// stop touch input handling
+		z2.touch.stop();
+
+		// stop kbd handling
+		z2.kbd.stop();
+
 		// clear the view (& thus Pixi)
 		game.view.clear();
 

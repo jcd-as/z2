@@ -119,14 +119,15 @@ zSquared.view = function( z2 )
 	 */
 	z2.View.prototype.clear = function()
 	{
+		// clear the camera objects
+		this.camera_doc.removeChild( this.doc );
+		this.doc = new PIXI.DisplayObjectContainer();
+		this.camera_doc.addChild( this.doc );
+
+		// clear the 'fixed' objects
 		game.stage.removeChild( this.fixed );
 		this.fixed = new PIXI.DisplayObjectContainer();
 		game.stage.addChild( this.fixed );
-		do
-		{
-			this.doc.removeChild( this.doc.children[0] );
-		}
-		while( game.view.doc.children.length > 0 );
 	};
 
 	Object.defineProperty( z2.View.prototype, 'follow_mode',

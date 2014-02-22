@@ -404,11 +404,12 @@ zSquared.input = function( z2 )
 
 			// remove all the Pixi items
 			for( var i = 0; i < this.buttons.length; i++ )
-				game.view.remove( this.buttons[i] );
+				if( this.buttons[i] )
+					game.view.remove( this.buttons[i], true );
 
 			// reset fields
-			this.buttons = null;
-			this.buttonsPressed = null;
+			this.buttons = [];
+			this.buttonsPressed = [];
 			this.numButtons = 0;
 			this.buttonDim = 0;
 		},
