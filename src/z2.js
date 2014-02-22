@@ -130,7 +130,31 @@ var zSquared = function( opts )
 					return array[i];
 			}
 			return null;
-		}
+		},
+
+		/** Toggel fullscreen mode, when available
+		 * @function z2#toggleFullScreen
+		 */
+		toggleFullScreen : function()
+		{
+			var doc = window.document;
+			var de = doc.documentElement;
+
+			var requestFullScreen = de.requestFullScreen ||
+				de.mozRequestFullScreen ||
+				de.webkitRequestFullScreen ||
+				de.msRequestFullscreen;
+			var cancelFullScreen = doc.exitFullScreen ||
+				doc.mozCancelFullScreen ||
+				doc.webkitExitFullscreen ||
+				doc.msExitFullscreen;
+
+			if( !doc.fullscreenElement && !doc.mozFullScreenElement	&& 
+				!doc.webkitFullscreenElement && !doc.msFullscreenElement )
+				requestFullScreen.call( de );
+			else
+				cancelFullScreen.call( doc );
+		},
 
 	};
 
