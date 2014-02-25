@@ -3,6 +3,8 @@
 // Components and Systems for particle emitter for 2d games
 // TODO:
 // - use re-usable Pixi Sprite pool too
+// - don't create new Particle objects each time we emit, just set the props on
+// an existing one in the pool
 // - gravity & resistance
 // - infinite lifespans
 // - ability to use animations instead of just frames
@@ -49,6 +51,8 @@ zSquared.emitter = function( z2 )
 			minAlpha: 1, maxAlpha: 1,
 			// min/max particle lifespan (in ms)
 			minLifespan: 0, maxLifespan: 0,
+			// maximum number of particles (pool size)
+			maxParticles: 100
 		} );
 
 	/////////////////////////////////////////////////////////////////////////
@@ -182,6 +186,10 @@ zSquared.emitter = function( z2 )
 						// fire particles
 						for( i = 0; i < em.quantity; i++ )
 						{
+							// don't create more than 'maxParticles'
+							if( this.openSlots.length === 0 && this.particles.length > em.maxParticles )
+								continue;
+
 							// TODO: randomize animation ???
 
 							var sprite;

@@ -117,8 +117,8 @@ zSquared.tiledscene = function( z2 )
 		this.renderer = z2.createRenderingSystem( game.canvas, game.view, game.force_canvas );
 		z2.manager.get().addSystem( this.renderer );
 
-		// tell the game to start/resume the main loop
-		game.start();
+		// tell the main loop that it is okay to call 'update' on us
+		this.ready = true;
 	};
 };
 

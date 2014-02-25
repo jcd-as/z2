@@ -26,7 +26,8 @@ zSquared.game = function( z2 )
 		{
 			// update the scene
 			// (lets it implement any non-ECS behaviour it wants)
-			game.scene.update();
+			if( game.scene && game.scene.ready )
+				game.scene.update();
 
 			// update the ECS system
 			z2.ecsUpdate( et );
@@ -113,9 +114,6 @@ zSquared.game = function( z2 )
 	 */
 	z2.Game.prototype.startScene = function ( scene )
 	{
-		// stop the main game loop
-		z2.stopMain();
-
 		var new_scene;
 		if( typeof scene === 'object' )
 		{
@@ -137,8 +135,6 @@ zSquared.game = function( z2 )
 			this.scene.stop();
 		this.scene = new_scene;
 		this.scene.start();
-
-		// NOTE! it is up to the scene to (re)start the main loop!
 	};
 
 };

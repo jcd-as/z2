@@ -29,6 +29,8 @@ zSquared.scene = function( z2 )
 
 		this.width = width || 0;
 		this.height = height || 0;
+
+		this.ready = false;
 	};
 
 	/** Start the scene
@@ -79,8 +81,8 @@ zSquared.scene = function( z2 )
 		// create the objects for the scene
 		this.create();
 
-		// (re)start the main loop
-		game.start();
+		// tell the main loop that it is okay to call 'update' on us
+		this.ready = true;
 	};
 };
 
