@@ -14,6 +14,7 @@ var zSquared = function( opts )
 	"use strict";
 
 	var loaded = {};
+	var raf;
 
 	/** Main z2 namespace object
 	 * @global
@@ -48,13 +49,28 @@ var zSquared = function( opts )
 		 */
 		main : function( update )
 		{
+			var requestAnimationFrame = window.requestAnimationFrame || 
+				window.mozRequestAnimationFrame ||
+				window.webkitRequestAnimationFrame || 
+				window.msRequestAnimationFrame;
+
 			// start the main loop
 			var f = function( et )
 			{
 				update( et );
-				requestAnimationFrame( f );
+				raf = requestAnimationFrame( f );
 			};
-			requestAnimationFrame( f );
+			raf = requestAnimationFrame( f );
+		},
+
+		/** Stops the main loop
+		 * @function z2#stopMain
+		 */
+		stopMain : function()
+		{
+			var cancelAnimationFrame = window.cancelAnimationFrame || window.mozCancelAnimationFrame;
+
+			cancelAnimationFrame( raf );
 		},
 
 		/** Function to create a canvas object

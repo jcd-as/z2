@@ -17,13 +17,14 @@ zSquared.scene = function( z2 )
 	 * @arg {number} width Width of the scene, in pixels
 	 * @arg {number} height Height of the scene, in pixels
 	 * @arg {Object} scene An object defining the functions for the scene: load,
-	 * init, create and destroy
+	 * init, create, update and destroy
 	 */
 	z2.Scene = function( width, height, scene )
 	{
 		this.load = scene.load || function() {};
 		this.init = scene.init || function() {};
 		this.create = scene.create || function() {};
+		this.update = scene.update || function() {};
 		this.destroy = scene.destroy || function() {};
 
 		this.width = width || 0;
@@ -77,6 +78,9 @@ zSquared.scene = function( z2 )
 
 		// create the objects for the scene
 		this.create();
+
+		// (re)start the main loop
+		game.start();
 	};
 };
 

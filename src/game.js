@@ -11,6 +11,31 @@ zSquared.game = function( z2 )
 
 	z2.require( ["2d"] );
 
+	// enable debug data?
+	var _debug = true;
+
+	// the main ecs loop
+	function mainloop( et )
+	{
+		if( _debug && z2.stats )
+			z2.stats.begin();
+
+		// TODO: problem with this is that ecsUpdate calculates the time delta, so
+		// by intercepting here the dt doesn't get updated properly
+		if( !game.paused )
+		{
+			// update the scene
+			// (lets it implement any non-ECS behaviour it wants)
+			game.scene.update();
+
+			// update the ECS system
+			z2.ecsUpdate( et );
+		}
+
+		if( _debug && z2.stats )
+			z2.stats.end();
+	}
+
 	/** 
 	 * @class z2#z2.Game
 	 * @classdesc Game class - this is where it all starts
@@ -69,6 +94,51 @@ zSquared.game = function( z2 )
 		document.addEventListener( 'pageshow', visibilityChange, false );
 		window.onblur = visibilityChange;
 		window.onfocus = visibilityChange;
+	};
+
+	/** Start the main loop
+	 * @function z2.Game#start
+	 */
+	z2.Game.prototype.start = function()
+	{
+		// start the main game loop
+		z2.main( mainloop );
+	};
+
+	/** Start a scene by name or object
+	 * @function z2.Game#startScene
+	 * @arg {z2.Scene|Function} scene The Scene object or the function to create
+	 * the Scene object which to start. If it is a function, any remaining args
+	 * will be passed to the function
+	 */
+	z2.Game.prototype.startScene = function ( scene )
+	{
+		// stop the main game loop
+		z2.stopMain();
+
+		var new_scene;
+		if( typeof scene === 'object' )
+		{
+			new_scene = scene;
+		}
+		else if( typeof scene === 'function' )
+		{
+			var extras = Array.prototype.slice.call( arguments, 1 );
+			if( extras )
+				new_scene = scene.apply( null, extras );
+			else
+				new_scene = scene();
+		}
+		else
+			throw new Error( "Scene object passed to Game.startScene() is neither an object nor a function" );
+
+		// if we have a scene running, stop it first
+		if( this.scene )
+			this.scene.stop();
+		this.scene = new_scene;
+		this.scene.start();
+
+		// NOTE! it is up to the scene to (re)start the main loop!
 	};
 
 };

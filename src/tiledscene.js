@@ -19,13 +19,14 @@ zSquared.tiledscene = function( z2 )
 	 * @constructor
 	 * @arg {string} url The asset URL for the Tiled level (e.g. 'level.json')
 	 * @arg {Object} scene An object defining the functions for the scene: load,
-	 * init, create and destroy
+	 * init, create, update and destroy
 	 */
 	z2.TiledScene = function( url, scene )
 	{
 		this.load = scene.load || function() {};
 		this.init = scene.init || function() {};
 		this.create = scene.create || function() {};
+		this.update = scene.update || function() {};
 		this.destroy = scene.destroy || function() {};
 
 		this.map = null;
@@ -115,6 +116,9 @@ zSquared.tiledscene = function( z2 )
 		// create rendering system
 		this.renderer = z2.createRenderingSystem( game.canvas, game.view, game.force_canvas );
 		z2.manager.get().addSystem( this.renderer );
+
+		// tell the game to start/resume the main loop
+		game.start();
 	};
 };
 
