@@ -3,6 +3,7 @@
 // Canvas view class/module for zed-squared
 //
 // TODO:
+// - fcn to set custom follow-mode parameters 
 // -
 
 zSquared.view = function( z2 )
@@ -65,10 +66,14 @@ zSquared.view = function( z2 )
 		this.camera_doc.position.y = this.height/2;
 
 		// follow-mode data
-		this._hbuf = 0;
-		this._vbuf = 0;
-		this._hoffs = 0;
-		this._voffs = 0;
+		this.tbuf = 0;
+		this.bbuf = 0;
+		this.lbuf = 0;
+		this.rbuf = 0;
+		this.toffs = 0;
+		this.boffs = 0;
+		this.loffs = 0;
+		this.roffs = 0;
 		this.follow_mode = follow_mode || z2.FOLLOW_MODE_NONE;
 	};
 
@@ -144,34 +149,35 @@ zSquared.view = function( z2 )
 			switch( this.follow_mode )
 			{
 			case z2.FOLLOW_MODE_TIGHT:
-				this.hbuf = this.width/2;
-				this.vbuf = this.height/2;
+				this.lbuf = this.rbuf = this.width/2;
+				this.tbuf = this.bbuf = this.height/2;
 				break;
 			case z2.FOLLOW_MODE_PLATFORMER:
-				// TODO: better values? different 'top' value than 'bottom'
-				// (instead of same 'vbuf' for top & bottom)
-				this.hbuf = this.width/2.5;
-				this.vbuf = this.height/3;
+				this.lbuf = this.rbuf = this.width/2.5;
+				this.bbuf = this.height/3;
+				this.tbuf = this.height/4;
 				break;
 			case z2.FOLLOW_MODE_OVERHEAD_SCROLLER:
-				this.hbuf = this.width/3;
-				this.vbuf = this.height/3;
+				this.lbuf = this.rbuf = this.width/3;
+				this.tbuf = this.bbuf = this.height/3;
 				break;
 			}
 
-			// horizontal and vertical offset from center
+			// horizontal and vertical offsets from center
 			// (ie distance from center of view to target)
-			this.hoffs = this.width/2 - this.hbuf;
-			this.voffs = this.height/2 - this.vbuf;
+			this.loffs = this.width/2 - this.lbuf;
+			this.roffs = this.width/2 - this.rbuf;
+			this.toffs = this.height/2 - this.tbuf;
+			this.boffs = this.height/2 - this.bbuf;
 		}
 	} );
 
 	z2.View.prototype._follow = function()
 	{
-		var l = -this.doc.position.x - this.hoffs;
-		var r = -this.doc.position.x + this.hoffs;
-		var t = -this.doc.position.y - this.voffs;
-		var b = -this.doc.position.y + this.voffs;
+		var l = -this.doc.position.x - this.loffs;
+		var r = -this.doc.position.x + this.roffs;
+		var t = -this.doc.position.y - this.toffs;
+		var b = -this.doc.position.y + this.boffs;
 
 		// get the target's x/y coordinates in scene space
 		var x = this._target.x;
@@ -182,12 +188,12 @@ zSquared.view = function( z2 )
 		// account for scene size
 		if( this.scene )
 		{
-			if( x > this.scene.width - this.hbuf || x < this.hbuf )
+			if( x > this.scene.width - this.rbuf || x < this.lbuf )
 			{
 				// x can't change
 				xstop = true;
 			}
-			if( y > this.scene.height - this.vbuf || y < this.vbuf )
+			if( y > this.scene.height - this.bbuf || y < this.tbuf )
 			{
 				// y can't change
 				ystop = true;
@@ -202,12 +208,12 @@ zSquared.view = function( z2 )
 		{
 			if( x < l )
 			{
-				x += this.hoffs;
+				x += this.loffs;
 				setx = true;
 			}
 			else if( x > r )
 			{
-				x -= this.hoffs;
+				x -= this.roffs;
 				setx = true;
 			}
 		}
@@ -215,12 +221,12 @@ zSquared.view = function( z2 )
 		{
 			if( y < t )
 			{
-				y += this.voffs;
+				y += this.toffs;
 				sety = true;
 			}
 			else if( y > b )
 			{
-				y -= this.voffs;
+				y -= this.boffs;
 				sety = true;
 			}
 		}
