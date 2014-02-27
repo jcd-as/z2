@@ -50,6 +50,8 @@ zSquared.game = function( z2 )
 		this.canvas = canvas;
 		this.force_canvas = force_canvas || false;
 		this.paused = false;
+		this.pausedSprite = null;
+		this.pausedBg = null;
 		this.scene = null;
 
 		window.game = this;
@@ -74,20 +76,9 @@ zSquared.game = function( z2 )
 		var visibilityChange = function( event )
 		{
 			if( that.paused === false && (event.type == 'pagehide' || event.type == 'blur' || document.hidden === true || document.webkitHidden === true))
-				that.paused = true;
+				that._pause();
 			else
-				that.paused = false;
-
-			if( that.paused )
-			{
-				z2.time.pause();
-				z2.pauseSounds();
-			}
-			else
-			{
-				z2.resumeSounds();
-				z2.time.resume();
-			}
+				that._resume();
 		};
 		document.addEventListener( 'visibilitychange', visibilityChange, false );
 		document.addEventListener( 'webkitvisibilitychange', visibilityChange, false );
@@ -95,6 +86,57 @@ zSquared.game = function( z2 )
 		document.addEventListener( 'pageshow', visibilityChange, false );
 		window.onblur = visibilityChange;
 		window.onfocus = visibilityChange;
+	};
+
+	z2.Game.prototype._pause = function()
+	{
+		this.paused = true;
+		z2.time.pause();
+		z2.pauseSounds();
+
+		// TODO: black background too, like msgs
+		// display paused graphic, if we have one
+		if( this.pausedSprite )
+		{
+			this.view.add( this.pausedBg, true );
+			this.view.add( this.pausedSprite, true );
+			this.renderer.render( this.stage );
+		}
+		else
+		{
+			var img = z2.loader.getAsset( 'paused-image' );
+			if( img )
+			{
+				this.pausedBg = new PIXI.Graphics();
+				this.pausedBg.beginFill( 0x000000 );
+				this.pausedBg.alpha = 0.85;
+				this.pausedBg.drawRect( 0, 0, this.view.width, this.view.height );
+				this.pausedBg.endFill();
+
+				var bt = new PIXI.BaseTexture( img );
+				var t = new PIXI.Texture( bt );
+				this.pausedSprite = new PIXI.Sprite( t );
+
+				this.view.add( this.pausedBg, true );
+				this.view.add( this.pausedSprite, true );
+				this.renderer.render( this.stage );
+			}
+		}
+	};
+
+	z2.Game.prototype._resume = function()
+	{
+		this.paused = false;
+		z2.resumeSounds();
+		z2.time.resume();
+
+		// hide paused graphic, if we have one
+		if( this.pausedSprite )
+		{
+			this.view.remove( this.pausedBg, true );
+			this.view.remove( this.pausedSprite, true );
+			this.renderer.render( this.stage );
+		}
 	};
 
 	/** Start the main loop
