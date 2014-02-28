@@ -90,6 +90,9 @@ zSquared.game = function( z2 )
 
 	z2.Game.prototype._pause = function()
 	{
+		if( this.paused )
+			return;
+
 		this.paused = true;
 		z2.time.pause();
 		z2.pauseSounds();
@@ -126,6 +129,9 @@ zSquared.game = function( z2 )
 
 	z2.Game.prototype._resume = function()
 	{
+		if( !this.paused )
+			return;
+
 		this.paused = false;
 		z2.resumeSounds();
 		z2.time.resume();
