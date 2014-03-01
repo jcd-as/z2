@@ -27,6 +27,9 @@ zSquared.scene = function( z2 )
 		this.update = scene.update || function() {};
 		this.destroy = scene.destroy || function() {};
 
+		// callback fcn can be set
+		this.loadProgressCallback = null;
+
 		this.width = width || 0;
 		this.height = height || 0;
 
@@ -43,7 +46,7 @@ zSquared.scene = function( z2 )
 		this.load();
 
 		// start the loader
-		z2.loader.load( this._start, this );
+		z2.loader.load( this._start, this._loadProgressCallback, this );
 	};
 
 	/** Stop the scene
@@ -84,6 +87,13 @@ zSquared.scene = function( z2 )
 		// tell the main loop that it is okay to call 'update' on us
 		this.ready = true;
 	};
+
+	z2.Scene.prototype._loadProgressCallback = function( percent_done )
+	{
+		if( this.loadProgressCallback )
+			this.loadProgressCallback( percent_done );
+	};
+
 };
 
 

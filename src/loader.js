@@ -9,7 +9,7 @@
 // x support text files
 // x support json files
 // x support audio files
-// - support bitmap fonts (.fnt files)
+// x support bitmap fonts (.fnt files)
 // - use browser type to load appropriate audio files (i.e. ogg for firefox)
 // - 
 
@@ -261,12 +261,16 @@ zSquared.loader = function( z2 )
 
 		/** Start the load (asynchronous)
 		 * @method z2.loader#load
-		 * @arg {Function} onComplete Callback function. Should take two numeric
+		 * @arg {Function} onComplete Callback function. Should take two numeric 
 		 * arguments: the number of loaded items and the number of failed items
+		 * @arg {Function} onProgress Callback function. Takes one numeric
+		 * argument: the loading progress (0 to 1)
+		 * @arg {object} that The 'this' object for the callback functions
 		 */
-		load: function( onComplete, that )
+		load: function( onComplete, onProgress, that )
 		{
 			var remaining = assetQueue.length;
+			var total = remaining;
 
 			// loaded callback
 			var loaded = function( key, obj )
@@ -275,7 +279,9 @@ zSquared.loader = function( z2 )
 				remaining--;
 				assetsLoaded++;
 
-				// TODO: call progress callback here
+				// call progress callback
+				if( onProgress )
+					onProgress.call( that, (total - remaining) / total );
 
 				// if we're done, call the final callback
 				if( remaining === 0 )

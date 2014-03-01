@@ -29,6 +29,9 @@ zSquared.tiledscene = function( z2 )
 		this.update = scene.update || function() {};
 		this.destroy = scene.destroy || function() {};
 
+		this.loadProgressImage = null;
+		this.loadProgressSprite = null;
+
 		this.map = null;
 		this.width = 0;
 		this.height = 0;
@@ -46,8 +49,23 @@ zSquared.tiledscene = function( z2 )
 		// queue the assets
 		this.load();
 
+		// if we have a loading image, display it
+		if( this.loadProgressImage )
+		{
+			var bt = new PIXI.BaseTexture( this.loadProgressImage );
+			var tex = new PIXI.Texture( bt );
+			this.loadProgressSprite = new PIXI.Sprite( tex );
+			// center the sprite
+			this.loadProgressSprite.position.x = game.view.width / 2 - bt.width/2;
+			this.loadProgressSprite.position.y = game.view.height / 2 - bt.height/2;
+			// crop the sprite
+			tex.frame.width = 0;
+			game.view.add( this.loadProgressSprite, true );
+			game.renderer.render( game.stage );
+		}
+
 		// start the loader
-		z2.loader.load( this._start, this );
+		z2.loader.load( this._start, this._loadProgressCallback, this );
 	};
 
 	/** Stop the scene
@@ -99,6 +117,13 @@ zSquared.tiledscene = function( z2 )
 
 	z2.TiledScene.prototype._start = function()
 	{
+		// if we have a loading image, remove it
+		if( this.loadProgressSprite )
+		{
+			game.view.remove( this.loadProgressSprite, true );
+			this.loadProgressSprite = null;
+		}
+
 		var json = z2.loader.getAsset( 'level' );
 
 		// get the ecs manager (force it to init)
@@ -120,5 +145,18 @@ zSquared.tiledscene = function( z2 )
 		// tell the main loop that it is okay to call 'update' on us
 		this.ready = true;
 	};
+
+	z2.TiledScene.prototype._loadProgressCallback = function( percent_done )
+	{
+		if( this.loadProgressSprite )
+		{
+			// crop the sprite
+			var tex = this.loadProgressSprite.texture;
+			tex.frame.width = tex.baseTexture.width * percent_done;
+			// force a render
+			game.renderer.render( game.stage );
+		}
+	};
+
 };
 
