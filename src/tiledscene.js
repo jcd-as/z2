@@ -153,6 +153,7 @@ zSquared.tiledscene = function( z2 )
 			// crop the sprite
 			var tex = this.loadProgressSprite.texture;
 			tex.frame.width = tex.baseTexture.width * percent_done;
+			tex.setFrame( tex.frame );
 			// force a render
 			game.renderer.render( game.stage );
 		}

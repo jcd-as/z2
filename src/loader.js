@@ -4,8 +4,8 @@
 //
 // TODO:
 // x support 'base' URL for loading
-// - support progress indicator callback
-// - support pre-loads
+// x support progress indicator callback
+// - support pre-loads (?)
 // x support text files
 // x support json files
 // x support audio files
@@ -312,6 +312,7 @@ zSquared.loader = function( z2 )
 					// tileset images
 					for( var i = 0; i < data.tilesets.length; i++ )
 					{
+						total++;
 						remaining++;
 						var img_url = data.tilesets[i].image.split( '/' ).slice( -1 )[0];
 						loadImage( data.tilesets[i].name, img_url, loaded, failed, that );
@@ -321,6 +322,7 @@ zSquared.loader = function( z2 )
 					{
 						if( data.layers[i].type == 'imagelayer' )
 						{
+							total++;
 							remaining++;
 							var path = data.layers[i].name + ".png";
 							loadImage( data.layers[i].name, path, loaded, failed, that );
