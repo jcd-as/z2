@@ -27,10 +27,13 @@ zSquared.game = function( z2 )
 			// update the scene
 			// (lets it implement any non-ECS behaviour it wants)
 			if( game.scene && game.scene.ready )
+			{
+				// let the scene do any specific updating that it needs
 				game.scene.update();
 
-			// update the ECS system
-			z2.ecsUpdate( et );
+				// update the ECS system
+				z2.ecsUpdate( et );
+			}
 		}
 
 		if( _debug && z2.stats )

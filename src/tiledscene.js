@@ -36,6 +36,8 @@ zSquared.tiledscene = function( z2 )
 		this.width = 0;
 		this.height = 0;
 
+		this.ready = false;
+
 		// queue the Tiled map json
 		z2.loader.queueAsset( 'level', url, 'tiled' );
 	};
