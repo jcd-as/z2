@@ -172,6 +172,32 @@ var zSquared = function( opts )
 				cancelFullScreen.call( doc );
 		},
 
+		/**
+		 * Save state to local storage
+		 * @function z2#saveState
+		 * @arg {string} file
+		 * @arg {string} state
+		 */
+		saveState : function( file, state )
+		{
+			window.localStorage.setItem( file, JSON.stringify( state ) );
+		},
+		
+		/**
+		 * Load state from local storage
+		 * @function z2#loadState
+		 * @arg {string} file
+		 * @returns {Object}
+		 */
+		loadState : function( file )
+		{
+			var state = window.localStorage.getItem( file );
+			if( state )
+				return JSON.parse( state );
+			else
+				return null;
+		},
+
 	};
 
 	// return the main (namespace) object

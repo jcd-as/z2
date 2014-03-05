@@ -66,7 +66,8 @@ zSquared.game = function( z2 )
 			this.renderer = PIXI.autoDetectRenderer( canvas.width, canvas.height, canvas, true );
 
 		// create a Pixi stage for everything to be drawn on
-		this.stage = new PIXI.Stage( 0x800000 );
+//		this.stage = new PIXI.Stage( 0x800000 );
+		this.stage = new PIXI.Stage( 0x000000 );
 		this.stage.interactive = false;
 
 		// create a view with some default values
