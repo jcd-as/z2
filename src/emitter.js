@@ -2,20 +2,22 @@
 // Copyright 2013 Joshua C Shepard
 // Components and Systems for particle emitter for 2d games
 // TODO:
-// - use re-usable Pixi Sprite pool too
-// - don't create new Particle objects each time we emit, just set the props on
+// x use re-usable Pixi Sprite pool too
+// x don't create new Particle objects each time we emit, just set the props on
 // an existing one in the pool
 // - gravity & resistance
 // - infinite lifespans
 // - ability to use animations instead of just frames
-// - should be able to 'trickle' particles in...
+// x should be able to 'trickle' particles in...
+// - do particles need to be removed from the sprite batch when the system is
+// torn down? does the sprite batch need to be removed from the Stage??
 // -
 
 zSquared.emitter = function( z2 )
 {
 	"use strict";
 
-	z2.require( ["ecs", "2d", "time"] );
+	z2.require( ["ecs", "2d", "time", "objectpool"] );
 
 
 	/////////////////////////////////////////////////////////////////////////
@@ -58,32 +60,89 @@ zSquared.emitter = function( z2 )
 	/////////////////////////////////////////////////////////////////////////
 	// Particle class
 	/////////////////////////////////////////////////////////////////////////
-	/** Particle class
-	 * @class z2#Particle
-	 * @constructor
-	 * @arg {PIXI.Sprite} sprite The Pixi Sprite for this type of particle
-	 * @arg {Number} width The width of the sprite image, in pixels
-	 * @arg {Number} frame The spritesheet frame (index) in the spritesheet
-	 * @arg {Number} x The X coordinate
-	 * @arg {Number} y The Y coordinate
-	 * @arg {Number} vel_x X velocity
-	 * @arg {Number} vel_y Y velocity
-	 * @arg {Number} theta Rotation angle
-	 * @arg {Number} alpha alpha transparency (0 to 1)
-	 * @arg {Number} lifespan Lifespan of the particle, in ms
+	/** Factory function to create Particle class
+	 * @function z2#particleFactory
+	 * @arg {PIXI.BaseTexture} basetexture The Pixi BaseTexture for the
+	 * Particles
+	 * @arg {PIXI.Texture} texture The Pixi Texture for the * Particles
+	 * @arb {PIXI.SpriteBatch} batch The Pixi SpriteBatch to which the Particle
+	 * sprites will be added
 	 */
-	function Particle( sprite, width, frame, x, y, vel_x, vel_y, theta, alpha, lifespan )
+	function particleFactory( basetexture, texture, batch )
 	{
-		this.sprite = sprite;
-		sprite.position.x = x || 0;
-		sprite.position.y = y || 0;
-		sprite.texture.setFrame( new PIXI.Rectangle( frame * width, 0, width, sprite.height ) );
-		this.velX = vel_x || 0;
-		this.velY = vel_y || 0;
-		sprite.rotation = theta || 0;
-		sprite.alpha = alpha || 1;
-		this._born = z2.time.now();
-		this.lifespan = lifespan || 0;
+		/** Particle class
+		 * @class z2#Particle
+		 * @constructor
+		 */
+		function Particle()
+		{
+			var t;
+			// non-animated particles can all share the same texture, saving
+			// memory, increasing perf
+			if( texture )
+				t = texture;
+			// animated particles need their own texture object
+			else
+				t = new PIXI.Texture( basetexture );
+			this.sprite = new PIXI.Sprite( t );
+			this.reset();
+			batch.addChild( this.sprite );
+		};
+
+		/** Reset a Particle to a default state
+		 * @function Particle.reset
+		 */
+		Particle.prototype.reset = function()
+		{
+			this.sprite.position.x = 0;
+			this.sprite.position.y = 0;
+			this.sprite.rotation = 0;
+			this.sprite.alpha = 1;
+			this.velX = 0;
+			this.velY = 0;
+			this._born = 0;
+			this.lifespan = 0;
+		};
+
+		/** Initialize a Particle
+		 * @function Particle.init
+		 * @arg {Number} width The width of the sprite image, in pixels
+		 * @arg {Number} frame The spritesheet frame (index) in the spritesheet
+		 * @arg {Number} x The X coordinate
+		 * @arg {Number} y The Y coordinate
+		 * @arg {Number} vel_x X velocity
+		 * @arg {Number} vel_y Y velocity
+		 * @arg {Number} theta Rotation angle
+		 * @arg {Number} alpha alpha transparency (0 to 1)
+		 * @arg {Number} lifespan Lifespan of the particle, in ms
+		 */
+		Particle.prototype.init = function ( width, frame, x, y, vel_x, vel_y, theta, alpha, lifespan )
+		{
+			// set the sprite frame (create a new one if needed)
+			var fr;
+			if( this.sprite.frame )
+				fr = this.sprite.frame;
+			else
+				fr = new PIXI.Rectangle();
+			fr.x = frame * width;
+			fr.y = 0;
+			fr.width = width;
+			fr.height = this.sprite.height;
+			this.sprite.texture.setFrame( fr );
+
+			this.sprite.position.x = x || 0;
+			this.sprite.position.y = y || 0;
+			this.sprite.rotation = theta || 0;
+			this.sprite.alpha = alpha || 1;
+			this.sprite.visible = true;
+
+			this.velX = vel_x || 0;
+			this.velY = vel_y || 0;
+			this._born = z2.time.now();
+			this.lifespan = lifespan || 0;
+		}
+
+		return Particle;
 	}
 
 
@@ -108,12 +167,11 @@ zSquared.emitter = function( z2 )
 		{
 			timer : null,
 			spritesheet : null,
+			particlePool : null,
 			particles : [],
-			openSlots : [],
 			animated : false,
 			texture : null,
 			basetexture : null,
-//			sprites : [],
 			sb : null,
 			init: function()
 			{
@@ -122,9 +180,12 @@ zSquared.emitter = function( z2 )
 				// if we're not animated, all particles can share the same texture
 				if( !this.animated )
 					this.texture = new PIXI.Texture( this.basetexture );
+
 				this.sb = new PIXI.SpriteBatch();
 //				this.sb = new PIXI.DisplayObjectContainer();
 				view.doc.addChild( this.sb );
+
+				this.particlePool = new z2.ObjectPool( particleFactory( this.basetexture, this.texture, this.sb ) );
 			},
 //			onStart: function()
 //			{
@@ -139,7 +200,9 @@ zSquared.emitter = function( z2 )
 					this.timer = z2.time.now() + em.delay - em.period;
 
 				// update existing particles
-				for( i = 0; i < this.particles.length; i++ )
+				// (iterate backwards so we can remove dead particles as we come
+				// to them)
+				for( i = this.particles.length; i >= 0; i-- )
 				{
 					var p = this.particles[i];
 					if( !p )
@@ -148,12 +211,13 @@ zSquared.emitter = function( z2 )
 					// if it's lifetime is at an end, destroy this entity
 					if( z2.time.now() >= p._born + p.lifespan )
 					{
-						// remove the sprite from Pixi
-						this.sb.removeChild( p.sprite );
+						// hide the sprite
+						p.sprite.visible = false;
 
 						// remove the entity from the particle array
-						this.openSlots.push( i );
-						this.particles[i] = null;
+						// safe to remove while iterating *backwards*
+						this.particles.splice( i, 1 );
+						this.particlePool.release( p );
 
 						continue;
 					}
@@ -187,32 +251,19 @@ zSquared.emitter = function( z2 )
 						for( i = 0; i < em.quantity; i++ )
 						{
 							// don't create more than 'maxParticles'
-							if( this.openSlots.length === 0 && this.particles.length > em.maxParticles )
+							if( this.particles.length === em.maxParticles )
 								continue;
 
 							// TODO: randomize animation ???
-
-							var sprite;
-							// if we're animated, we need a separate texture for
-							// each particle, because they'll have different
-							// frames
-							if( this.animated )
-							{
-								var texture = new PIXI.Texture( this.basetexture );
-								sprite = new PIXI.Sprite( texture );
-							}
-							else
-							{
-								sprite = new PIXI.Sprite( this.texture );
-							}
-							this.sb.addChild( sprite );
 
 							var frame = 0;
 							if( em.frames )
 								frame = em.frames[z2.random( 0, em.frames.length-1, Math.round )];
 							
-							var particle = new Particle(
-								sprite, 
+							// get a particle from the pool
+							var particle = this.particlePool.get();
+							particle.init(
+//								sprite, 
 								this.spritesheet.width,
 								frame,
 								// x
@@ -231,14 +282,8 @@ zSquared.emitter = function( z2 )
 								z2.random( em.minLifespan, em.maxLifespan, Math.round )
 							);
 
-							// find or create a slot for the particle
-							if( this.openSlots.length > 0 )
-							{
-								var slot = this.openSlots.pop();
-								this.particles[slot] = particle;
-							}
-							else
-								this.particles.push( particle );
+							// and add it to our collection
+							this.particles.push( particle );
 						}
 					}
 				}

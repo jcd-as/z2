@@ -189,7 +189,12 @@ zSquared.game = function( z2 )
 
 		// if we have a scene running, stop it first
 		if( this.scene )
+		{
 			this.scene.stop();
+			// then delete it
+			this.scene.destroy();
+		}
+		// then start the new scene
 		this.scene = new_scene;
 		this.scene.start();
 	};

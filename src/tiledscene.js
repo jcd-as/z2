@@ -87,9 +87,6 @@ zSquared.tiledscene = function( z2 )
 
 		// reset the ecs system
 		z2.manager.reset();
-
-		// tear-down the scene
-		this.destroy();
 	};
 
 	/** Re-start a scene
