@@ -7,6 +7,8 @@
 // - (optimized) routines to just detect intersection, not resolve collision
 // - convert all collision routines to return boolean and use out param for
 // separation vector (not just direction normal)
+// - account for gravity (and resistance/friction?) for sloped surfaces??
+// - surface materials (friction, restitution etc)
 // - 
 
 zSquared.collision = function( z2 )
@@ -766,8 +768,10 @@ zSquared.collision = function( z2 )
 				var d = l + t - tw;
 				if( d < 0 )
 					return false;
-				t = d;
-				l = 0;
+				// ybound = tw - l;
+				t = t - tw - l;
+				// xbound = th - t;
+				l = l - th - t;
 			}
 		}
 		// slopeDownRight - 45 deg
@@ -780,8 +784,10 @@ zSquared.collision = function( z2 )
 				var d = r + t - tw;
 				if( d < 0 )
 					return false;
-				t = d;
-				r = 0;
+				// ybound = tw - r;
+				t = t - tw - r;
+				// xbound = th - t;
+				r = r - th - t;
 			}
 		}
 
