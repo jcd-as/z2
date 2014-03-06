@@ -621,15 +621,15 @@ zSquared.collision = function( z2 )
 	 * @arg {Array} l TileLayer data (array of tile indices)
 	 * @arg {Number} w width of data array
 	 * @arg {Number} h width of data array
-	 * @arg {Array} solid Array of indices of the tiles that are considered for
-	 * collision ('solid' tiles)
+	 * @arg {Array} tiles Array of tile characteristics that are considered for
+	 * collision ('solid' tiles, 'sloped' tiles etc)
 	 * @returns {Array} collision map - an array of objects, one for each tile,
 	 * null for tiles that cannot be collided against ("non-solid"), 
-	 * { left: n, right: n, top: n, bottom: n } for solid tiles (n is 1 for
+	 * { left: n, right: n, top: n, bottom: n, slope: n } for solid tiles (n is 1 for
 	 * solid, 0 for non-solid and -1 for 'interesting' [which is not-yet-impl])
 	 *
 	 */
-	z2.buildCollisionMap = function( l, w, h, solid )
+	z2.buildCollisionMap = function( l, w, h, tiles )
 	{
 		var i, j, k, t;
 
@@ -649,8 +649,15 @@ zSquared.collision = function( z2 )
 				{
 					// true index is one less than stored in the Tiled file
 					t--;
-					if( solid.indexOf( t ) !== -1 )
-						map[k] = {left:1, right:1, top:1, bottom:1};
+					// tile is 'slopeDownLeft'
+					if( tiles[t] && tiles[t].slope == 1 )
+						map[k] = {left:-1, right:1, top:-1, bottom:1, slope:1};
+					// tile is 'slopeDownRight'
+					else if( tiles[t] && tiles[t].slope == 2 )
+						map[k] = {left:1, right:-1, top:-1, bottom:1, slope:2};
+					// just plain solid
+					else if( tiles[t] && tiles[t].solid )
+						map[k] = {left:1, right:1, top:1, bottom:1, slope:0};
 					else
 						map[k] = null;
 				}
@@ -706,7 +713,7 @@ zSquared.collision = function( z2 )
 	 * @arg {Array} box (flat) Array of values for aabb 1: top, left, bottom, right
 	 * @arg {Array} tile (flat) Array of values for tile: top, left, bottom, right
 	 * @arg {Object} td Object containing the tile data for this tile (e.g.
-	 * {left:n, right:n, top:n, bottom:n} )
+	 * {left:n, right:n, top:n, bottom:n, slope:n} )
 	 * @arg {Array} pv (out) Vector (2 element array) for returning penetration (direction and magnitude)
 	 * @returns {boolean} true if collision / penetration, false if none
 	 */
@@ -725,14 +732,6 @@ zSquared.collision = function( z2 )
 		if( t < 0 || l < 0 || b < 0 || r < 0 )
 			return 0;
 
-		// don't allow overlap greater than the tile size
-		var tw = tile[3] - tile[1];
-		var th = tile[2] - tile[0];
-		if( t > th ) t = 0;
-		if( l > tw ) l = 0;
-		if( b > th ) b = 0;
-		if( r > tw ) r = 0;
-
 		// only check against the sides of the tile that are marked for
 		// collision
 		if( !td.top )
@@ -743,6 +742,48 @@ zSquared.collision = function( z2 )
 			b = 0;
 		if( !td.right )
 			r = 0;
+
+		// tile dimensions
+		var tw = tile[3] - tile[1];
+		var th = tile[2] - tile[0];
+
+		// non-sloped tiles
+		if( td.slope == 0 )
+		{
+			// don't allow overlap greater than the tile size
+			if( t > th ) t = 0;
+			if( l > tw ) l = 0;
+			if( b > th ) b = 0;
+			if( r > tw ) r = 0;
+		}
+		// slopeDownLeft - 45 deg
+		else if( td.slope == 1 )
+		{
+			if( l > tw ) l = tw;
+			if( l || t )
+			{
+				// TODO: this only works for SQUARE tiles
+				var d = l + t - tw;
+				if( d < 0 )
+					return false;
+				t = d;
+				l = 0;
+			}
+		}
+		// slopeDownRight - 45 deg
+		else if( td.slope == 2 )
+		{
+			if( r > tw ) r = tw;
+			if( r || t )
+			{
+				// TODO: this only works for SQUARE tiles
+				var d = r + t - tw;
+				if( d < 0 )
+					return false;
+				t = d;
+				r = 0;
+			}
+		}
 
 		// if there is any overlap, select the least overlap
 		if( t || l || b || r )
@@ -788,7 +829,6 @@ zSquared.collision = function( z2 )
 	 * @arg {Number} h height of collision map array
 	 * @arg {Number} tw width of tiles (in pixels)
 	 * @arg {Number} th height of tiles (in pixels)
-	 * solid, 0 for non-solid and -1 for 'interesting' [which is not-yet-impl])
 	 * @arg {Array} pv (out) Vector (2 element array) for returning penetration (direction and magnitude)
 	 * @returns {boolean} true if collision, false if none
 	 */

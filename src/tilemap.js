@@ -111,7 +111,8 @@ zSquared.tilemap = function( z2 )
 		this.objectGroups = [];
 
 		// collision map
-		this.solidTiles = [];
+		// array of {solid: true/false, slope: #}
+		this.tileCharacterstics = [];
 		this.collisionMap = null;
 		this.collisionMapComponent = null;
 
@@ -171,7 +172,7 @@ zSquared.tilemap = function( z2 )
 
 		// build the list of solid tiles
 		// TODO: support multiple tilesets
-		this._buildSolidTileList( map.tilesets[0] );
+		this._buildTileCharacteristics( map.tilesets[0] );
 
 		var l;
 
@@ -209,21 +210,31 @@ zSquared.tilemap = function( z2 )
 		}
 	};
 
-	z2.TileMap.prototype._buildSolidTileList = function( tileset )
+	z2.TileMap.prototype._buildTileCharacteristics = function( tileset )
 	{
 		// TODO: support multiple tilesets
 		for( var key in tileset.tileproperties )
 		{
 			if( !tileset.tileproperties.hasOwnProperty( key ) )
 				continue;
+			var solid = false;
+			var slope = 0;
 			if( tileset.tileproperties[key].solid )
-				this.solidTiles.push( +key );
+			{
+				if( tileset.tileproperties[key].solid == 'slopeDownLeft' )
+					slope = 1;
+				if( tileset.tileproperties[key].solid == 'slopeDownRight' )
+					slope = 2;
+				solid = true;
+				// TODO: do we care if any other tileproperties are set?
+				this.tileCharacterstics[key] = {solid: solid, slope: slope};
+			}
 		}
 	};
 
 	z2.TileMap.prototype._buildCollisionMap = function( data )
 	{
-		this.collisionMap = z2.buildCollisionMap( data, this.widthInTiles, this.heightInTiles, this.solidTiles );
+		this.collisionMap = z2.buildCollisionMap( data, this.widthInTiles, this.heightInTiles, this.tileCharacterstics );
 	};
 
 	z2.TileMap.prototype._updateObjectCollisionMaps = function()
