@@ -768,10 +768,10 @@ zSquared.collision = function( z2 )
 				var d = l + t - tw;
 				if( d < 0 )
 					return false;
-				// ybound = tw - l;
-				t = t - tw - l;
-				// xbound = th - t;
-				l = l - th - t;
+				var xbound = th - t;
+				var ybound = tw - l;
+				t = t - ybound;
+				l = l - xbound;
 			}
 		}
 		// slopeDownRight - 45 deg
@@ -784,10 +784,10 @@ zSquared.collision = function( z2 )
 				var d = r + t - tw;
 				if( d < 0 )
 					return false;
-				// ybound = tw - r;
-				t = t - tw - r;
-				// xbound = th - t;
-				r = r - th - t;
+				var xbound = th - t;
+				var ybound = tw - r;
+				t = t - ybound;
+				r = r - xbound;
 			}
 		}
 
