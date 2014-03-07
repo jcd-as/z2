@@ -85,6 +85,9 @@ zSquared.input = function( z2 )
 		{
 			document.body.removeEventListener( 'keydown', this._onKeyDown );
 			document.body.removeEventListener( 'keyup', this._onKeyUp );
+			this.captured = {};
+			this.pressed = {};
+			this.up = {};
 		},
 
 		/** Update the 'keyUp' status. In order for keyUp() to work, this needs
