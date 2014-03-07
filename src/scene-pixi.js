@@ -55,11 +55,17 @@ zSquared.scene = function( z2 )
 	 */
 	z2.Scene.prototype.stop = function()
 	{
+		// stop touch input handling
+		z2.touch.stop();
+
+		// stop kbd handling
+		z2.kbd.stop();
+
+		// clear the view (& thus Pixi)
+		game.view.clear();
+
 		// reset the ecs system
 		z2.manager.reset();
-
-		// tear-down the scene
-		this.destroy();
 	};
 
 
