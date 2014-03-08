@@ -61,17 +61,14 @@ zSquared['2d'] = function( z2 )
 	/** Component Factory for 2d radius */
 	z2.radiusFactory = z2.createComponentFactory( {radius:0} );
 
-	/** Component Factory for root (non-grouped) 2d transforms*/
-//	z2.rootTransformFactory = z2.createComponentFactory();
-
 	/** Component Factory for 2d (animated) sprite */
 	z2.spriteFactory = z2.createComponentFactory( {sprite: null, width: 0, animations: null } );
 
 	/** Component Factory for groups */
-	z2.groupFactory = z2.createComponentFactory( {group: []} );
+//	z2.groupFactory = z2.createComponentFactory( {group: []} );
 
 	/** Component Factory for physics body (AABB bounds, mass, etc) */
-	z2.physicsBodyFactory = z2.createComponentFactory( {aabb:null, restitution: 0, mass:1, blocked_top: false, blocked_left:false, blocked_down:false, blocked_right:false, collisionCallback: null} );
+	z2.physicsBodyFactory = z2.createComponentFactory( {aabb:null, restitution: 0, mass:1, blocked_top: false, blocked_left:false, blocked_down:false, blocked_right:false, was_blocked_top:false, was_blocked_left:false, was_blocked_bottom:false, was_blocked_right:false, collisionCallback: null} );
 
 	/** Component Factory for 2d gravity */
 	z2.gravityFactory = z2.createComponentFactory( {x: 0, y: 0} );
@@ -483,6 +480,16 @@ zSquared['2d'] = function( z2 )
 				// if we have a physics body, handle collision-related things
 				if( bc )
 				{
+					bc.was_blocked_left = bc.blocked_left;
+					bc.was_blocked_right = bc.blocked_right;
+					bc.was_blocked_up = bc.blocked_up ;
+					bc.was_blocked_down = bc.blocked_down ;
+
+					bc.blocked_left = false;
+					bc.blocked_right = false;
+					bc.blocked_up = false;
+					bc.blocked_down = false;
+
 					// handle sprite vs sprite collisions
 					if( cgc )
 					{
@@ -529,9 +536,14 @@ zSquared['2d'] = function( z2 )
 									// call collision callback, if it exists
 									if( bc.collisionCallback && typeof(bc.collisionCallback) == 'function' )
 									{
-										// call it. if it returns 'true', don't
-										// separate
+										// call it. if it returns 'true', don't separate
 										if( bc.collisionCallback( e, ent ) )
+											continue;
+									}
+									else if( body.collisionCallback && typeof(body.collisionCallback) == 'function' )
+									{
+										// call it. if it returns 'true', don't separate
+										if( body.collisionCallback( ent, e ) )
 											continue;
 									}
 
@@ -631,48 +643,26 @@ zSquared['2d'] = function( z2 )
 							{
 								vc.x = vc.x * -bc.restitution;
 								bc.blocked_left = true;
-								bc.blocked_right = false;
-								bc.blocked_up = false;
-								bc.blocked_down = false;
 							}
 							// right
 							else if( this.pv[0] < 0 )
 							{
 								vc.x = vc.x * -bc.restitution;
-								bc.blocked_left = true;
 								bc.blocked_right = true;
-								bc.blocked_left = false;
-								bc.blocked_up = false;
-								bc.blocked_down = false;
 							}
 							// top
 							else if( this.pv[1] > 0 )
 							{
 								vc.y = vc.y * -bc.restitution;
 								bc.blocked_up = true;
-								bc.blocked_left = false;
-								bc.blocked_right = false;
-								bc.blocked_down = false;
 							}
 							// bottom
 							else if( this.pv[1] < 0 )
 							{
 								vc.y = vc.y * -bc.restitution;
 								bc.blocked_down = true;
-								bc.blocked_left = false;
-								bc.blocked_right = false;
-								bc.blocked_up = false;
 							}
 						}
-					}
-
-					// no collision, un-set blocked status
-					if( !collision )
-					{
-						bc.blocked_left = false;
-						bc.blocked_right = false;
-						bc.blocked_up = false;
-						bc.blocked_down = false;
 					}
 				}
 
