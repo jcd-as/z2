@@ -71,7 +71,7 @@ zSquared['2d'] = function( z2 )
 	z2.groupFactory = z2.createComponentFactory( {group: []} );
 
 	/** Component Factory for physics body (AABB bounds, mass, etc) */
-	z2.physicsBodyFactory = z2.createComponentFactory( {aabb:null, restitution: 0, mass:1, blocked_top: false, blocked_left:false, blocked_down:false, blocked_right:false} );
+	z2.physicsBodyFactory = z2.createComponentFactory( {aabb:null, restitution: 0, mass:1, blocked_top: false, blocked_left:false, blocked_down:false, blocked_right:false, collisionCallback: null} );
 
 	/** Component Factory for 2d gravity */
 	z2.gravityFactory = z2.createComponentFactory( {x: 0, y: 0} );
@@ -525,6 +525,15 @@ zSquared['2d'] = function( z2 )
 								if( m )
 								{
 									collision = true;
+
+									// call collision callback, if it exists
+									if( bc.collisionCallback && typeof(bc.collisionCallback) == 'function' )
+									{
+										// call it. if it returns 'true', don't
+										// separate
+										if( bc.collisionCallback( e, ent ) )
+											continue;
+									}
 
 									// separate
 									pc.x += this.pv[0];
