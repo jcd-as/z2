@@ -11,6 +11,7 @@
 // x should be able to 'trickle' particles in...
 // - do particles need to be removed from the sprite batch when the system is
 // torn down? does the sprite batch need to be removed from the Stage??
+// - cull off-screen particles
 // -
 
 zSquared.emitter = function( z2 )

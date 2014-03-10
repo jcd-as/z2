@@ -772,6 +772,9 @@ zSquared.collision = function( z2 )
 				var ybound = tw - l;
 				t = t - ybound;
 				l = l - xbound;
+//				pv[0] = -l;
+//				pv[1] = -t;
+//				return true;
 			}
 		}
 		// slopeDownRight - 45 deg
@@ -788,6 +791,9 @@ zSquared.collision = function( z2 )
 				var ybound = tw - r;
 				t = t - ybound;
 				r = r - xbound;
+//				pv[0] = r;
+//				pv[1] = -t;
+//				return true;
 			}
 		}
 

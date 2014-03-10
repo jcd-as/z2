@@ -11,13 +11,10 @@ zSquared.game = function( z2 )
 
 	z2.require( ["2d"] );
 
-	// enable debug data?
-	var _debug = true;
-
 	// the main ecs loop
 	function mainloop( et )
 	{
-		if( _debug && z2.stats )
+		if( game.debug && z2.stats )
 			z2.stats.begin();
 
 		// TODO: problem with this is that ecsUpdate calculates the time delta, so
@@ -36,7 +33,7 @@ zSquared.game = function( z2 )
 			}
 		}
 
-		if( _debug && z2.stats )
+		if( game.debug && z2.stats )
 			z2.stats.end();
 	}
 
@@ -57,6 +54,8 @@ zSquared.game = function( z2 )
 		this.pausedBg = null;
 		this.scene = null;
 
+		var debug = false;
+
 		window.game = this;
 
 		// TODO: support different widths/heights than the canvas'
@@ -72,11 +71,6 @@ zSquared.game = function( z2 )
 
 		// create a view with some default values
 		this.view = new z2.View( this.canvas.width, this.canvas.height );
-
-		// TODO: better way of handling player-sprite and sprite-sprite
-		// collisions
-		// array of entities that can collide with the player
-		this.collidables = [];
 
 		// setup handlers for visibility change events (pause game when focus is
 		// lost)

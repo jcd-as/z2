@@ -36,6 +36,8 @@ zSquared.tiledscene = function( z2 )
 		this.width = 0;
 		this.height = 0;
 
+		this.collidables = null;
+
 		this.ready = false;
 
 		// queue the Tiled map json
@@ -116,6 +118,8 @@ zSquared.tiledscene = function( z2 )
 
 	z2.TiledScene.prototype._start = function()
 	{
+		this.collidables = [];
+
 		// if we have a loading image, remove it
 		if( this.loadProgressSprite )
 		{

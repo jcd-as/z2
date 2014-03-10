@@ -33,6 +33,8 @@ zSquared.scene = function( z2 )
 		this.width = width || 0;
 		this.height = height || 0;
 
+		this.collidables = null;
+
 		this.ready = false;
 	};
 
@@ -81,6 +83,8 @@ zSquared.scene = function( z2 )
 
 	z2.Scene.prototype._start = function()
 	{
+		this.collidables = [];
+
 		// get the ecs manager (force it to init)
 		z2.manager.get();
 
