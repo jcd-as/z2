@@ -16,7 +16,7 @@ stats.domElement.style.top = '0px';
 var WIDTH = 512;
 var HEIGHT = 384;
 
-var z2 = zSquared();
+var z2 = new zSquared();
 
 // require z2 modules
 z2.require( ["loader", "input", "game", "tiledscene", "audio", "statemachine", "emitter"] );
@@ -60,19 +60,20 @@ var myScene =
 {
 	load : function()
 	{
-		z2.loader.queueAsset( 'man', 'stylized.png' );
-		z2.loader.queueAsset( 'firefly', 'firefly.png', 'spritesheet', 8, 8 );
-		z2.loader.queueAsset( 'logo', 'logo.png' );
-		z2.loader.queueAsset( 'field', 'field.mp3' );
+		z2.loader.queueAsset( 'man', 'test/assets/img/stylized.png' );
+		z2.loader.queueAsset( 'firefly', 'test/assets/img/firefly.png', 'spritesheet', 8, 8 );
+		z2.loader.queueAsset( 'logo', 'test/assets/img/logo.png' );
+		z2.loader.queueAsset( 'field', 'test/assets/snd/field.mp3' );
 //		z2.loader.queueAsset( 'field', 'field.ogg' );
-		z2.loader.queueAsset( 'land', 'landing.mp3' );
+		z2.loader.queueAsset( 'land', 'test/assets/snd/landing.mp3' );
 //		z2.loader.queueAsset( 'land', 'landing.ogg' );
 //		z2.loader.queueAsset( 'theme', 'logo.mp3' );
 //		z2.loader.queueAsset( 'theme', 'logo.ogg' );
 
-		z2.loader.queueAsset( 'font', 'open_sans_italic_20.fnt' );
+		z2.loader.queueAsset( 'font', 'test/assets/img/open_sans_italic_20.fnt' );
 
-		z2.loader.queueAsset( 'left', 'the_source/assets/img/button_left.png' );
+		z2.loader.queueAsset( 'left', 'test/assets/img/button_left.png' );
+//		z2.loader.queueAsset( 'left', 'the_source/assets/img/button_left.png' );
 //		z2.loader.queueAsset( 'right', 'the_source/assets/img/button_right.png' );
 //		z2.loader.queueAsset( 'circle', 'the_source/assets/img/button_circle.png' );
 //		z2.loader.queueAsset( 'square', 'the_source/assets/img/button_square.png' );
@@ -143,6 +144,7 @@ var myScene =
 				var jump = false;
 				// only jump when standing on 'ground'
 				if( bc.blocked_down && z2.kbd.isDown( z2.kbd.UP ) )
+//				if( z2.kbd.isDown( z2.kbd.UP ) )
 					jump = true;
 				if( z2.kbd.isDown( z2.kbd.LEFT ) )
 					left = true;
@@ -311,9 +313,13 @@ var myScene =
 
 		// create a collision map
 		// (for 50-layer perf test:)
-		var collisionMap = z2.buildCollisionMap( scene.map.layers[48].data, scene.map.widthInTiles, scene.map.heightInTiles, [0,1,2,3,4] );
+        let tiles = [
+            {solid: false}, {solid: true}
+        ]
+		var collisionMap = z2.buildCollisionMap( scene.map.layers[48].data, scene.map.widthInTiles, scene.map.heightInTiles, tiles );
+//		var collisionMap = z2.buildCollisionMap( scene.map.layers[48].data, scene.map.widthInTiles, scene.map.heightInTiles, [0,1,2,3,4] );
 //		var collisionMap = z2.buildCollisionMap( this.map.layers[1].data, this.map.widthInTiles, this.map.heightInTiles, [0,1,2,3,4] );
-//		var collisionMap = this.map.collisionMap;
+//		var collisionMap = this.map.mainLayer.data;
 
 		// create a collision map component
 		var cmc = z2.collisionMapFactory.create( {map: this.map, data: collisionMap} );
@@ -331,8 +337,8 @@ var myScene =
 		game.view.add( sprite );
 		var sprc = z2.spriteFactory.create( {sprite:sprite, width: 64, animations:anims} );
 		var sprv = z2.velocityFactory.create( {x: 0, y: 0, maxx: 200, maxy: 500} );
-//		var sprp = z2.positionFactory.create( {x: 512, y: 512} );
-		var sprp = z2.positionFactory.create( {x: 1024-64, y: 1024-64} );
+		var sprp = z2.positionFactory.create( {x: 512, y: 512} );
+//		var sprp = z2.positionFactory.create( {x: 1024-64, y: 1024-64} );
 		var sprr = z2.rotationFactory.create( {theta: 0} );
 //		var sprr = z2.rotationFactory.create( {theta: z2.math.d2r(10)} );
 		// reverse sprite facing
@@ -435,8 +441,8 @@ var myScene =
 
 
 		// create an emitter system
-//		var es = z2.createEmitterSystem( game.view, 'firefly' );
-//		z2.manager.get().addSystem( es );
+		var es = z2.createEmitterSystem( game.view, 'firefly' );
+		z2.manager.get().addSystem( es );
 
 		// create a movement system
 		var ms = z2.createMovementSystem( 200 );
@@ -477,7 +483,7 @@ var myScene =
 
 
 // create a Tiled map scene using our scene definition object
-var scene = new z2.TiledScene( 'test.json', myScene );
+var scene = new z2.TiledScene( 'test/assets/maps/test.json', myScene );
 game.scene = scene;
 
 // start the scene

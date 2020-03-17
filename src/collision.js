@@ -649,13 +649,11 @@ zSquared.collision = function( z2 )
 				// in Tiled, tile indices of 0 indicate 'empty tile'
 				if( t !== 0 )
 				{
-					// true index is one less than stored in the Tiled file
-					t--;
 					// tile is 'slopeDownLeft'
-					if( tiles[t] && tiles[t].slope == 1 )
+					if( tiles[t] && tiles[t].slope === 1 )
 						map[k] = {left:-1, right:1, top:-1, bottom:1, slope:1};
 					// tile is 'slopeDownRight'
-					else if( tiles[t] && tiles[t].slope == 2 )
+					else if( tiles[t] && tiles[t].slope === 2 )
 						map[k] = {left:1, right:-1, top:-1, bottom:1, slope:2};
 					// just plain solid
 					else if( tiles[t] && tiles[t].solid )
@@ -750,7 +748,7 @@ zSquared.collision = function( z2 )
 		var th = tile[2] - tile[0];
 
 		// non-sloped tiles
-		if( td.slope == 0 )
+		if( td.slope === 0 )
 		{
 			// don't allow overlap greater than the tile size
 			if( t > th ) t = 0;
@@ -759,7 +757,7 @@ zSquared.collision = function( z2 )
 			if( r > tw ) r = 0;
 		}
 		// slopeDownLeft - 45 deg
-		else if( td.slope == 1 )
+		else if( td.slope === 1 )
 		{
 			if( l > tw ) l = tw;
 			if( l || t )
@@ -778,7 +776,7 @@ zSquared.collision = function( z2 )
 			}
 		}
 		// slopeDownRight - 45 deg
-		else if( td.slope == 2 )
+		else if( td.slope === 2 )
 		{
 			if( r > tw ) r = tw;
 			if( r || t )

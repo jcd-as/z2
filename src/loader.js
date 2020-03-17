@@ -314,7 +314,7 @@ zSquared.loader = function( z2 )
 					{
 						total++;
 						remaining++;
-						var img_url = data.tilesets[i].image.split( '/' ).slice( -1 )[0];
+						var img_url = data.tilesets[i].image
 						loadImage( data.tilesets[i].name, img_url, loaded, failed, that );
 					}
 					// imagelayer images
