@@ -7,13 +7,13 @@
   "licenseUrl": "http://www.opensource.org/licenses/mit-license.php",
   "repository": {
     "type": "git",
-    "url": "https://jcs@bitbucket.com/jcs/z2.git"
+    "url": "git@github.com:jcd-as/z2.git"
   },
   "keywords": [
     "HTML5",
-	"ECS",
-	"Entity",
-	"Component",
+    "ECS",
+    "Entity",
+    "Component",
     "game",
     "canvas",
     "2d",
@@ -22,12 +22,23 @@
     "physics",
     "javascript"
   ],
+  "scripts": {
+    "clean": "rm -f js/*",
+    "build": "babel src -d js -s",
+    "minify": "./node_modules/.bin/babel js --presets minify",
+    "lint": "eslint src"
+  },
   "devDependencies": {
-    "grunt": "~0.4.1",
-    "grunt-contrib-concat": "~0.3.0",
-    "grunt-contrib-connect": "~0.5.0",
-    "grunt-contrib-copy": "~0.4.1",
-    "grunt-contrib-clean": "~0.5.0",
-    "grunt-contrib-uglify": "~0.2.4"
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.8.7",
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
+    "@babel/preset-env": "^7.8.7",
+    "babel-plugin-transform-optional-chaining": "^7.0.0-beta.3",
+    "babel-preset-minify": "^0.5.1",
+    "eslint": "^6.8.0",
+    "eslint-plugin-babel": "^5.3.0"
+  },
+  "dependencies": {
+    "@babel/polyfill": "^7.8.7"
   }
 }
