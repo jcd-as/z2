@@ -15,37 +15,37 @@ let _pauseStart = 0
  */
 export default
 {
-    /** Get the current game time
-     * @function time#now
-     */
-    now : function()
-    {
-        return Date.now() - _totalPaused
-    },
+	/** Get the current game time
+	* @function time#now
+	*/
+	now : function()
+	{
+		return Date.now() - _totalPaused
+	},
 
-    /** Get the current system time
-     * (does NOT account for time spent paused)
-     * @function time#system
-     */
-    system : function()
-    {
-        return Date.now()
-    },
+	/** Get the current system time
+	* (does NOT account for time spent paused)
+	* @function time#system
+	*/
+	system : function()
+	{
+		return Date.now()
+	},
 
-    /** Pause - stop counting game time
-     * @function time#pause
-     */
-    pause : function()
-    {
-        _pauseStart = Date.now()
-    },
+	/** Pause - stop counting game time
+	* @function time#pause
+	*/
+	pause : function()
+	{
+		_pauseStart = Date.now()
+	},
 
-    /** Resume - re-start counting game time
-     * @function time#resume
-     */
-    resume : function()
-    {
-        _totalPaused += Date.now() - _pauseStart
-    }
+	/** Resume - re-start counting game time
+	* @function time#resume
+	*/
+	resume : function()
+	{
+		_totalPaused += Date.now() - _pauseStart
+	}
 }
 
