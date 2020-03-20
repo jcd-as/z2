@@ -5,28 +5,53 @@
 			body {
 				margin: 0;
 				padding: 0;
-				background-color:
-				#000000;
+				background-color: #000000;
+				color: #a0a0a0;
 			}
 		</style>
+
+		<script src="lib/stats.min.js"></script>
+
 		<!--
 		<script src="lib/z2.js"></script>
 		-->
+		<script src="lib/pixi.dev.js"></script>
+
+        <!-- game entry point -->
+        <script type="module" src="js/test-pixi.js"></script>
+
 	</head>
 	<body>
-		<script src="src/z2.js"></script>
-		<script src="src/math.js"></script>
-		<script src="src/bitset.js"></script>
-		<script src="src/statemachine.js"></script>
-		<script src="src/scene.js"></script>
-		<script src="src/view.js"></script>
-		<script src="src/ecs.js"></script>
-		<script src="src/loader.js"></script>
-		<script src="src/input.js"></script>
-		<script src="src/time.js"></script>
-		<script src="src/2d.js"></script>
-		<script src="src/collision.js"></script>
-		<script src="src/test.js"></script>
+        <!-- div to hold the game canvas -->
+        <div id='canvas'></div>
+
+        <!-- physics settings sliders -->
+		<div id='sliders'>
+			Gravity: 0
+			<input id='grav_y_slide' type='range' min='0'
+			max='5000' step='100' value='1000' onchange='updateGravity(this.value)'/>
+			5000
+			<br/>
+			Mass: 0.1
+			<input id='mass_slide' type='range' min='0.1'
+			max='10' step='0.1' value='1' onchange='updateMass(this.value)'/>
+			10
+			<br/>
+			Restitution: 0.1
+			<input id='rest_slide' type='range' min='0.1'
+			max='2' step='0.1' value='1' onchange='updateRestitution(this.value)'/>
+			2	
+			<br/>
+			Resistance X: 0.1
+			<input id='res_x_slide' type='range' min='0.1'
+			max='2' step='0.1' value='1' onchange='updateResistanceX(this.value)'/>
+			1
+			<br/>
+			Resistance Y: 0.1
+			<input id='res_y_slide' type='range' min='0.1'
+			max='2' step='0.1' value='1' onchange='updateResistanceY(this.value)'/>
+			1
+		</div>
 	</body>
 </html>
 

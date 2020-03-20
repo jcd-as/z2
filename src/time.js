@@ -3,27 +3,49 @@
 // Time module for zed-squared
 //
 // TODO:
-// - 
+// -
 
-"use strict";
 
-zSquared.time = function( z2 )
+// the total time the game has been on pause
+let _totalPaused = 0
+let _pauseStart = 0
+
+/** Time namespace object
+ * @namespace time
+ */
+export default
 {
-//	z2.require( [] );
+    /** Get the current game time
+     * @function time#now
+     */
+    now : function()
+    {
+        return Date.now() - _totalPaused
+    },
 
-	/** Time namespace object
-	 * @namespace z2.time
-	 */
-	z2.time = 
-	{
-		/** Get the current system time
-		 * @function z2.time#now
-		 */
-		now : function()
-		{
-			return Date.now();
-		}
-	};
+    /** Get the current system time
+     * (does NOT account for time spent paused)
+     * @function time#system
+     */
+    system : function()
+    {
+        return Date.now()
+    },
 
-};
+    /** Pause - stop counting game time
+     * @function time#pause
+     */
+    pause : function()
+    {
+        _pauseStart = Date.now()
+    },
+
+    /** Resume - re-start counting game time
+     * @function time#resume
+     */
+    resume : function()
+    {
+        _totalPaused += Date.now() - _pauseStart
+    }
+}
 

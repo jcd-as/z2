@@ -1,0 +1,47 @@
+{
+  "name": "z-squared",
+  "version": "0.9.0",
+  "description": "HTML5 2d game library based on an ECS system and using Pixi.js for rendering",
+  "author": "Josh Shepard",
+  "license": "MIT",
+  "licenseUrl": "http://www.opensource.org/licenses/mit-license.php",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:jcd-as/z2.git"
+  },
+  "keywords": [
+    "HTML5",
+    "ECS",
+    "Entity",
+    "Component",
+    "game",
+    "canvas",
+    "2d",
+    "WebGL",
+    "web audio",
+    "physics",
+    "javascript"
+  ],
+  "scripts": {
+    "clean": "rm -f js/*",
+    "build": "babel src -d js -s",
+    "minify": "./node_modules/.bin/babel js --presets minify",
+    "lint": "eslint src"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.8.7",
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
+    "@babel/plugin-proposal-private-methods": "^7.8.3",
+    "@babel/preset-env": "^7.8.7",
+    "babel-eslint": "^10.1.0",
+    "babel-plugin-transform-optional-chaining": "^7.0.0-beta.3",
+    "babel-preset-minify": "^0.5.1",
+    "browserify": "^16.5.0",
+    "eslint": "^6.8.0",
+    "eslint-plugin-babel": "^5.3.0"
+  },
+  "dependencies": {
+    "@babel/polyfill": "^7.8.7"
+  }
+}
