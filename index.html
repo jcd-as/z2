@@ -9,55 +9,23 @@
 				color: #a0a0a0;
 			}
 		</style>
+
 		<script src="lib/stats.min.js"></script>
+
 		<!--
 		<script src="lib/z2.js"></script>
 		-->
-	</head>
-	<body>
 		<script src="lib/pixi.dev.js"></script>
 
-		<!-- the concat'd lib -->
-		<!--
-		<script src="dist/z2.js"></script>
-		-->
-		<!-- the concat'd, minified lib -->
-		<!--
-		<script src="dist/z2.min.js"></script>
-		-->
+        <!-- game entry point -->
+        <script type="module" src="js/test-pixi.js"></script>
 
-		<!-- the individual source files -->
-		<!-- PIXI renderer files -->
-		<script src="js/z2.js"></script>
-		<script src="js/device.js"></script>
-		<script src="js/math.js"></script>
-		<script src="js/bitset.js"></script>
-		<script src="js/statemachine.js"></script>
-		<script src="js/game.js"></script>
-		<script src="js/scene-pixi.js"></script>
-		<script src="js/view-pixi.js"></script>
-		<script src="js/ecs.js"></script>
-		<script src="js/audio.js"></script>
-		<script src="js/loader.js"></script>
-		<script src="js/input.js"></script>
-		<script src="js/time.js"></script>
-		<script src="js/2d-pixi.js"></script>
-		<script src="js/collision.js"></script>
-		<script src="js/tilemap.js"></script>
-		<script src="js/tiledscene.js"></script>
-		<script src="js/objectpool.js"></script>
-		<script src="js/emitter.js"></script>
-		<script src="js/test-pixi.js"></script>
+	</head>
+	<body>
+        <!-- div to hold the game canvas -->
+        <div id='canvas'></div>
 
-		<!-- non-PIXI renderer files -->
-        <!--
-		<script src="src/2d.js"></script>
-		<script src="src/scene.js"></script>
-		<script src="src/view.js"></script>
-		<script src="src/test.js"></script>
-        -->
-
-
+        <!-- physics settings sliders -->
 		<div id='sliders'>
 			Gravity: 0
 			<input id='grav_y_slide' type='range' min='0'

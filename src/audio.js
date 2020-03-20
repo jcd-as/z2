@@ -1,228 +1,210 @@
 // audio.js
 // Copyright 2013 Joshua C Shepard
-// web audio functionality for zed-squared 
+// web audio functionality for zed-squared
 //
 // TODO:
-// - 
+// -
 
-zSquared.audio = function( z2 )
+import time from './time.js'
+import loader from './loader.js'
+
+
+let AudioContext = window.AudioContext || window.webkitAudioContext
+
+export let audioContext = new AudioContext()
+
+const NUM_CHANNELS = 16
+
+// audio buffer sources
+const channels = new Array( NUM_CHANNELS )
+// data about channels
+// (only valid for active channels)
+const channel_data = []
+// initialize channel data
+for(let i = 0; i < NUM_CHANNELS; i++) {
+    channel_data[i] = {
+        key: null,
+        volume: 1,
+        loop: false,
+        start : 0,
+        paused : 0,
+        timeout : null
+    }
+}
+
+function resetChannelData(idx)
 {
-	"use strict";
+    const cd = channel_data[idx]
+    cd.key = null
+    cd.volume = 1
+    cd.loop = false
+    cd.start = 0
+    cd.paused = 0
+    cd.timeout = null
+}
 
-	z2.require( ["time"] );
+function findChannel()
+{
+    for(let i = 0; i < channels.length; i++) {
+        if(!channel_data[i].key)
+            return i
+    }
+    return -1
+}
 
+function internalPlaySound(snd, channel, key, offset, volume, loop)
+{
+    // create a buffer source
+    const src = audioContext.createBufferSource()
 
-	z2.AudioContext = window.AudioContext || window.webkitAudioContext;
+    // set the source buffer
+    src.buffer = snd
 
-	z2.audio = new z2.AudioContext();
+    // loop?
+    if(loop)
+        src.loop = true
 
-	var NUM_CHANNELS = 16;
+    // volume?
+    if(volume) {
+        const gain = audioContext.createGain()
+        src.connect(gain)
+        gain.gain.value = volume
+        gain.connect(audioContext.destination)
+    }
+    else
+        src.connect(audioContext.destination)
 
-	// audio buffer sources 
-	var channels = new Array( NUM_CHANNELS );
-	// data about channels
-	// (only valid for active channels)
-	var channel_data = [];
-	// initialize channel data
-	for( var i = 0; i < NUM_CHANNELS; i++ )
-	{
-		channel_data[i] = 
-		{
-			key: null,
-			volume: 1,
-			loop: false,
-			start : 0,
-			paused : 0,
-			timeout : null
-		};
-	}
+    // set this channel
+    channels[channel] = src
 
-	function resetChannelData( idx )
-	{
-		var cd = channel_data[idx];
-		cd.key = null;
-		cd.volume = 1;
-		cd.loop = false;
-		cd.start = 0;
-		cd.paused = 0;
-		cd.timeout = null;
-	}
+    // set the channel data
+    const cd = channel_data[channel]
+    cd.key = key
+    cd.volume = volume
+    cd.loop = loop
+    if(cd.paused)
+        cd.start = time.system() - cd.paused
+    else
+        cd.start = time.system()
+    cd.paused = 0
 
-	function findChannel()
-	{
-		for( var i = 0; i < channels.length; i++ )
-		{
-			if( !channel_data[i].key )
-				return i;
-		}
-		return -1;
-	}
+    // play
+    src.start(0, offset)
 
-	function playSound( snd, channel, key, offset, volume, loop )
-	{
-		// create a buffer source
-		var src = z2.audio.createBufferSource();
+    // set a timeout to remove from this channel
+    channel_data[channel].timeout = setTimeout(() => { delete channels[channel]; resetChannelData( channel ); }, src.buffer.duration * 1000)
+}
 
-		// set the source buffer
-		src.buffer = snd;
+/** Play a sound
+ * @method z2#playSound
+ * @arg {string} key Key of the loader asset to play (must be loaded)
+ * @arg {number} offset Offset into the sound
+ * @arg {number} volume Volume for playback
+ * @arg {boolean} loop Should the sound loop forever?
+ * @returns {number} The channel this sound was played on. -1 indicates the
+ * sound could not be played because there was no open channel
+ */
+export function playSound(key, offset, volume, loop)
+{
+    // find an open channel & add sound to it
+    const idx = findChannel()
+    if(idx === -1)
+        return -1
 
-		// loop?
-		if( loop )
-			src.loop = true;
+    offset = offset || 0
 
-		// volume?
-		if( volume )
-		{
-			var gain = z2.audio.createGain();
-			src.connect( gain );
-			gain.gain.value = volume;
-			gain.connect( z2.audio.destination );
-		}
-		else
-			src.connect( z2.audio.destination );
+    // get the asset
+    const snd = loader.getAsset(key)
 
-		// set this channel
-		channels[channel] = src;
+    internalPlaySound(snd, idx, key, offset, volume, loop)
 
-		// set the channel data
-		var cd = channel_data[channel];
-		cd.key = key;
-		cd.volume = volume;
-		cd.loop = loop;
-		if( cd.paused )
-			cd.start = z2.time.system() - cd.paused;
-		else
-			cd.start = z2.time.system();
-		cd.paused = 0;
+    return idx
+}
 
-		// play
-		src.start( 0, offset );
+/** Stop a sound from playing
+ * @method z2#stopSound
+ * @arg {number} channel Channel to stop playing
+ */
+export function stopSound(channel)
+{
+    // clear the timeout
+    clearTimeout(channel_data[channel].timeout)
+    // reset the channel data
+    resetChannelData(channel)
+    // stop playback
+    const snd = channels[channel]
+    if(snd)
+        snd.stop()
+}
 
-		// set a timeout to remove from this channel
-		channel_data[channel].timeout = setTimeout( function() { delete channels[channel]; resetChannelData( channel ); }, src.buffer.duration * 1000 );
-	}
+/** Pause a sound
+ * @method z2#pauseSound
+ * @arg {number} channel Channel to pause
+ */
+export function pauseSound(channel)
+{
+    const cd = channel_data[channel]
+    const snd = channels[channel]
+    if(snd && cd.key && !cd.paused) {
+        let t = time.system() - cd.start
+        // handle offset greater than duration
+        // (for looped sounds)
+        t %= (snd.buffer.duration * 1000)
+        // record the paused time
+        cd.paused = t
+        // clear the timeout
+        clearTimeout(cd.timeout)
+        // stop the playback
+        if(snd)
+            snd.stop()
+    }
+}
 
-	/** Play a sound 
-	 * @method z2#playSound
-	 * @arg {string} key Key of the loader asset to play (must be loaded)
-	 * @arg {number} offset Offset into the sound
-	 * @arg {number} volume Volume for playback
-	 * @arg {boolean} loop Should the sound loop forever?
-	 * @returns {number} The channel this sound was played on. -1 indicates the
-	 * sound could not be played because there was no open channel
-	 */
-	z2.playSound = function( key, offset, volume, loop )
-	{
-		// find an open channel & add sound to it
-		var idx = findChannel();
-		if( idx === -1 )
-			return -1; 
+/** Resume playing a sound
+ * @method z2#resumeSound
+ * @arg {number} channel Channel to resume
+ */
+export function resumeSound(channel)
+{
+    const cd = channel_data[channel]
+    // if we have a paused sound on this channel
+    if(cd.key && cd.paused) {
+        // get the asset
+        const snd = loader.getAsset(cd.key)
+        // reset the start time
+        cd.start = time.system() - cd.paused
+        // play the sound
+        internalPlaySound(snd, channel, cd.key, cd.paused / 1000, cd.volume, cd.loop)
+    }
+}
 
-		offset = offset || 0;
+/** Stop all sound from being played
+ * @method z2#stopSounds
+ */
+export function stopSounds()
+{
+    for(let i = 0; i < channels.length; i++) {
+        stopSound(i)
+    }
+}
 
-		// get the asset
-		var snd = z2.loader.getAsset( key );
+/** Pause all sounds
+ * @method z2#pauseSounds
+ */
+export function pauseSounds()
+{
+    for(let i = 0; i < channels.length; i++) {
+        pauseSound(i)
+    }
+}
 
-		playSound( snd, idx, key, offset, volume, loop );
-
-		return idx;
-	};
-
-	/** Stop a sound from playing
-	 * @method z2#stopSound
-	 * @arg {number} channel Channel to stop playing
-	 */
-	z2.stopSound = function( channel )
-	{
-		// clear the timeout
-		clearTimeout( channel_data[channel].timeout );
-		// reset the channel data
-		resetChannelData( channel );
-		// stop playback
-		var snd = channels[channel];
-		if( snd )
-		{
-			snd.stop();
-		}
-	};
-
-	/** Pause a sound
-	 * @method z2#pauseSound
-	 * @arg {number} channel Channel to pause
-	 */
-	z2.pauseSound = function( channel )
-	{
-		var cd = channel_data[channel];
-		var snd = channels[channel];
-		if( snd && cd.key && !cd.paused )
-		{
-			var t = z2.time.system() - cd.start;
-			// handle offset greater than duration
-			// (for looped sounds)
-			t %= (snd.buffer.duration * 1000);
-			// record the paused time
-			cd.paused = t;
-			// clear the timeout
-			clearTimeout( cd.timeout );
-			// stop the playback
-			if( snd )
-			{
-				snd.stop();
-			}
-		}
-	};
-
-	/** Resume playing a sound
-	 * @method z2#resumeSound
-	 * @arg {number} channel Channel to resume
-	 */
-	z2.resumeSound = function( channel )
-	{
-		var cd = channel_data[channel];
-		// if we have a paused sound on this channel
-		if( cd.key && cd.paused )
-		{
-			// get the asset
-			var snd = z2.loader.getAsset( cd.key );
-			// reset the start time
-			cd.start = z2.time.system() - cd.paused;
-			// play the sound
-			playSound( snd, channel, cd.key, cd.paused / 1000, cd.volume, cd.loop );
-		}
-	};
-
-	/** Stop all sound from being played
-	 * @method z2#stopSounds
-	 */
-	z2.stopSounds = function()
-	{
-		for( var i = 0; i < channels.length; i++ )
-		{
-			z2.stopSound( i );
-		}
-	};
-
-	/** Pause all sounds
-	 * @method z2#pauseSounds
-	 */
-	z2.pauseSounds = function()
-	{
-		for( var i = 0; i < channels.length; i++ )
-		{
-			z2.pauseSound( i );
-		}
-	};
-
-	/** Resume all paused sounds
-	 * @method z2#pauseSounds
-	 */
-	z2.resumeSounds = function()
-	{
-		for( var i = 0; i < channels.length; i++ )
-		{
-			z2.resumeSound( i );
-		}
-	};
-
-};
+/** Resume all paused sounds
+ * @method z2#pauseSounds
+ */
+export function resumeSounds()
+{
+    for(let i = 0; i < channels.length; i++) {
+        resumeSound(i)
+    }
+}
 

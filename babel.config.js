@@ -5,12 +5,12 @@ module.exports = {
             '@babel/preset-env',
             {
                 targets: {
-                    node:
-                        'current',
+                    esmodules: true,
                 },
+                modules: "false"
             },
         ],
     ],
     "plugins":
-        ["transform-optional-chaining", "@babel/proposal-class-properties"]
+        ["transform-optional-chaining", "@babel/proposal-class-properties", "@babel/proposal-private-methods"]
 }

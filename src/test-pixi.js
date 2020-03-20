@@ -3,224 +3,220 @@
 // - improve usability of z2 & make this sample much cleaner
 //
 
+import loader from './loader.js'
+import * as input from './input.js'
+import View from './view-pixi.js'
+import Game from './game.js'
+import TiledScene from './tiledscene.js'
+import * as audio from './audio.js'
+import StateMachine from './statemachine.js'
+import * as emitter from './emitter.js'
+import zSquared from './z2.js'
+import * as collision from './collision.js'
+import * as tilemap from './tilemap.js'
+import * as ecs from './ecs.js'
+import * as _2d from './2d-pixi.js'
+//import * as math from './math.js'
+
+
 (function()
 {
-"use strict";
+//"use strict"
 
 // stats fps display
-var stats = new Stats();
-document.body.appendChild( stats.domElement );
-stats.domElement.style.position = 'absolute';
-stats.domElement.style.top = '0px';
+// eslint-disable-next-line no-undef
+var stats = new Stats()
+document.body.appendChild(stats.domElement)
+stats.domElement.style.position = 'absolute'
+stats.domElement.style.top = '0px'
 
-var WIDTH = 512;
-var HEIGHT = 384;
+const WIDTH = 512
+const HEIGHT = 384
 
-var z2 = new zSquared();
-
-// require z2 modules
-z2.require( ["loader", "input", "game", "tiledscene", "audio", "statemachine", "emitter"] );
- 
-// create a canvas
-var canvas = z2.createCanvas( WIDTH, HEIGHT, null, true );
-
-// global set-up stuff
-var visibilityChange = function( event )
-{
-	if( game.paused === false && (event.type == 'pagehide' || event.type == 'blur' || document.hidden === true || document.webkitHidden === true))
-		game.paused = true;
-	else
-		game.paused = false;
-
-	if( game.paused )
-		z2.pauseSounds();
-	else
-		z2.resumeSounds();
-};
-document.addEventListener( 'visibilitychange', visibilityChange, false );
-document.addEventListener( 'webkitvisibilitychange', visibilityChange, false );
-document.addEventListener( 'pagehide', visibilityChange, false );
-document.addEventListener( 'pageshow', visibilityChange, false );
-window.onblur = visibilityChange;
-window.onfocus = visibilityChange;
+const z2 = new zSquared()
 
 // global 'game' object
-var force_canvas = false;
-var game = new z2.Game( canvas, force_canvas );
+const div = document.getElementById('canvas')
+console.log(div)
+//const canvas = zSquared.createCanvas(WIDTH, HEIGHT, null, true)
+const canvas = zSquared.createCanvas(WIDTH, HEIGHT, div, true)
+let force_canvas = false
+const game = new Game(canvas, force_canvas)
+
+// global set-up stuff
+const visibilityChange = function(event) {
+	if(game.paused === false && (event.type == 'pagehide' || event.type == 'blur' || document.hidden === true || document.webkitHidden === true))
+		game.paused = true
+	else
+		game.paused = false
+
+	if(game.paused)
+		audio.pauseSounds()
+	else
+		audio.resumeSounds()
+}
+document.addEventListener('visibilitychange', visibilityChange, false)
+document.addEventListener('webkitvisibilitychange', visibilityChange, false)
+document.addEventListener('pagehide', visibilityChange, false)
+document.addEventListener('pageshow', visibilityChange, false)
+window.onblur = visibilityChange
+window.onfocus = visibilityChange
 
 // create a "player control" component
-var player = z2.createComponentFactory();
+const player = ecs.createComponentFactory()
 
 // create an 'enemy' component, for enemy 'AI'
-var enemyc = z2.createComponentFactory();
+const enemyc = ecs.createComponentFactory()
 
 // create an object defining our scene
 // (load, create and update methods)
-var myScene = 
+const myScene =
 {
 	load : function()
 	{
-		z2.loader.queueAsset( 'man', 'test/assets/img/stylized.png' );
-		z2.loader.queueAsset( 'firefly', 'test/assets/img/firefly.png', 'spritesheet', 8, 8 );
-		z2.loader.queueAsset( 'logo', 'test/assets/img/logo.png' );
-		z2.loader.queueAsset( 'field', 'test/assets/snd/field.mp3' );
-//		z2.loader.queueAsset( 'field', 'field.ogg' );
-		z2.loader.queueAsset( 'land', 'test/assets/snd/landing.mp3' );
-//		z2.loader.queueAsset( 'land', 'landing.ogg' );
-//		z2.loader.queueAsset( 'theme', 'logo.mp3' );
-//		z2.loader.queueAsset( 'theme', 'logo.ogg' );
+		loader.queueAsset('man', 'test/assets/img/stylized.png')
+		loader.queueAsset('firefly', 'test/assets/img/firefly.png', 'spritesheet', 8, 8)
+		loader.queueAsset('logo', 'test/assets/img/logo.png')
+		loader.queueAsset('field', 'test/assets/snd/field.mp3')
+//		loader.queueAsset('field', 'field.ogg')
+		loader.queueAsset('land', 'test/assets/snd/landing.mp3')
+//		loader.queueAsset('land', 'landing.ogg')
+//		loader.queueAsset('theme', 'logo.mp3')
+//		loader.queueAsset('theme', 'logo.ogg')
 
-		z2.loader.queueAsset( 'font', 'test/assets/img/open_sans_italic_20.fnt' );
+		loader.queueAsset('font', 'test/assets/img/open_sans_italic_20.fnt')
 
-		z2.loader.queueAsset( 'left', 'test/assets/img/button_left.png' );
-//		z2.loader.queueAsset( 'left', 'the_source/assets/img/button_left.png' );
-//		z2.loader.queueAsset( 'right', 'the_source/assets/img/button_right.png' );
-//		z2.loader.queueAsset( 'circle', 'the_source/assets/img/button_circle.png' );
-//		z2.loader.queueAsset( 'square', 'the_source/assets/img/button_square.png' );
+		loader.queueAsset('left', 'test/assets/img/button_left.png')
+//		loader.queueAsset('left', 'the_source/assets/img/button_left.png')
+//		loader.queueAsset('right', 'the_source/assets/img/button_right.png')
+//		loader.queueAsset('circle', 'the_source/assets/img/button_circle.png')
+//		loader.queueAsset('square', 'the_source/assets/img/button_square.png')
 	},
 
-	create : function()
-	{
-		var enemy_sys = new z2.System( 100, [enemyc, z2.velocityFactory, z2.physicsBodyFactory],
-		{
-			init: function()
-			{
-			},
-			update: function( e, dt )
-			{
-//				var bc = e.getComponent( z2.physicsBodyFactory );
-//				var vc = e.getComponent( z2.velocityFactory );
-//		
+	create : function() {
+		const enemy_sys = new ecs.System(100, [enemyc, _2d.velocityFactory, _2d.physicsBodyFactory], {
+			init: function() { },
+			// eslint-disable-next-line no-unused-vars
+			update: function(e, dt) {
+//				var bc = e.getComponent(_2d.physicsBodyFactory)
+//				var vc = e.getComponent(_2d.velocityFactory)
+//
 //				// if we're going to the left and we're blocked, turn right
-//				if( vc.x <= 0 && bc.blocked_left )
-//					vc.x = 100;
+//				if(vc.x <= 0 && bc.blocked_left)
+//					vc.x = 100
 //				// if we're going to the right and we're blocked, turn left
-//				else if( vc.x >= 0 && bc.blocked_right )
-//					vc.x = -100;
+//				else if(vc.x >= 0 && bc.blocked_right)
+//					vc.x = -100
 //				// if we're not moving, just try going left
-//				else if( vc.x === 0 )
-//					vc.x = -100;
+//				else if(vc.x === 0)
+//					vc.x = -100
 			}
-		} );
-		z2.manager.get().addSystem( enemy_sys );
+		})
+		ecs.manager.get().addSystem(enemy_sys)
 
-		// placeholder for sprite entity
-		var spre;
 		// create an input system
-		var input_sys = new z2.System( 50, [player, z2.velocityFactory, z2.physicsBodyFactory],
-		{
-			init: function()
-			{
+		const input_sys = new ecs.System( 50, [player, _2d.velocityFactory, _2d.physicsBodyFactory], {
+			init: function() {
 				// initialize FSM
-				this.fsm = new z2.StateMachine( this.states, this );
-				
+				this.fsm = new StateMachine(this.states, this)
+
 				// initialize keyboard
-				z2.kbd.start();
-				z2.kbd.addKey( z2.kbd.UP );
-				z2.kbd.addKey( z2.kbd.LEFT );
-				z2.kbd.addKey( z2.kbd.RIGHT );
-				z2.kbd.addKey( z2.kbd.SPACEBAR );
+				input.kbd.start()
+				input.kbd.addKey(input.kbd.UP)
+				input.kbd.addKey(input.kbd.LEFT)
+				input.kbd.addKey(input.kbd.RIGHT)
+				input.kbd.addKey(input.kbd.SPACEBAR)
 			},
-			update: function( e, dt )
-			{
-				if( z2.kbd.isDown( z2.kbd.SPACEBAR ) )
+			// eslint-disable-next-line no-unused-vars
+			update: function(e, dt) {
+				if(input.kbd.isDown(input.kbd.SPACEBAR))
 				{
-					game.scene.restart();
-					return;
+					game.scene.restart()
+					return
 				}
 
 				// get the velocity component
-				var vc = e.getComponent( z2.velocityFactory );
+				const vc = e.getComponent(_2d.velocityFactory)
 
 				// get the physics body
-				var bc = e.getComponent( z2.physicsBodyFactory );
+				const bc = e.getComponent(_2d.physicsBodyFactory)
 
 				// get the scale component
-				var sc = e.getComponent( z2.scaleFactory );
+				const sc = e.getComponent(_2d.scaleFactory)
 
 				// check keys
-				var left = false;
-				var right = false;
-				var jump = false;
+				let left = false
+				let right = false
+				let jump = false
 				// only jump when standing on 'ground'
-				if( bc.blocked_down && z2.kbd.isDown( z2.kbd.UP ) )
-//				if( z2.kbd.isDown( z2.kbd.UP ) )
-					jump = true;
-				if( z2.kbd.isDown( z2.kbd.LEFT ) )
-					left = true;
-				else if( z2.kbd.isDown( z2.kbd.RIGHT ) )
-					right = true;
+				if(bc.blocked_down && input.kbd.isDown( input.kbd.UP ))
+					jump = true
+				if( input.kbd.isDown(input.kbd.LEFT))
+					left = true
+				else if(input.kbd.isDown(input.kbd.RIGHT))
+					right = true
 
-				var state = this.fsm.getState();
-				switch( state )
-				{
+				const state = this.fsm.getState()
+				switch(state) {
 				case 'walking':
 					// reset horizontal velocity
-//					vc.x = 0;
+//					vc.x = 0
 
 					// can jump, fall, keep walking or stop
-					if( jump )
-						this.fsm.consumeEvent( 'jump', vc, bc );
+					if(jump)
+						this.fsm.consumeEvent('jump', vc, bc)
 					// not touching ground ?
-					else if( !bc.blocked_down )
-						this.fsm.consumeEvent( 'fall', vc, bc );
-					else if( left )
-					{
-						this.goLeft( vc, bc, sc );
+					else if(!bc.blocked_down)
+						this.fsm.consumeEvent('fall', vc, bc)
+					else if(left) {
+						this.goLeft(vc, bc, sc)
 					}
-					else if( right )
-					{
-						this.goRight( vc, bc, sc );
+					else if(right) {
+						this.goRight(vc, bc, sc)
 					}
-					else
-					{
+					else {
 						// stop
-						this.fsm.consumeEvent( 'stop' );
+						this.fsm.consumeEvent('stop')
 					}
-					break;
+					break
 				case 'jumping':
 				case 'falling':
 					// reset horizontal velocity
-//					vc.x = 0;
+//					vc.x = 0
 
 					// land?
-					if( bc.blocked_down )
-					{
-						z2.playSound( 'land' );
-						this.fsm.consumeEvent( 'land', vc, bc, sc );
+					if(bc.blocked_down) {
+						audio.playSound('land')
+						this.fsm.consumeEvent('land', vc, bc, sc)
 					}
 					// can move side to side
-					if( left )
-					{
-						this.facing = 'left';
-						this.goLeft( vc, bc, sc );
+					if(left) {
+						this.facing = 'left'
+						this.goLeft(vc, bc, sc)
 					}
-					else if( right )
-					{
-						this.facing = 'right';
-						this.goRight( vc, bc, sc );
+					else if(right) {
+						this.facing = 'right'
+						this.goRight(vc, bc, sc)
 					}
-					break;
+					break
 				case 'idle':
 					// reset horizontal velocity
-//					vc.x = 0;
+//					vc.x = 0
 
 					// can walk or jump
-					if( jump )
-						this.fsm.consumeEvent( 'jump', vc, bc, sc );
-					else if( left )
-					{
-						this.facing = 'left';
-						this.fsm.consumeEvent( 'left', vc, bc, sc );
+					if(jump)
+						this.fsm.consumeEvent('jump', vc, bc, sc)
+					else if(left) {
+						this.facing = 'left'
+						this.fsm.consumeEvent('left', vc, bc, sc)
 					}
-					else if( right )
-					{
-						this.facing = 'right';
-						this.fsm.consumeEvent( 'right', vc, bc, sc );
+					else if(right) {
+						this.facing = 'right'
+						this.fsm.consumeEvent('right', vc, bc, sc)
 					}
-					break;
+					break
 				default:
-					break;
+					break
 				}
 				////////////////////////////
 			},
@@ -229,7 +225,7 @@ var myScene =
 			v_vel_inc : 750,
 			// finite state machine states for player sprite
 			fsm : null,
-			states : 
+			states :
 			[
 				{
 					'name' : 'idle',
@@ -267,141 +263,146 @@ var myScene =
 				},
 				{
 					'name' : 'falling',
-					'events' : 
+					'events' :
 					{
 						'land' : 'idle',
 					}
 				}
 			],
 			// state handlers
-			idle : function( vc, bc, sc )
-			{
+			// eslint-disable-next-line no-unused-vars
+			idle : function(vc, bc, sc) {
 				// set animation, facing
 			},
-			walking : function( vc, bc, sc )
-			{
+			walking : function(vc, bc, sc) {
 				// set animation, facing
-				if( this.facing == 'left' )
-					this.goLeft( vc, bc, sc );
-				else if( this.facing == 'right' )
-					this.goRight( vc, bc, sc );
-//				else error
+				if(this.facing == 'left')
+					this.goLeft(vc, bc, sc)
+				else if(this.facing == 'right')
+					this.goRight(vc, bc, sc)
 			},
-			jumping : function( vc, bc, sc )
-			{
-				vc.y = -this.v_vel_inc;
+			// eslint-disable-next-line no-unused-vars
+			jumping : function(vc, bc, sc) {
+				vc.y = -this.v_vel_inc
 				// set animation, facing
 			},
-			falling : function( vc, bc, sc )
-			{
+			// eslint-disable-next-line no-unused-vars
+			falling : function(vc, bc, sc) {
 				// set animation, facing
 			},
-			goLeft : function( vc, bc, sc )
-			{
-				vc.x += -this.h_vel_inc;
-				if( sc )
-					sc.sx = -1; 
+			goLeft : function(vc, bc, sc) {
+				vc.x += -this.h_vel_inc
+				if(sc)
+					sc.sx = -1
 			},
-			goRight : function( vc, bc, sc )
-			{
-				vc.x += this.h_vel_inc;
-				if( sc )
-					sc.sx = 1; 
+			goRight : function(vc, bc, sc) {
+				vc.x += this.h_vel_inc
+				if(sc)
+					sc.sx = 1
 			},
-		} );
-		z2.manager.get().addSystem( input_sys );
+		})
+		ecs.manager.get().addSystem(input_sys)
 
+		// TODO: shouldn't the TileMap (via TiledScene) be doing this??
 		// create a collision map
 		// (for 50-layer perf test:)
-        let tiles = [
-            {solid: false}, {solid: true}
-        ]
-		var collisionMap = z2.buildCollisionMap( scene.map.layers[48].data, scene.map.widthInTiles, scene.map.heightInTiles, tiles );
-//		var collisionMap = z2.buildCollisionMap( scene.map.layers[48].data, scene.map.widthInTiles, scene.map.heightInTiles, [0,1,2,3,4] );
-//		var collisionMap = z2.buildCollisionMap( this.map.layers[1].data, this.map.widthInTiles, this.map.heightInTiles, [0,1,2,3,4] );
-//		var collisionMap = this.map.mainLayer.data;
+		let tiles = [
+			{solid: false}, {solid: true}
+		]
+		const collisionMap = collision.buildCollisionMap(scene.map.layers[48].data, scene.map.widthInTiles, scene.map.heightInTiles, tiles)
+//		var collisionMap = collision.buildCollisionMap(scene.map.layers[48].data, scene.map.widthInTiles, scene.map.heightInTiles, [0,1,2,3,4])
+//		var collisionMap = collision.buildCollisionMap(this.map.layers[1].data, this.map.widthInTiles, this.map.heightInTiles, [0,1,2,3,4])
 
 		// create a collision map component
-		var cmc = z2.collisionMapFactory.create( {map: this.map, data: collisionMap} );
+		const cmc = tilemap.collisionMapFactory.create({map: this.map, data: collisionMap})
 
 		// gravity component
-		var gravc = z2.gravityFactory.create( {x: 0, y: 1000} );
+		const gravc = _2d.gravityFactory.create({x: 0, y: 1000})
 
 		// create the player sprite
-		var s_img = z2.loader.getAsset( 'man' );
-		var anims = new z2.AnimationSet();
-		anims.add( 'walk', [[0, 250], [1, 250]] );
-		var sbasetexture = new PIXI.BaseTexture( s_img );
-		var stexture = new PIXI.Texture( sbasetexture );
-		var sprite = new PIXI.Sprite( stexture );
-		game.view.add( sprite );
-		var sprc = z2.spriteFactory.create( {sprite:sprite, width: 64, animations:anims} );
-		var sprv = z2.velocityFactory.create( {x: 0, y: 0, maxx: 200, maxy: 500} );
-		var sprp = z2.positionFactory.create( {x: 512, y: 512} );
-//		var sprp = z2.positionFactory.create( {x: 1024-64, y: 1024-64} );
-		var sprr = z2.rotationFactory.create( {theta: 0} );
-//		var sprr = z2.rotationFactory.create( {theta: z2.math.d2r(10)} );
+		const s_img = loader.getAsset('man')
+		const anims = new _2d.AnimationSet()
+		anims.add('walk', [[0, 250], [1, 250]])
+		// eslint-disable-next-line no-undef
+		const sbasetexture = new PIXI.BaseTexture(s_img)
+		// eslint-disable-next-line no-undef
+		const stexture = new PIXI.Texture(sbasetexture)
+		// eslint-disable-next-line no-undef
+		const sprite = new PIXI.Sprite(stexture)
+		game.view.add(sprite)
+		const sprc = _2d.spriteFactory.create({sprite:sprite, width: 64, animations:anims})
+		const sprv = _2d.velocityFactory.create({x: 0, y: 0, maxx: 200, maxy: 500})
+		const sprp = _2d.positionFactory.create({x: 512, y: 512})
+//		const sprp = _2d.positionFactory.create({x: 1024-64, y: 1024-64})
+		const sprr = _2d.rotationFactory.create({theta: 0})
+//		const sprr = _2d.rotationFactory.create({theta: math.d2r(10)})
 		// reverse sprite facing
-//		var sprs = z2.scaleFactory.create( {sx: -1, sy: 1} );
-		var sprres = z2.resistanceFactory.create( {x: 0.95} );
-		var sprs = z2.scaleFactory.create( {sx: 1, sy: 1} );
-//		var sprsz = z2.sizeFactory.create( {width: 64, height: 64} );
-		var sprcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
-		var sprpc = z2.positionConstraintsFactory.create( {minx: 16, maxx: this.width-16, miny: 32, maxy: this.height-32} );
-		var sprbody = z2.physicsBodyFactory.create( {aabb:[-32, -15, 32, 15], restitution:1, mass:1} );
+//		const sprs = _2d.scaleFactory.create({sx: -1, sy: 1})
+		const sprres = _2d.resistanceFactory.create({x: 0.95})
+		const sprs = _2d.scaleFactory.create({sx: 1, sy: 1})
+//		const sprsz = _2d.sizeFactory.create({width: 64, height: 64})
+		const sprcc = _2d.centerFactory.create({cx: 0.5, cy: 0.5})
+		const sprpc = _2d.positionConstraintsFactory.create({minx: 16, maxx: this.width-16, miny: 32, maxy: this.height-32})
+		const sprbody = _2d.physicsBodyFactory.create({aabb:[-32, -15, 32, 15], restitution:1, mass:1})
 		// collision group for the player to collide against
-		var pcolg = z2.collisionGroupFactory.create( {entities:[spre2]} );
+		const pcolg = _2d.collisionGroupFactory.create({entities:[spre2]})
 		// create the entity
-		spre = z2.manager.get().createEntity( [z2.renderableFactory, gravc, cmc, sprbody, player, sprv, sprp, sprr, /*sprsz,*/ sprs, sprcc, sprpc, sprc, pcolg, sprres] );
+		ecs.manager.get().createEntity([_2d.renderableFactory, gravc, cmc, sprbody, player, sprv, sprp, sprr, /*sprsz,*/ sprs, sprcc, sprpc, sprc, pcolg, sprres])
 
-		anims.play( 'walk' );
+		anims.play('walk')
 
 		// create a non-player sprite
-		var anims2 = new z2.AnimationSet();
-		anims2.add( 'jitter', [[8, 250], [9, 250]] );
-		var sbasetexture2 = new PIXI.BaseTexture( s_img );
-		var stexture2 = new PIXI.Texture( sbasetexture2 );
-		var sprite2 = new PIXI.Sprite( stexture2 );
-		var sprv2 = z2.velocityFactory.create( {x: -100, y: 0, maxx: 200, maxy: 500} );
-		game.view.add( sprite2 );
-		var sprc2 = z2.spriteFactory.create( {sprite:sprite2, width:64, animations:anims2} );
-		var sprp2 = z2.positionFactory.create( {x: 64, y: 1024-64} );
-		var sprbody2 = z2.physicsBodyFactory.create( {aabb:[-32, -16, 32, 16], restitution:1, mass:1, resistance_x: 0} );
+		const anims2 = new _2d.AnimationSet()
+		anims2.add('jitter', [[8, 250], [9, 250]])
+		// eslint-disable-next-line no-undef
+		const sbasetexture2 = new PIXI.BaseTexture(s_img)
+		// eslint-disable-next-line no-undef
+		const stexture2 = new PIXI.Texture(sbasetexture2)
+		// eslint-disable-next-line no-undef
+		const sprite2 = new PIXI.Sprite(stexture2)
+		const sprv2 = _2d.velocityFactory.create({x: -100, y: 0, maxx: 200, maxy: 500})
+		game.view.add(sprite2)
+		const sprc2 = _2d.spriteFactory.create({sprite:sprite2, width:64, animations:anims2})
+		const sprp2 = _2d.positionFactory.create({x: 64, y: 1024-64})
+		const sprbody2 = _2d.physicsBodyFactory.create({aabb:[-32, -16, 32, 16], restitution:1, mass:1, resistance_x: 0})
 		// create the entity
-		var spre2 = z2.manager.get().createEntity( [z2.renderableFactory, gravc, cmc, sprbody2, sprv2, sprp2, /*sprsz,*/ sprs, sprcc, sprpc, sprc2] );
-		anims2.play( 'jitter' );
+		const spre2 = ecs.manager.get().createEntity([_2d.renderableFactory, gravc, cmc, sprbody2, sprv2, sprp2, /*sprsz,*/ sprs, sprcc, sprpc, sprc2])
+		anims2.play('jitter')
 
 		// create a 'billboard' image
-		var img = z2.loader.getAsset( 'logo' );
-		var imgp = z2.positionFactory.create( {x: WIDTH/2, y: HEIGHT/2} );
-		var imgr = z2.rotationFactory.create( {theta: 0} );
-		var imgs = z2.scaleFactory.create( {sx: 1, sy: 1} );
-		var imgsz = z2.sizeFactory.create( {width: 512, height: 384} );
-		var imgcc = z2.centerFactory.create( {cx: 0.5, cy: 0.5} );
-		var basetexture = new PIXI.BaseTexture( img );
-		var texture = new PIXI.Texture( basetexture );
-		var image = new PIXI.Sprite( texture );
-		image.alpha = 0.25;
-		game.view.add( image, true );
-		var imgc = z2.imageFactory.create( {sprite:image} );
-		var imge = z2.manager.get().createEntity( [z2.renderableFactory, imgp, imgr, imgsz, imgs, imgcc, imgc] );
+		const img = loader.getAsset('logo')
+		const imgp = _2d.positionFactory.create({x: WIDTH/2, y: HEIGHT/2})
+		const imgr = _2d.rotationFactory.create({theta: 0})
+		const imgs = _2d.scaleFactory.create({sx: 1, sy: 1})
+		const imgsz = _2d.sizeFactory.create({width: 512, height: 384})
+		const imgcc = _2d.centerFactory.create({cx: 0.5, cy: 0.5})
+		// eslint-disable-next-line no-undef
+		const basetexture = new PIXI.BaseTexture(img)
+		// eslint-disable-next-line no-undef
+		const texture = new PIXI.Texture(basetexture)
+		// eslint-disable-next-line no-undef
+		const image = new PIXI.Sprite(texture)
+		image.alpha = 0.25
+		game.view.add(image, true)
+		const imgc = _2d.imageFactory.create({sprite:image})
+		ecs.manager.get().createEntity([_2d.renderableFactory, imgp, imgr, imgsz, imgs, imgcc, imgc])
 
 		// draw some text
-		var txt = new PIXI.BitmapText( "foobar", {font: 'Open_Sans', align: 'center'} );
-		txt.position.x = WIDTH/2 - txt.textWidth/2;
-		txt.position.y = HEIGHT/2 - txt.textHeight/2;
-		game.view.add( txt, true );
+		// eslint-disable-next-line no-undef
+		const txt = new PIXI.BitmapText("foobar", {font: 'Open_Sans', align: 'center'})
+		txt.position.x = WIDTH/2 - txt.textWidth/2
+		txt.position.y = HEIGHT/2 - txt.textHeight/2
+		game.view.add(txt, true)
 
 		// create an emitter
 		//
-		var emc = z2.emitterFactory.create(
-		{
+		const emc = emitter.emitterFactory.create({
 			// is the emitter on?
 			on: true,
 			// is this a 'burst' emitter? (fires all particles, then turns off)
 			burst: false,
 			// how many particles are released at a time?
-			quantity: 10000, 
+			quantity: 10000,
 			// how often (in ms) are particles released?
 			period: 3000,
 			// how long to wait before the first release of particles?
@@ -419,87 +420,75 @@ var myScene =
 			minAlpha: 0.1, maxAlpha: 0.4,
 			// min/max particle lifespan (in ms)
 			minLifespan: 10000, maxLifespan: 10000,
-		} );
-		var empos = z2.positionFactory.create( {x: 700, y: 800} );
-		var eme = z2.manager.get().createEntity( 
-		[
-			emc,
-			empos
-		] );
-		
+		})
+		const empos = _2d.positionFactory.create({x: 700, y: 800})
+		ecs.manager.get().createEntity([ emc, empos ])
+
 
 		// add touchscreen buttons
-//		z2.touch.start( 5 );
-//		z2.touch.addButton( z2.loader.getAsset( 'left' ) );
+//		input.touch.start(game, 5)
+//		input.touch.addButton(loader.getAsset('left'))
 
 		// set the entities for collision groups
-		pcolg.entities = [spre2];
+		pcolg.entities = [spre2]
 
 		// follow the player sprite
-		game.view.follow_mode = z2.FOLLOW_MODE_PLATFORMER;
-		game.view.target = sprp;
+		game.view.follow_mode = View.FOLLOW_MODE_PLATFORMER
+		game.view.target = sprp
 
 
 		// create an emitter system
-		var es = z2.createEmitterSystem( game.view, 'firefly' );
-		z2.manager.get().addSystem( es );
+		const es = emitter.createEmitterSystem(game.view, 'firefly')
+		ecs.manager.get().addSystem(es)
 
 		// create a movement system
-		var ms = z2.createMovementSystem( 200 );
-		z2.manager.get().addSystem( ms );
+		const ms = _2d.createMovementSystem(200)
+		ecs.manager.get().addSystem(ms)
 
-//		z2.playSound( 'field', 0, 1, true );
-//		z2.playSound( 'theme', 0, 1, true );
+//		audio.playSound( 'field', 0, 1, true )
+//		audio.playSound( 'theme', 0, 1, true )
 
 		//////////////////
 		// add global handlers for web page controls
-		window.updateMass = function( value )
-		{
-			sprbody.mass = value;
-		};
-		window.updateRestitution = function( value )
-		{
-			sprbody.restitution = value;
-		};
-		window.updateResistanceX = function( value )
-		{
-			sprres.x = value;
-		};
-		window.updateResistanceY = function( value )
-		{
-			sprres.y = value;
-		};
-		window.updateGravity = function( value )
-		{
-			gravc.y = value;
-		};
-
+		window.updateMass = function(value) {
+			sprbody.mass = value
+		}
+		window.updateRestitution = function(value) {
+			sprbody.restitution = value
+		}
+		window.updateResistanceX = function(value) {
+			sprres.x = value
+		}
+		window.updateResistanceY = function(value) {
+			sprres.y = value
+		}
+		window.updateGravity = function(value) {
+			gravc.y = value
+		}
 	},
 
-	destroy : function()
-	{
-	}
-};
+	destroy : function() { }
+}
 
 
 // create a Tiled map scene using our scene definition object
-var scene = new z2.TiledScene( 'test/assets/maps/test.json', myScene );
-game.scene = scene;
+const scene = new TiledScene(game, 'test/assets/maps/test.json', myScene)
+game.scene = scene
 
 // start the scene
-scene.start();
+scene.start()
 
 // start the main ecs loop
-//z2.main( z2.ecsUpdate );
-function mainloop( et )
+//z2.main(ecs.ecsUpdate)
+function mainloop(et)
 {
-	stats.begin();
+	stats.begin()
 	// TODO: problem with this is that ecsUpdate calculates the time delta, so
 	// by intercepting here the dt doesn't get updated properly
-	if( !game.paused )
-		z2.ecsUpdate( et );
-	stats.end();
+	if(!game.paused)
+		ecs.ecsUpdate(et)
+	stats.end()
 }
-z2.main( mainloop );
+z2.main(mainloop)
 
-})();
+})()

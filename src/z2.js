@@ -1,36 +1,16 @@
-"use strict"
-
 // z2.js
 // Copyright 2013 Joshua C Shepard
 // zed-squared html5 game components
 // TODO:
 // -
 
-class zSquared
+/**
+ * @class zSquared
+ * @classdesc Main zSquared class
+ */
+export default class zSquared
 {
-	loaded = {}
     raf = null
-
-	/** Main z2 namespace object
-	 * @global
-	 * @namespace
-	 */
-    require(modules)
-    {
-        if(!(modules instanceof Array))
-            throw new Error("Non-array type passed to require()")
-        for(let i = 0; i < modules.length; i++) {
-            // don't reload modules
-            let m = this.loaded[modules[i]]
-            if(!m) {
-                m = zSquared[modules[i]] || modules[i]
-                if(!(m instanceof Function))
-                    throw new Error( "Unknown module: '" + m + "' passed to require()" )
-                m(this)
-                this.loaded[modules[i]] = true
-            }
-        }
-    }
 
     /** Main game loop helper. Starts main loop with given fcn.
      * @function z2#main
@@ -40,9 +20,9 @@ class zSquared
      */
     main(update)
     {
-        const requestAnimationFrame = window.requestAnimationFrame || 
+        const requestAnimationFrame = window.requestAnimationFrame ||
             window.mozRequestAnimationFrame ||
-            window.webkitRequestAnimationFrame || 
+            window.webkitRequestAnimationFrame ||
             window.msRequestAnimationFrame
 
         // start the main loop
@@ -63,7 +43,7 @@ class zSquared
     }
 
     /** Function to create a canvas object
-     * @function z2#createCanvas
+     * @function createCanvas
      * @arg {Number} w Canvas width, in pixels
      * @arg {Number} h Canvas height, in pixels
      * @arg {boolean} [add_to_doc] Should this canvas be added to the
@@ -71,7 +51,7 @@ class zSquared
      * @arg {DOM Element} [parent] Parent element in DOM
      * @returns {Canvas} The Canvas object
      */
-    createCanvas(w, h, parent, add_to_doc)
+    static createCanvas(w, h, parent, add_to_doc)
     {
         let canvas = document.createElement('canvas')
         canvas.width = w
@@ -88,13 +68,13 @@ class zSquared
     /** Wraps text at 'width' columns
      * @function z2#wrapText
      * @arg {string} text Text to wrap
-     * @arg {number} width Column at which to wrap text 
+     * @arg {number} width Column at which to wrap text
      * @returns {string} Wrapped text (input with newlines added)
      */
-    wrapText(text, width)
+    static wrapText(text, width)
     {
         width = width || 75
-        var regex = '.{1,' + width + '}(\\s|$)' + '|\\S+?(\\s|$)'
+        const regex = '.{1,' + width + '}(\\s|$)' + '|\\S+?(\\s|$)'
         return text.match(RegExp(regex, 'g')).join('\n')
     }
 
@@ -107,9 +87,9 @@ class zSquared
      * integer value)
      * @returns {number} random number in [min,max] range
      */
-    random(min, max, round)
+    static random(min, max, round)
     {
-        var val
+        let val
         if(min === max)
             val = min
         else
@@ -126,7 +106,7 @@ class zSquared
      * @arg {string} name
      * @returns item with given name
      */
-    findByName(array, name)
+    static findByName(array, name)
     {
         for(let i = 0; i < array.length; i++) {
             if(array[i].name && array[i].name === name)
@@ -138,7 +118,7 @@ class zSquared
     /** Toggel fullscreen mode, when available
      * @function z2#toggleFullScreen
      */
-    toggleFullScreen()
+    static toggleFullScreen()
     {
         const doc = window.document
         const de = doc.documentElement
@@ -152,8 +132,8 @@ class zSquared
             doc.webkitExitFullscreen ||
             doc.msExitFullscreen
 
-        if(!doc.fullscreenElement && !doc.mozFullScreenElement	&& 
-            !doc.webkitFullscreenElement && !doc.msFullscreenElement)
+        if(!doc.fullscreenElement && !doc.mozFullScreenElement	&&
+           !doc.webkitFullscreenElement && !doc.msFullscreenElement)
             requestFullScreen.call(de)
         else
             cancelFullScreen.call(doc)
@@ -165,18 +145,18 @@ class zSquared
      * @arg {string} file
      * @arg {string} state
      */
-    saveState(file, state)
+    static saveState(file, state)
     {
         window.localStorage.setItem(file, JSON.stringify(state))
     }
-    
+
     /**
      * Load state from local storage
      * @function z2#loadState
      * @arg {string} file
      * @returns {Object}
      */
-    loadState(file)
+    static loadState(file)
     {
         const state = window.localStorage.getItem(file)
         if(state)
@@ -184,6 +164,5 @@ class zSquared
         else
             return null
     }
-
 }
 

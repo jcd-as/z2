@@ -4,163 +4,176 @@
 //
 // TODO:
 // - BUG: restarting a level doesn't re-display touch controls
-// - 
+// -
 //
 
-zSquared.tiledscene = function( z2 )
+import loader from './loader.js'
+import * as tilemap from './tilemap.js'
+import * as ecs from './ecs.js'
+import * as input from './input.js'
+import * as _2d from './2d-pixi.js'
+
+
+/**
+* @class TiledScene
+* @classdesc Scene class which loads from a Tiled (json) map file. Represents a game scene/level/area
+*/
+export default class TiledScene
 {
-	"use strict";
+    game = undefined
+    load = undefined
+    init = undefined
+    create = undefined
+    update = undefined
+    destroy = undefined
 
-	z2.require( ["2d", "view", "tilemap", "ecs"] );
+    loadProgressImage = null
+    loadProgressSprite = null
 
-	/** 
-	 * @class z2#z2.TiledScene
-	 * @classdesc Scene class which loads from a Tiled (json) map file. Represents a game scene/level/area
-	 * @constructor
-	 * @arg {string} url The asset URL for the Tiled level (e.g. 'level.json')
-	 * @arg {Object} scene An object defining the functions for the scene: load,
-	 * init, create, update and destroy
-	 */
-	z2.TiledScene = function( url, scene )
-	{
-		this.load = scene.load || function() {};
-		this.init = scene.init || function() {};
-		this.create = scene.create || function() {};
-		this.update = scene.update || function() {};
-		this.destroy = scene.destroy || function() {};
+    map = null
+    width = 0
+    height = 0
 
-		this.loadProgressImage = null;
-		this.loadProgressSprite = null;
+    collidables = null
 
-		this.map = null;
-		this.width = 0;
-		this.height = 0;
+    ready = false
 
-		this.collidables = null;
+    /*
+     * @constructor
+     * @arg {Object} game Instance of the Game object
+     * @arg {string} url The asset URL for the Tiled level (e.g. 'level.json')
+     * @arg {Object} scene An object defining the functions for the scene: load,
+     * init, create, update and destroy
+     */
+    constructor(game, url, scene)
+    {
+        this.game = game
+        this.load = scene.load || function() {}
+        this.init = scene.init || function() {}
+        this.create = scene.create || function() {}
+        this.update = scene.update || function() {}
+        this.destroy = scene.destroy || function() {}
 
-		this.ready = false;
+        // queue the Tiled map json
+        loader.queueAsset('level', url, 'tiled')
+    }
 
-		// queue the Tiled map json
-		z2.loader.queueAsset( 'level', url, 'tiled' );
-	};
+    /** Start the scene
+     * @method TiledScene#start
+     * @memberof TiledScene
+     */
+    start()
+    {
+        // queue the assets
+        this.load()
 
-	/** Start the scene
-	 * @method z2.TiledScene#start
-	 * @memberof z2.TiledScene
-	 */
-	z2.TiledScene.prototype.start = function()
-	{
-		// queue the assets
-		this.load();
+        // if we have a loading image, display it
+        if(this.loadProgressImage) {
+            // eslint-disable-next-line no-undef
+            const bt = new PIXI.BaseTexture( this.loadProgressImage )
+            // eslint-disable-next-line no-undef
+            const tex = new PIXI.Texture( bt )
+            // eslint-disable-next-line no-undef
+            this.loadProgressSprite = new PIXI.Sprite( tex )
+            // center the sprite
+            this.loadProgressSprite.position.x = this.game.view.width / 2 - bt.width/2
+            this.loadProgressSprite.position.y = this.game.view.height / 2 - bt.height/2
+            // crop the sprite
+            tex.frame.width = 0
+            this.game.view.add(this.loadProgressSprite, true)
+            this.game.renderer.render(this.game.stage)
+        }
 
-		// if we have a loading image, display it
-		if( this.loadProgressImage )
-		{
-			var bt = new PIXI.BaseTexture( this.loadProgressImage );
-			var tex = new PIXI.Texture( bt );
-			this.loadProgressSprite = new PIXI.Sprite( tex );
-			// center the sprite
-			this.loadProgressSprite.position.x = game.view.width / 2 - bt.width/2;
-			this.loadProgressSprite.position.y = game.view.height / 2 - bt.height/2;
-			// crop the sprite
-			tex.frame.width = 0;
-			game.view.add( this.loadProgressSprite, true );
-			game.renderer.render( game.stage );
-		}
+        // start the loader
+        loader.load(this._start, this._loadProgressCallback, this)
+    }
 
-		// start the loader
-		z2.loader.load( this._start, this._loadProgressCallback, this );
-	};
+    /** Stop the scene
+     * @method TiledScene#stop
+     * @memberof TiledScene
+     */
+    stop()
+    {
+        // stop touch input handling
+        input.touch.stop()
 
-	/** Stop the scene
-	 * @method z2.TiledScene#stop
-	 * @memberof z2.TiledScene
-	 */
-	z2.TiledScene.prototype.stop = function()
-	{
-		// stop touch input handling
-		z2.touch.stop();
+        // stop kbd handling
+        input.kbd.stop()
 
-		// stop kbd handling
-		z2.kbd.stop();
+        // clear the view (& thus Pixi)
+        this.game.view.clear()
 
-		// clear the view (& thus Pixi)
-		game.view.clear();
+        // reset the ecs system
+        ecs.manager.reset()
+    }
 
-		// reset the ecs system
-		z2.manager.reset();
-	};
+    /** Re-start a scene
+     * @method TiledScene#restart
+     * @memberof TileScene
+     */
+    restart()
+    {
+        this.stop()
+        this.game.view.scene = null
+        this._start()
+    }
 
-	/** Re-start a scene
-	 * @method z2.TiledScene#restart
-	 * @memberof z2.TileScene
-	 */
-	z2.TiledScene.prototype.restart = function()
-	{
-		this.stop();
-		game.view.scene = null;
-		this._start();
-	};
+    _loadMap(tiled)
+    {
+        this.map = new tilemap.TileMap(this.game.view)
+        this.map.load(tiled)
+        this.width = this.map.worldWidth
+        this.height = this.map.worldHeight
 
-	z2.TiledScene.prototype._loadMap = function( tiled )
-	{
-		this.map = new z2.TileMap( game.view );
-		this.map.load( tiled );
-		this.width = this.map.worldWidth;
-		this.height = this.map.worldHeight;
+        // start this tile map / level
+        this.map.start()
 
-		// start this tile map / level
-		this.map.start();
+        // TODO: call a method to setScene ?
+        this.game.view.scene = this
+    }
 
-		// TODO: call a method to setScene ?
-		game.view.scene = this;
-	};
+    _start()
+    {
+        this.collidables = []
 
-	z2.TiledScene.prototype._start = function()
-	{
-		this.collidables = [];
+        // if we have a loading image, remove it
+        if(this.loadProgressSprite) {
+            this.game.view.remove(this.loadProgressSprite, true)
+            this.loadProgressSprite = null
+        }
 
-		// if we have a loading image, remove it
-		if( this.loadProgressSprite )
-		{
-			game.view.remove( this.loadProgressSprite, true );
-			this.loadProgressSprite = null;
-		}
+        const json = loader.getAsset('level')
 
-		var json = z2.loader.getAsset( 'level' );
+        // get the ecs manager (force it to init)
+        ecs.manager.get()
 
-		// get the ecs manager (force it to init)
-		z2.manager.get();
+        // init the scene (pre-tiled load)
+        this.init()
 
-		// init the scene (pre-tiled load)
-		this.init();
+        // load the tiled json
+        this._loadMap(json)
 
-		// load the tiled json
-		this._loadMap( json );
+        // create the objects for the scene
+        this.create()
 
-		// create the objects for the scene
-		this.create();
+        // create rendering system
+        this.renderer = _2d.createRenderingSystem(this.game.canvas, this.game.view, this.game.force_canvas)
+        ecs.manager.get().addSystem(this.renderer)
 
-		// create rendering system
-		this.renderer = z2.createRenderingSystem( game.canvas, game.view, game.force_canvas );
-		z2.manager.get().addSystem( this.renderer );
+        // tell the main loop that it is okay to call 'update' on us
+        this.ready = true
+    }
 
-		// tell the main loop that it is okay to call 'update' on us
-		this.ready = true;
-	};
-
-	z2.TiledScene.prototype._loadProgressCallback = function( percent_done )
-	{
-		if( this.loadProgressSprite )
-		{
-			// crop the sprite
-			var tex = this.loadProgressSprite.texture;
-			tex.frame.width = tex.baseTexture.width * percent_done;
-			tex.setFrame( tex.frame );
-			// force a render
-			game.renderer.render( game.stage );
-		}
-	};
-
-};
+    _loadProgressCallback(percent_done)
+    {
+        if(this.loadProgressSprite) {
+            // crop the sprite
+            const tex = this.loadProgressSprite.texture
+            tex.frame.width = tex.baseTexture.width * percent_done
+            tex.setFrame(tex.frame)
+            // force a render
+            this.game.renderer.render(this.game.stage)
+        }
+    }
+}
 
