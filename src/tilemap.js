@@ -10,6 +10,10 @@
 // have scrolled out of a tile boundary (ala RENDER_OPT_PIXI_SPR)
 // -
 
+/** Tile map module.
+ * @module
+ */
+
 import zSquared from './z2.js'
 import * as ecs from './ecs.js'
 import loader from './loader.js'
@@ -36,85 +40,85 @@ const RENDER_OPT_PIXI_SPR = 3
 const RENDER_PIXI_ALL_SPR = 4
 
 let render_method
-//	let render_method = RENDER_PIXI_ALL_SPR
-//	let render_method = RENDER_OPT_PIXI_SPR
-//	let render_method = RENDER_PIXI_SPR
-//	let render_method = RENDER_OPT_PAGES
-//	let render_method = RENDER_SIMPLE
 
+/** Renderer constants.
+ * @namespace */
 export const renderers =
 {
-    RENDER_SIMPLE : RENDER_SIMPLE,
-    RENDER_OPT_PAGES : RENDER_OPT_PAGES,
-    RENDER_PIXI_SPR : RENDER_PIXI_SPR,
-    RENDER_OPT_PIXI_SPR : RENDER_OPT_PIXI_SPR,
-    RENDER_PIXI_ALL_SPR : RENDER_PIXI_ALL_SPR
+	/** @name module:tilemap.renderers#RENDER_SIMPLE */
+	RENDER_SIMPLE : RENDER_SIMPLE,
+	/** @name module:tilemap.renderers#RENDER_OPT_PAGES */
+	RENDER_OPT_PAGES : RENDER_OPT_PAGES,
+	/** @name module:tilemap.renderers#RENDER_PIXI_SPR */
+	RENDER_PIXI_SPR : RENDER_PIXI_SPR,
+	/** @name module:tilemap.renderers#RENDER_OPT_PIXI_SPR */
+	RENDER_OPT_PIXI_SPR : RENDER_OPT_PIXI_SPR,
+	/** @name module:tilemap.renderers#RENDER_PIXI_ALL_SPR */
+	RENDER_PIXI_ALL_SPR : RENDER_PIXI_ALL_SPR
 }
 
+/** Set the rendering method. */
 export function setRenderMethod(rm)
 {
-    render_method = rm
+	render_method = rm
 }
 
-/**
-* @class TileMap
-* @classdesc Tile map class
-*/
+/** Tile map class. */
 export class TileMap
 {
-    // tiles image
-    tilesets = []
+	// tiles image
+	tilesets = []
 
-    // tile dimensions
-    tileWidth = 0
-    tileHeight = 0
+	// tile dimensions
+	tileWidth = 0
+	tileHeight = 0
 
-    // map size data
-    // these, times the tile width/height, must be the same as the scene
-    // width & height...
-    width = 0
-    height = 0
-    widthInTiles = 0
-    heightInTiles = 0
-    viewWidthInTiles = 0
-    viewHeightInTiles = 0
+	// map size data
+	// these, times the tile width/height, must be the same as the scene
+	// width & height...
+	width = 0
+	height = 0
+	widthInTiles = 0
+	heightInTiles = 0
+	viewWidthInTiles = 0
+	viewHeightInTiles = 0
 
-    // layer data
-    layers = []
+	// layer data
+	layers = []
 
-    // the 'main' layer, with which the player is seen to interact
-    mainLayer = null
-    // size of the 'main' layer
-    worldWidth = 0
-    worldHeight = 0
+	// the 'main' layer, with which the player is seen to interact
+	mainLayer = null
+	// size of the 'main' layer
+	worldWidth = 0
+	worldHeight = 0
 
-    // image layers
-    imageLayers = []
+	// image layers
+	imageLayers = []
 
-    // object groups (arrays of objects)
-    objectGroups = []
+	// object groups (arrays of objects)
+	objectGroups = []
 
-    // collision map
-    // array of {solid: true/false, slope: #}
-    tileCharacterstics = []
-    collisionMap = null
-    collisionMapComponent = null
+	// collision map
+	// array of {solid: true/false, slope: #}
+	tileCharacterstics = []
+	collisionMap = null
+	collisionMapComponent = null
 
-    // Tile layer Entities
-    layerEntities = []
+	// Tile layer Entities
+	layerEntities = []
 
-    /**
+	/**
 	* @constructor
 	* @arg {View} view The view
 	*/
-    constructor(view)
+	constructor(view)
 	{
 		// if the render method hasn't been set already,
 		// make a best guess
 		if(render_method === undefined) {
 			if( device.webGL )
 				render_method = RENDER_OPT_PIXI_SPR
-//				render_method = RENDER_PIXI_ALL_SPR
+				//render_method = RENDER_PIXI_ALL_SPR
 			else
 				render_method = RENDER_OPT_PAGES
 		}
@@ -126,12 +130,10 @@ export class TileMap
 		this.viewHeight = view.height
 	}
 
-	/** Load a tile map from Tiled object
-	* @method TileMap#load
-	* @memberof TileMap
+	/** Load a tile map from Tiled object.
 	* @arg {Object} map map data from a Tiled json file
 	*/
-    load(map)
+	load(map)
 	{
 		let i
 
@@ -210,7 +212,7 @@ export class TileMap
 		}
 	}
 
-    _buildTileCharacteristics(tileset)
+	_buildTileCharacteristics(tileset)
 	{
 		// TODO: support multiple tilesets
 		for(let key in tileset.tileproperties) {
@@ -231,12 +233,12 @@ export class TileMap
 		}
 	}
 
-    buildCollisionMap(data)
+	buildCollisionMap(data)
 	{
 		this.collisionMap = collision.buildCollisionMap(data, this.widthInTiles, this.heightInTiles, this.tileCharacterstics)
 	}
 
-    updateObjectCollisionMaps()
+	updateObjectCollisionMaps()
 	{
 		for(let i = 0; i < this.objectGroups.length; i++) {
 			let grp = this.objectGroups[i]
@@ -251,10 +253,8 @@ export class TileMap
 		}
 	}
 
-	/** Start the scene running
-	* @method TileMap#start
-	*/
-    start()
+	/** Start the Entities in this map running. */
+	start()
 	{
 		let i
 		let mgr = ecs.manager.get()
@@ -270,16 +270,15 @@ export class TileMap
 		for(i = 0; i < this.imageLayers.length; i++) {
 			const ilc = imageLayerFactory.create( {layer: this.imageLayers[i]} )
 			mgr.createEntity( [_2d.renderableFactory, ilc] )
-            // TODO: ??? should 'ile' be added to layerEntities??
+			// TODO: ??? should 'ile' be added to layerEntities??
 		}
 	}
 
-	/** Get the tileset for a given tile index
-	* @method TileMap#getTilesetForIndex
+	/** Get the tileset for a given tile index.
 	* @arg {Number} idx Index of the tile whose tileset we want
 	* @returns {Object} The tileset object
 	*/
-    getTilesetForIndex(idx)
+	getTilesetForIndex(idx)
 	{
 		// TODO: binary search?
 		// check each tileset
@@ -291,31 +290,28 @@ export class TileMap
 	}
 }
 
-/**
-* @class TileLayer
-* @classdesc Tile map layer class
-*/
+/** Tile map layer class. */
 export class TileLayer
 {
-    solid = false
+	solid = false
 
-    // the factor by which the movement (scrolling) of this layer differs
-    // from the "main" map. e.g. '2' would be twice as fast, '0.5' would be
-    // half as fast
-    scrollFactorX = 1
-    scrollFactorY = 1
-    map = null
+	// the factor by which the movement (scrolling) of this layer differs
+	// from the "main" map. e.g. '2' would be twice as fast, '0.5' would be
+	// half as fast
+	scrollFactorX = 1
+	scrollFactorY = 1
+	map = null
 
-    // vars for tracking the previous frame position
-    #prev_x = NaN
-    #prev_tx = NaN
-    #prev_ty = NaN
+	// vars for tracking the previous frame position
+	#prev_x = NaN
+	#prev_tx = NaN
+	#prev_ty = NaN
 
 	/**
 	* @constructor
 	* @arg {TileMap} map The tile map
 	*/
-    constructor(map)
+	constructor(map)
 	{
 		// set the render method to the appropriate internal method
 		if(render_method === RENDER_SIMPLE)
@@ -354,25 +350,25 @@ export class TileLayer
 			this.canvas = zSquared.createCanvas(this.canvasWidth, this.canvasHeight)
 			this.context = this.canvas.getContext('2d')
 
-            // eslint-disable-next-line no-undef
+			// eslint-disable-next-line no-undef
 			this.baseTexture = new PIXI.BaseTexture(this.canvas)
-            // eslint-disable-next-line no-undef
+			// eslint-disable-next-line no-undef
 			this.frame = new PIXI.Rectangle(0, 0, this.canvas.width, this.canvas.height)
-            // eslint-disable-next-line no-undef
+			// eslint-disable-next-line no-undef
 			this.texture = new PIXI.Texture(this.baseTexture)
-            // eslint-disable-next-line no-undef
+			// eslint-disable-next-line no-undef
 			this.sprite = new PIXI.Sprite(this.texture)
 			map.view.add(this.sprite)
 		}
 		else if(render_method === RENDER_PIXI_SPR || render_method === RENDER_OPT_PIXI_SPR) {
 			this.canvasWidth = map.viewWidth + map.tileWidth
 			this.canvasHeight = map.viewHeight + map.tileHeight
-            // eslint-disable-next-line no-undef
+			// eslint-disable-next-line no-undef
 			this.frame = new PIXI.Rectangle(0, 0, this.canvasWidth, this.canvasHeight)
 			// TODO: support more than one tileset
-            // eslint-disable-next-line no-undef
+			// eslint-disable-next-line no-undef
 			this.tileTexture = new PIXI.BaseTexture(map.tilesets[0].tiles)
-            // eslint-disable-next-line no-undef
+			// eslint-disable-next-line no-undef
 			this.doc = new PIXI.DisplayObjectContainer()
 //			this.doc = new PIXI.SpriteBatch()
 
@@ -380,9 +376,9 @@ export class TileLayer
 			for(let i = 0; i <= map.viewHeightInTiles; i++) {
 				this.tileSprites.push([])
 				for(let j = 0; j <= map.viewWidthInTiles; j++) {
-                    // eslint-disable-next-line no-undef
+					// eslint-disable-next-line no-undef
 					let texture = new PIXI.Texture(this.tileTexture)
-                    // eslint-disable-next-line no-undef
+					// eslint-disable-next-line no-undef
 					let spr = new PIXI.Sprite(texture)
 					spr.position.x = j * map.tileWidth
 					spr.position.y = i * map.tileHeight
@@ -409,13 +405,13 @@ export class TileLayer
 			// TODO: we shouldn't be doing this if the layer is not visible...
 			this.canvasWidth = map.viewWidth
 			this.canvasHeight = map.viewHeight
-            // eslint-disable-next-line no-undef
+			// eslint-disable-next-line no-undef
 			this.frame = new PIXI.Rectangle(0, 0, this.canvasWidth, this.canvasHeight)
 
 			// TODO: support more than one tileset
-            // eslint-disable-next-line no-undef
+			// eslint-disable-next-line no-undef
 			this.tileTexture = new PIXI.BaseTexture(map.tilesets[0].tiles)
-            // eslint-disable-next-line no-undef
+			// eslint-disable-next-line no-undef
 			this.doc = new PIXI.SpriteBatch()
 //			this.doc = new PIXI.DisplayObjectContainer()
 
@@ -425,11 +421,10 @@ export class TileLayer
 		}
 	}
 
-	/** Load a tile layer from Tiled object
-	* @method TileLayer#load
+	/** Load a tile layer from Tiled object.
 	* @arg {Object} lyr Layer data from a Tiled json file
 	*/
-    load(lyr)
+	load(lyr)
 	{
 		// tiles data
 		this.data = lyr.data.slice()
@@ -443,7 +438,7 @@ export class TileLayer
 		}
 	}
 
-    createSpritesForPixiAllSpr()
+	createSpritesForPixiAllSpr()
 	{
 		// TODO: support more than one tileset
 		let tileset = this.map.tilesets[0]
@@ -455,9 +450,9 @@ export class TileLayer
 				// '0' tiles in Tiled are *empty*
 				if(tile) {
 					tile--
-                    // eslint-disable-next-line no-undef
+					// eslint-disable-next-line no-undef
 					let texture = new PIXI.Texture(this.tileTexture)
-                    // eslint-disable-next-line no-undef
+					// eslint-disable-next-line no-undef
 					let spr = new PIXI.Sprite(texture)
 					spr.position.x = j * this.map.tileWidth
 					spr.position.y = i * this.map.tileHeight
@@ -477,7 +472,7 @@ export class TileLayer
 		}
 	}
 
-    updateSpritesForPixiAllSpr()
+	updateSpritesForPixiAllSpr()
 	{
 		// TODO: support more than one tileset
 		const tileset = this.map.tilesets[0]
@@ -490,7 +485,7 @@ export class TileLayer
 				if(tile) {
 					// if we have a tile, but no sprite, create a sprite
 					if(!spr) {
-                        // eslint-disable-next-line no-undef
+						// eslint-disable-next-line no-undef
 						spr = new PIXI.Sprite(new PIXI.Texture(this.tileTexture))
 						this.doc.addChild(spr)
 					}
@@ -514,10 +509,8 @@ export class TileLayer
 		}
 	}
 
-	/** Force the entire layer to be re-drawn in the next frame
-	* @method TileLayer#forceDirty
-	*/
-    forceDirty()
+	/** Force the entire layer to be re-drawn in the next frame. */
+	forceDirty()
 	{
 		switch(render_method) {
 			case RENDER_SIMPLE:
@@ -539,7 +532,7 @@ export class TileLayer
 		}
 	}
 
-    renderCanvasNaive(viewx, viewy)
+	renderCanvasNaive(viewx, viewy)
 	{
 		this.sprite.visible = this.visible
 		if(!this.visible)
@@ -607,16 +600,16 @@ export class TileLayer
 //			PIXI.texturesToUpdate.push( this.baseTexture )
 		// but texturesToUpdate isn't actually updated in 1.4,
 		// so we have to update it ourselves:
-        // eslint-disable-next-line no-undef
+		// eslint-disable-next-line no-undef
 		if(PIXI.defaultRenderer.renderSession.gl)
-            // eslint-disable-next-line no-undef
+			// eslint-disable-next-line no-undef
 			PIXI.updateWebGLTexture(this.baseTexture, PIXI.defaultRenderer.renderSession.gl)
 
 		this.sprite.position.x = 0 | (viewx - this.map.viewWidth/2)
 		this.sprite.position.y = 0 | (viewy - this.map.viewHeight/2)
 	}
 
-    renderCanvasOpt(viewx, viewy)
+	renderCanvasOpt(viewx, viewy)
 	{
 		this.sprite.visible = this.visible
 		if(!this.visible)
@@ -879,16 +872,16 @@ export class TileLayer
 //			PIXI.texturesToUpdate.push( this.baseTexture )
 		// but texturesToUpdate isn't actually updated in 1.4,
 		// so we have to update it ourselves:
-        // eslint-disable-next-line no-undef
+		// eslint-disable-next-line no-undef
 		if(PIXI.defaultRenderer.renderSession.gl)
-            // eslint-disable-next-line no-undef
+			// eslint-disable-next-line no-undef
 			PIXI.updateWebGLTexture(this.baseTexture, PIXI.defaultRenderer.renderSession.gl)
 
 		this.sprite.position.x = 0 | (viewx - this.map.viewWidth/2)
 		this.sprite.position.y = 0 | (viewy - this.map.viewHeight/2)
 	}
 
-    renderPixiSpr(viewx, viewy)
+	renderPixiSpr(viewx, viewy)
 	{
 		this.doc.visible = this.visible
 		if(!this.visible)
@@ -950,7 +943,7 @@ export class TileLayer
 		this.doc.position.y = 0 | (viewy - this.map.viewHeight/2) + py
 	}
 
-    renderPixiSprOpt(viewx, viewy)
+	renderPixiSprOpt(viewx, viewy)
 	{
 		this.doc.visible = this.visible
 		if(!this.visible)
@@ -1035,7 +1028,7 @@ export class TileLayer
 
 	// "brute force" renderer - one sprite for each tile in each layer, mark
 	// offscreen tiles 'visible=false' & set parent transform for view (camera)
-    renderPixiAllSpr(viewx, viewy)
+	renderPixiAllSpr(viewx, viewy)
 	{
 		// TODO: use previous tile x/y to only set visible flags of the tiles
 		// that have scrolled on/off of the screen
@@ -1077,41 +1070,28 @@ export class TileLayer
 		const vy = viewy - this.map.viewHeight/2
 		this.doc.position.x = 0 | (vx - (vx * this.scrollFactorX))
 		this.doc.position.y = 0 | (vy - (vy * this.scrollFactorY))
-    }
+	}
 
-    // TODO:
 	/** Render the tilemap layer to its canvas
-	* @method TileLayer#render
+	* @name module:tilemap.TileLayer#render
+	* @function
 	* @arg {Number} viewx The x-coordinate that the view is centered on
 	* @arg {Number} viewy The y-coordinate that the view is centered on
 	*/
-//	if( render_method === RENDER_SIMPLE )
-//		TileLayer.prototype.render = TileLayer.prototype.renderCanvasNaive
-//	else if( render_method === RENDER_OPT_PAGES )
-//		TileLayer.prototype.render = TileLayer.prototype.renderCanvasOpt
-//	else if( render_method === RENDER_PIXI_SPR )
-//		TileLayer.prototype.render = TileLayer.prototype.renderPixiSpr
-//	else if( render_method === RENDER_OPT_PIXI_SPR )
-//		TileLayer.prototype.render = TileLayer.prototype.renderPixiSprOpt
-//	else if( render_method === RENDER_PIXI_ALL_SPR )
-//		TileLayer.prototype.render = TileLayer.prototype.renderPixiAllSpr
-
+	__render_placeholder__ = undefined
 }
 
-/**
- * @class ImageLayer
- * @classdesc Tile map image layer class
- */
+/** Tile map image layer class. */
 export class ImageLayer
 {
-    /**
+	/**
 	* @constructor
 	* @arg {TileMap} map The tile map
 	* @arg {Object} lyr The object for the layer - as read from the Tiled json
 	*/
-    constructor(map, lyr)
-    {
-        // reference to the TileMap that contains the layer
+	constructor(map, lyr)
+	{
+		// reference to the TileMap that contains the layer
 		this.map = map
 
 		// get the image asset
@@ -1120,11 +1100,11 @@ export class ImageLayer
 		this.visible = lyr.visible
 
 		// Pixi stuff
-        // eslint-disable-next-line no-undef
+		// eslint-disable-next-line no-undef
 		this.baseTexture = new PIXI.BaseTexture(img)
-        // eslint-disable-next-line no-undef
+		// eslint-disable-next-line no-undef
 		this.texture = new PIXI.Texture(this.baseTexture)
-        // eslint-disable-next-line no-undef
+		// eslint-disable-next-line no-undef
 		this.sprite = new PIXI.Sprite(this.texture)
 
 		// size of main layer, in pixels
@@ -1145,7 +1125,8 @@ export class ImageLayer
 		map.view.add(this.sprite)
 	}
 
-    render(viewx, viewy)
+	/** Render the layer. */
+	render(viewx, viewy)
 	{
 		this.sprite.visible = this.visible
 
@@ -1165,20 +1146,20 @@ export class ImageLayer
 // function to create objects for a Tiled object layer
 function createObjects( layer )
 {
-    const objects = []
-    // create an entity for each object
-    for(let i = 0; i < layer.objects.length; i++) {
-        const obj = layer.objects[i]
+	const objects = []
+	// create an entity for each object
+	for(let i = 0; i < layer.objects.length; i++) {
+		const obj = layer.objects[i]
 
 //        const factory = z2[obj.type]
-        const factory = zSquared[obj.type]
-        if(!factory) {
-            console.log("No factory method found for object type: " + obj.type)
-            continue
-        }
-        objects.push(factory(obj))
-    }
-    return objects
+		const factory = zSquared[obj.type]
+		if(!factory) {
+			console.log("No factory method found for object type: " + obj.type)
+			continue
+		}
+		objects.push(factory(obj))
+	}
+	return objects
 }
 
 
@@ -1186,12 +1167,12 @@ function createObjects( layer )
 // Component factories
 /////////////////////////////////////////////////////////////////////////
 
-/** Component Factory for tile map layer */
+/** Component Factory for tile map layer. */
 export const tileLayerFactory = ecs.createComponentFactory({layer: null})
 
-/** Component Factory for image layers */
+/** Component Factory for image layers. */
 export const imageLayerFactory = ecs.createComponentFactory({layer: null})
 
-/** Component Factory for collision map */
+/** Component Factory for collision map. */
 export const collisionMapFactory = ecs.createComponentFactory({map: null, data: null})
 

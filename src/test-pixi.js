@@ -489,6 +489,6 @@ function mainloop(et)
 		ecs.ecsUpdate(et)
 	stats.end()
 }
-z2.main(mainloop)
+z2.startMain(mainloop)
 
 })()

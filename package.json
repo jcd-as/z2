@@ -26,7 +26,8 @@
     "clean": "rm -f js/*",
     "build": "babel src -d js -s",
     "minify": "./node_modules/.bin/babel js --presets minify",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "docs": "rm -rf ./docs; jsdoc -d docs -P ./package.json src"
   },
   "devDependencies": {
     "@babel/cli": "^7.8.4",
@@ -39,7 +40,8 @@
     "babel-preset-minify": "^0.5.1",
     "browserify": "^16.5.0",
     "eslint": "^6.8.0",
-    "eslint-plugin-babel": "^5.3.0"
+    "eslint-plugin-babel": "^5.3.0",
+    "jsdoc": "^3.6.3"
   },
   "dependencies": {
     "@babel/polyfill": "^7.8.7"

@@ -5,16 +5,17 @@
 // TODO:
 // -
 
+/** Game Scene module.
+ * @module
+ */
+
 import * as ecs from './ecs.js'
 import loader from './loader.js'
 import * as input from './input.js'
 
 
-/**
-* @class Scene
-* @classdesc Scene class. Represents a game scene/level/area
-*/
-export default class Scene
+/** Scene class. Represents a game scene/level/area. */
+class Scene
 {
 	#load = undefined
 	#init = undefined
@@ -52,10 +53,7 @@ export default class Scene
 		this.height = height || 0
 	}
 
-	/** Start the scene
-	* @method Scene#start
-	* @memberof Scene
-	*/
+	/** Start the scene. */
 	start()
 	{
 		// queue the assets
@@ -65,10 +63,7 @@ export default class Scene
 		loader.load(this.internalStart, this.loadProgressCallback, this)
 	}
 
-	/** Stop the scene
-	* @method Scene#stop
-	* @memberof Scene
-	*/
+	/** Stop the scene. */
 	stop()
 	{
 		// stop touch input handling
@@ -87,10 +82,7 @@ export default class Scene
 	}
 
 
-	/** Re-start a scene
-	* @method Scene#restart
-	* @memberof Scene
-	*/
+	/** Re-start a scene. */
 	restart()
 	{
 		this.stop()
@@ -120,4 +112,5 @@ export default class Scene
 			this.loadProgressCallbackFn(percent_done)
 	}
 }
+export default Scene
 

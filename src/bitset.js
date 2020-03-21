@@ -2,21 +2,20 @@
 // Copyright 2013 Joshua C Shepard
 // rudimentary bit-set for zed-squared
 
+/** Bitset module.
+ * @module
+ */
+
 
 /** @constant */
 export const DEFAULT_BITSET_LENGTH = 2
 /** @constant */
 export const MAX_BITSET_BITS = (DEFAULT_BITSET_LENGTH * 32) - 1
 
-/**
-* @class Bitset
-* @classdesc Rudimentary bit-set for zed-squared
-*/
+/** Rudimentary bit-set for zed-squared */
 export class Bitset
 {
-	/**
-	* @constructor
-	*/
+	/** @constructor */
 	constructor( num_dwords )
 	{
 		this.length = +num_dwords || 1
@@ -26,10 +25,7 @@ export class Bitset
 			this.data = new Uint32Array(this.length)
 	}
 
-	/** Reset to zero
-	* @method Bitset#clear
-	* @memberof Bitset
-	*/
+	/** Reset all bits to zero. */
 	clear()
 	{
 		if(this.length === 1)
@@ -41,9 +37,7 @@ export class Bitset
 		}
 	}
 
-	/**
-	* @method Bitset#setBit
-	* @memberof Bitset
+	/** Set the n'th bit.
 	* @arg {Number} bit The bit to set (the 'nth' bit)
 	*/
 	setBit(bit)
@@ -64,9 +58,7 @@ export class Bitset
 		}
 	}
 
-	/**
-	* @method Bitset#setBits
-	* @memberof Bitset
+	/** Set multiple bits.
 	* @arg {Uint32Array}|{Number} bits A typed array of 32 bit unsigned integers
 	* or a single number containing the bits to set. If an array it must be the
 	* same length as 'this.length'
@@ -90,8 +82,7 @@ export class Bitset
 		}
 	}
 
-	/** See if any bits match
-	* @method Bitset#matchAny
+	/** See if any bits in the given bitset match.
 	* @arg {Bitset} bits The Bitset to match against
 	*/
 	matchAny(bits)
@@ -117,8 +108,7 @@ export class Bitset
 		}
 	}
 
-	/** See if all bits match
-	* @method Bitset#matchAll
+	/** See if all bits in the given bitset match.
 	* @arg {Bitset} bits The Bitset to match against
 	*/
 	matchAll(bits)

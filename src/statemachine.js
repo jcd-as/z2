@@ -20,10 +20,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+/** Simple Finite State Machine module.
+ * @module
+ */
 
-/**
- * @class StateMachine
- * @classdesc Class providing a state machine for the zed-squared.
+
+/** Class providing a state machine for the zed-squared.
  * Takes an array of objects that define the states and events, like such:
  * <pre>
  * states = [
@@ -58,7 +60,7 @@
  * same name as the new state, and take one parameter: the
  * event. e.g. <pre>function meeting( event ) { this.attendMeeting(); }</pre>
  */
-export default class StateMachine
+class StateMachine
 {
 	states = undefined
 	receiver = undefined
@@ -91,8 +93,6 @@ export default class StateMachine
 	}
 
 	/** Consume an event. Causes a new state to be entered.
-	* @function StateMachine#consumeEvent
-	* @memberof StateMachine
 	* @arg {string} e The event that has occurred
 	* @arg {any} args Any further arguments that you want to be passed to the
 	* receiver's function for this state change
@@ -111,8 +111,6 @@ export default class StateMachine
 
 	// TODO: make this a property
 	/** Retrieve the (name of) the current state.
-	* @function StateMachine#getState
-	* @memberof StateMachine
 	* @returns {string}
 	*/
 	getState()
@@ -120,13 +118,11 @@ export default class StateMachine
 		return this.currentState.name
 	}
 
-	/** Reset the state machine to its initial state
-	* @function StateMachine#reset
-	* @memberof StateMachine
-	*/
+	/** Reset the state machine to its initial state. */
 	reset()
 	{
 		this.currentState = this.initialState
 	}
 }
+export default StateMachine
 
