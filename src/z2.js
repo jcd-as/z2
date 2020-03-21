@@ -4,21 +4,21 @@
 // TODO:
 // -
 
-/**
- * @class zSquared
- * @classdesc Main zSquared class
+/** zSquared 'globals' module.
+ * @module
  */
-export default class zSquared
+
+/** Main zSquared class */
+class zSquared
 {
 	raf = null
 
-	/** Main game loop helper. Starts main loop with given fcn.
-	* @function z2#main
+	/** Main game loop helper. Starts main loop with a given function.
 	* @arg {Function} update Function to be called each frame. Takes a
 	* single parameter: the elapsed time since the loop was first started
 	* (the same param that requestAnimationFrame passes)
 	*/
-	main(update)
+	startMain(update)
 	{
 		const requestAnimationFrame = window.requestAnimationFrame ||
 			window.mozRequestAnimationFrame ||
@@ -33,22 +33,18 @@ export default class zSquared
 		this.raf = requestAnimationFrame(f)
 	}
 
-	/** Stops the main loop
-	* @function z2#stopMain
-	*/
+	/** Stop the main loop. */
 	stopMain()
 	{
 		const cancelAnimationFrame = window.cancelAnimationFrame || window.mozCancelAnimationFrame
 		cancelAnimationFrame( this.raf )
 	}
 
-	/** Function to create a canvas object
-	* @function createCanvas
+	/** Create an HTML canvas object.
 	* @arg {Number} w Canvas width, in pixels
 	* @arg {Number} h Canvas height, in pixels
-	* @arg {boolean} [add_to_doc] Should this canvas be added to the
-	* document?
-	* @arg {DOM Element} [parent] Parent element in DOM
+	* @arg {boolean} [add_to_doc] Should this canvas be added to the * document?
+	* @arg {DOMElement} [parent] Parent element in DOM
 	* @returns {Canvas} The Canvas object
 	*/
 	static createCanvas(w, h, parent, add_to_doc)
@@ -65,8 +61,7 @@ export default class zSquared
 		return canvas
 	}
 
-	/** Wraps text at 'width' columns
-	* @function z2#wrapText
+	/** Wrap text at 'width' columns.
 	* @arg {string} text Text to wrap
 	* @arg {number} width Column at which to wrap text
 	* @returns {string} Wrapped text (input with newlines added)
@@ -78,12 +73,10 @@ export default class zSquared
 		return text.match(RegExp(regex, 'g')).join('\n')
 	}
 
-	/** Generate a random number within bounds
-	* @function z2#random
+	/** Generate a random number within bounds.
 	* @arg {number} min minimum value to generate
 	* @arg {number} max maximum value to generate
-	* @arg {Function} mod Function to be applied to result prior to
-	* returning (e.g. pass 'Math.round' to get a number rounded to an
+	* @arg {Function} mod Function to be applied to result prior to * returning (e.g. pass 'Math.round' to get a number rounded to an
 	* integer value)
 	* @returns {number} random number in [min,max] range
 	*/
@@ -100,8 +93,7 @@ export default class zSquared
 			return val
 	}
 
-	/** Find an item in an array by 'name' property
-	* @function z2#findByName
+	/** Find an item in an array by 'name' property.
 	* @arg {array} array Array in which to find object
 	* @arg {string} name
 	* @returns item with given name
@@ -115,9 +107,7 @@ export default class zSquared
 		return null
 	}
 
-	/** Toggel fullscreen mode, when available
-	* @function z2#toggleFullScreen
-	*/
+	/** Toggle fullscreen mode, when available. */
 	static toggleFullScreen()
 	{
 		const doc = window.document
@@ -139,9 +129,7 @@ export default class zSquared
 			cancelFullScreen.call(doc)
 	}
 
-	/**
-	* Save state to local storage
-	* @function z2#saveState
+	/** Save state to local storage.
 	* @arg {string} file
 	* @arg {string} state
 	*/
@@ -150,9 +138,7 @@ export default class zSquared
 		window.localStorage.setItem(file, JSON.stringify(state))
 	}
 
-	/**
-	* Load state from local storage
-	* @function z2#loadState
+	/** Load state from local storage.
 	* @arg {string} file
 	* @returns {Object}
 	*/
@@ -165,4 +151,6 @@ export default class zSquared
 			return null
 	}
 }
+
+export default zSquared
 

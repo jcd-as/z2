@@ -6,16 +6,21 @@
 // - fcn to set custom follow-mode parameters
 // -
 
+/** Game View (viewport) module.
+ * @module
+ */
 
-/**
-* @class View
-* @classdesc View class. Represents a view into a Scene
-*/
-export default class View
+
+/** View class. Represents a view into a Scene. */
+class View
 {
+	/** @constant */
 	static FOLLOW_MODE_NONE = 'follow-mode-none'
+	/** @constant */
 	static FOLLOW_MODE_TIGHT = 'follow-mode-tight'
+	/** @constant */
 	static FOLLOW_MODE_PLATFORMER = 'follow-mode-platformer'
+	/** @constant */
 	static FOLLOW_MODE_OVERHEAD_SCROLLER = 'follow-mode-overhead-scroller'
 
 	scene = null
@@ -38,16 +43,7 @@ export default class View
 	roffs = 0
 	follow_mode = undefined
 
-	/**
-	* @property {string} follow_mode The angle of rotation of the view (in
-	* @property {number} rotation The angle of rotation of the view (in
-	* radians). (Note that the View is, like a camera, 'looking at' the scene,
-	* so if you rotate the view clockwise, the displayed scene will appear to
-	* rotate CCW, and vice-versa)
-	* @property {number} sx The scale factor for the view in the X dimension
-	* @property {number} sy The scale factor for the view in the Y dimension
-	* @property {number} x The X coordinate of the center of the View
-	* @property {number} y The Y coordinate of the center of the View
+   /**
 	* @constructor
 	* @arg {Object} game Instance of the Game class
 	* @arg {number} width The width of the View, in pixels
@@ -91,10 +87,7 @@ export default class View
 		this.follow_mode = follow_mode || View.FOLLOW_MODE_NONE
 	}
 
-	/** Update the view for the frame
-	* @function View#update
-	* @memberof View
-	*/
+	/** Update the view for the frame. */
 	update()
 	{
 		// adjust for follow-mode
@@ -102,9 +95,7 @@ export default class View
 			this._follow()
 	}
 
-	/** Add a (Pixi DisplayObject) to the view
-	* @function View#add
-	* @memberof View
+	/** Add a (Pixi DisplayObject) to the view.
 	* @arg {Pixi.DisplayObject} obj The object to add
 	* @arg {boolean} [fixed] Is the object fixed to the camera or not? fixed
 	* objects do not move (e.g. a HUD or life-meter). default is false
@@ -117,9 +108,7 @@ export default class View
 			this.doc.addChild(obj)
 	}
 
-	/** Remove a (Pixi DisplayObject) from the view
-	* @function View#add
-	* @memberof View
+	/** Remove a (Pixi DisplayObject) from the view.
 	* @arg {Pixi.DisplayObject} obj The object to remove
 	* @arg {boolean} [fixed] Is the object fixed to the camera or not? fixed
 	* objects do not move (e.g. a HUD or life-meter). default is false
@@ -132,10 +121,7 @@ export default class View
 			this.doc.removeChild(obj)
 	}
 
-	/** Remove all (Pixi DisplayObjects) from the view
-	* @function View#clear
-	* @memberof View
-	*/
+	/** Remove all (Pixi DisplayObjects) from the view. */
 	clear()
 	{
 		// clear the camera objects
@@ -151,6 +137,7 @@ export default class View
 		this.game.stage.addChild(this.fixed)
 	}
 
+	/** Camera 'follow mode'. */
 	get follow_mode()
 	{
 		return this._follow_mode
@@ -240,6 +227,11 @@ export default class View
 			this.doc.position.y = Math.round(-y)
 	}
 
+	/** The angle of rotation of the view (in * radians).
+	* (Note that the View is, like a camera, 'looking at' the scene,
+	* so if you rotate the view clockwise, the displayed scene will appear to
+	* rotate CCW, and vice-versa)
+	*/
 	get rotation()
 	{
 		return -this.camera_doc.rotation
@@ -249,9 +241,7 @@ export default class View
 		this.camera_doc.rotation = -val
 	}
 
-	/** Set the View scale
-	* @method View#setScale
-	* @memberof View
+	/** Set the View scale.
 	* @arg {Number} sx The x scale factor
 	* @arg {Number} sy The y scale factor
 	*/
@@ -261,6 +251,7 @@ export default class View
 		this.camera_doc.scale.y = sy
 	}
 
+	/** The scale factor for the view in the X dimension. */
 	get sx()
 	{
 		return this.camera_doc.scale.x
@@ -269,6 +260,8 @@ export default class View
 	{
 		this.camera_doc.scale.x = val
 	}
+
+	/** The scale factor for the view in the Y dimension. */
 	get sy()
 	{
 		return this.camera_doc.scale.y
@@ -278,9 +271,7 @@ export default class View
 		this.camera_doc.scale.y = val
 	}
 
-	/** Set the (center of) the View position (in the Scene)
-	* @method View#setPosition
-	* @memberof View
+	/** Set the (center of) the View position (in the Scene).
 	* @arg {Number} x The x coordinate for the position
 	* @arg {Number} y The y coordinate for the position
 	*/
@@ -294,6 +285,7 @@ export default class View
 		this.doc.position.y = y
 	}
 
+	/** The object for the camera to follow. */
 	get target()
 	{
 		return this._target
@@ -328,6 +320,7 @@ export default class View
 		}
 	}
 
+	/** The X coordinate of the center of the View. */
 	get x()
 	{
 		return -this.doc.position.x
@@ -337,6 +330,7 @@ export default class View
 		this.doc.position.x = -val
 	}
 
+	/** The Y coordinate of the center of the View. */
 	get y()
 	{
 		return -this.doc.position.y
@@ -346,4 +340,5 @@ export default class View
 		this.doc.position.y = -val
 	}
 }
+export default View
 

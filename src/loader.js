@@ -13,6 +13,10 @@
 // - use browser type to load appropriate audio files (i.e. ogg for firefox)
 // -
 
+/** Asset loader module.
+ * @module
+ */
+
 import {audioContext} from './audio.js'
 
 
@@ -148,12 +152,12 @@ function loadFont(key, url, onComplete, onError)
 }
 
 // public module interface:
-/** Loader namespace
+/*** Loader namespace
  * @namespace loader */
 export default
 {
 	/** Set base URL
-	* @method loader#setBaseUrl
+	* @method module:loader#setBaseUrl
 	* @arg {string} base base URL
 	*/
 	setBaseUrl: function(base)
@@ -162,7 +166,7 @@ export default
 	},
 
 	/** Set image base URL
-	* @method loader#setImageBaseUrl
+	* @method module:loader#setImageBaseUrl
 	* @arg {string} base base URL
 	*/
 	setImageBaseUrl: function(base)
@@ -171,7 +175,7 @@ export default
 	},
 
 	/** Set audio base URL
-	* @method loader#setAudioUrl
+	* @method module:loader#setAudioUrl
 	* @arg {string} base base URL
 	*/
 	setAudioBaseUrl: function(base)
@@ -180,7 +184,7 @@ export default
 	},
 
 	/** Set text base URL
-	* @method loader#setTextBaseUrl
+	* @method module:loader#setTextBaseUrl
 	* @arg {string} base base URL
 	*/
 	setTextBaseUrl: function(base)
@@ -189,7 +193,7 @@ export default
 	},
 
 	/** Set JSON base URL
-	* @method loader#setJsonBaseUrl
+	* @method module:loader#setJsonBaseUrl
 	* @arg {string} base base URL
 	*/
 	setJsonBaseUrl: function(base)
@@ -198,7 +202,7 @@ export default
 	},
 
 	/** Set font base URL
-	* @method loader#setFontBaseUrl
+	* @method module:loader#setFontBaseUrl
 	* @arg {string} base base URL
 	*/
 	setFontBaseUrl: function(base)
@@ -207,7 +211,7 @@ export default
 	},
 
 	/** Get an asset
-	* @method loader#getAsset
+	* @method module:loader#getAsset
 	* @arg {string} key Asset key (friendly name)
 	* @returns {string} Asset The asset
 	*/
@@ -217,7 +221,7 @@ export default
 	},
 
 	/** Dispose of an asset
-	* @method loader#deleteAsset
+	* @method module:loader#deleteAsset
 	* @arg {string} key Asset key (friendly name)
 	*/
 	deleteAsset: function(key)
@@ -226,7 +230,7 @@ export default
 	},
 
 	/** Free all assets
-	* @method loader#freeAssets
+	* @method module:loader#freeAssets
 	*/
 	freeAssets: function()
 	{
@@ -234,7 +238,7 @@ export default
 	},
 
 	/** Add an item to the loader queue
-	* @method loader#queueAsset
+	* @method module:loader#queueAsset
 	* @arg {string} key Key (friendly name) that will be used to access the
 	* asset
 	* @arg {string} url Asset URL to queue
@@ -254,7 +258,7 @@ export default
 	},
 
 	/** Start the load (asynchronous)
-	* @method loader#load
+	* @method module:loader#load
 	* @arg {Function} onComplete Callback function. Should take two numeric
 	* arguments: the number of loaded items and the number of failed items
 	* @arg {Function} onProgress Callback function. Takes one numeric

@@ -10,6 +10,10 @@ import time from './time.js'
 import * as audio from './audio.js'
 import loader from './loader.js'
 
+/** Game object module.
+ * @module
+ */
+
 
 // TODO: not yet used
 // the main ecs loop
@@ -41,20 +45,20 @@ import loader from './loader.js'
 //		z2.stats.end()
 //}
 
-/**
-* @class Game
-* @classdesc Game class - this is where it all starts
-*/
-export default class Game
+/** Game class - this is where it all starts. */
+class Game
 {
 	// TODO: once we start using the start()/startScene() methods, make these
 	// private:
+	/** Are we in debug mode? */
 	debug = false
 	canvas = null
 	force_canvas = false
+	/** Are we currently paused? */
 	paused = false
 	pausedSprite = null
 	pausedBg = null
+	/** The current game scene. */
 	scene = null
 
 	/**
@@ -206,4 +210,5 @@ export default class Game
 //		this.scene.start()
 //	}
 }
+export default Game
 

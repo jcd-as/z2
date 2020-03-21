@@ -15,6 +15,10 @@
 // - cull off-screen particles
 // -
 
+/** Particle emitter module.
+ * @module
+ */
+
 import time from './time.js'
 import * as ecs from './ecs.js'
 import * as _2d from'./2d-pixi.js'
@@ -169,7 +173,6 @@ function particleFactory( basetexture, texture, batch )
 /** EmitterSystem factory function
 * requires: emitter, position
 * optional:
-* @function z2#createEmitterSystem
 * @arg {View} view The view object to which the particles will be added
 * @arg {string} key The asset key for the spritesheet to use
 * @arg {number} [priority] Priority of system.

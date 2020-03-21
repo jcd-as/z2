@@ -4,12 +4,13 @@
 // TODO:
 // -
 
-
-/**
- * @class ObjectPool
- * @classdesc Object pool class
+/** Small object pool memory management module.
+ * @module
  */
-export default class ObjectPool
+
+
+/** Object pool class. */
+class ObjectPool
 {
 	/**
 	* @constructor
@@ -29,8 +30,7 @@ export default class ObjectPool
 		this.free = []
 	}
 
-	/** Get an Object from the pool
-	* @function z2#ObjectPool.get
+	/** Get an Object from the pool.
 	* @returns {Object}
 	*/
 	get()
@@ -54,8 +54,7 @@ export default class ObjectPool
 		}
 	}
 
-	/** Release an Object we acquired from the pool
-	* @function z2#ObjectPool.release
+	/** Release an Object we acquired from the pool.
 	* @arg {Object} obj The object that we acquired via 'ObjectPool.get()'
 	*/
 	release(obj)
@@ -67,4 +66,5 @@ export default class ObjectPool
 		this.free.push( obj )
 	}
 }
+export default ObjectPool
 

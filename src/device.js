@@ -6,6 +6,10 @@
 // - update to modern (2020) browsers...
 // -
 
+/** Device detection (browser/os/features) module
+ * @module
+ */
+
 
 // device
 let desktop, mobile;
@@ -109,6 +113,7 @@ let webAudio, canvas, localStorage, file, fileSystem, webGL, worker, touch, mspo
 	quirksMode = (document.compatMode === 'CSS1Compat') ? false : true
 })()
 
+/** Object representing the browser, OS and features of the current device. */
 export default
 {
 	// device

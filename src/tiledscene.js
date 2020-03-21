@@ -7,6 +7,10 @@
 // -
 //
 
+/** Module supporting Game Scenes loaded from Tiled editor JSON file.
+ * @module
+ */
+
 import loader from './loader.js'
 import * as tilemap from './tilemap.js'
 import * as ecs from './ecs.js'
@@ -14,11 +18,8 @@ import * as input from './input.js'
 import * as _2d from './2d-pixi.js'
 
 
-/**
-* @class TiledScene
-* @classdesc Scene class which loads from a Tiled (json) map file. Represents a game scene/level/area
-*/
-export default class TiledScene
+/** Scene class which loads from a Tiled (json) map file. Represents a game scene/level/area. */
+class TiledScene
 {
 	game = undefined
 	load = undefined
@@ -58,10 +59,7 @@ export default class TiledScene
 		loader.queueAsset('level', url, 'tiled')
 	}
 
-	/** Start the scene
-	* @method TiledScene#start
-	* @memberof TiledScene
-	*/
+	/** Start the scene. */
 	start()
 	{
 		// queue the assets
@@ -88,10 +86,7 @@ export default class TiledScene
 		loader.load(this._start, this._loadProgressCallback, this)
 	}
 
-	/** Stop the scene
-	* @method TiledScene#stop
-	* @memberof TiledScene
-	*/
+	/** Stop the scene. */
 	stop()
 	{
 		// stop touch input handling
@@ -107,10 +102,7 @@ export default class TiledScene
 		ecs.manager.reset()
 	}
 
-	/** Re-start a scene
-	* @method TiledScene#restart
-	* @memberof TileScene
-	*/
+	/** Re-start a scene. */
 	restart()
 	{
 		this.stop()
@@ -176,4 +168,5 @@ export default class TiledScene
 		}
 	}
 }
+export default TiledScene
 

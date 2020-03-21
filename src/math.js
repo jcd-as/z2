@@ -2,6 +2,10 @@
 // Copyright 2013 Joshua C Shepard
 // math, incl vector & matrix, routines for zed-squared
 
+/** Math module.
+ * @module
+ */
+
 
 // helpers
 
@@ -10,15 +14,13 @@ const D2R_CONVERSION_FACTOR = Math.PI/180
 /** @constant */
 const R2D_CONVERSION_FACTOR = 180/Math.PI
 
-/** Convert degrees to radians
-* @function math.d2r */
+/** Convert degrees to radians. */
 export function d2r(d)
 {
 	return d * D2R_CONVERSION_FACTOR
 }
 
-/** Convert radians to degrees
-* @function math.r2d */
+/** Convert radians to degrees. */
 export function r2d(r)
 {
 	return r * R2D_CONVERSION_FACTOR
@@ -27,8 +29,7 @@ export function r2d(r)
 
 // vector math routines
 
-/** Add two vectors
-* @function math.vecAdd */
+/** Add two vectors. */
 export function vecAdd(v1, v2, out)
 {
 	if(!out)
@@ -37,8 +38,7 @@ export function vecAdd(v1, v2, out)
 	out[1] = v1[1] + v2[1]
 }
 
-/** Subtract two vectors
-* @function math.vecSub */
+/** Subtract two vectors. */
 export function vecSub(v1, v2, out)
 {
 	if(!out)
@@ -47,8 +47,7 @@ export function vecSub(v1, v2, out)
 	out[1] = v1[1] - v2[1]
 }
 
-/** Multiply two vectors
-* @function math.vecMul */
+/** Multiply two vectors. */
 export function vecMul(v1, v2, out)
 {
 	if(!out)
@@ -57,8 +56,7 @@ export function vecMul(v1, v2, out)
 	out[1] = v1[1] * v2[1]
 }
 
-/** Divide two vectors
-* @function math.vecDiv */
+/** Divide two vectors. */
 export function vecDiv(v1, v2, out)
 {
 	if(!out)
@@ -67,8 +65,7 @@ export function vecDiv(v1, v2, out)
 	out[1] = v1[1] / v2[1]
 }
 
-/** Add a scalar to a vector
- * @function math.vecAddTo */
+/** Add a scalar to a vector. */
 export function vecAddTo(v, n, out)
 {
 	if(!out)
@@ -77,8 +74,7 @@ export function vecAddTo(v, n, out)
 	out[1] = v[1] * n
 }
 
-/** Subtract a scalar from a vector
- * @function math.vecSubFrom */
+/** Subtract a scalar from a vector. */
 export function vecSubFrom(v, n, out)
 {
 	if(!out)
@@ -87,8 +83,7 @@ export function vecSubFrom(v, n, out)
 	out[1] = v[1] = n
 }
 
-/** Multiply a vector by a scalar
- * @function math.vecMulBy */
+/** Multiply a vector by a scalar. */
 export function vecMulBy(v, n, out)
 {
 	if(!out)
@@ -97,8 +92,7 @@ export function vecMulBy(v, n, out)
 	out[1] = v[1] * n
 }
 
-/** Divide a vector by a scalar
- * @function math.vecDivBy */
+/** Divide a vector by a scalar. */
 export function vecDivBy(v, n, out)
 {
 	if(!out)
@@ -107,22 +101,19 @@ export function vecDivBy(v, n, out)
 	out[1] = v[1] / n
 }
 
-/** Vector dot-product
- * @function math.vecDot */
+/** Vector dot-product. */
 export function vecDot(v1, v2)
 {
 	return v1[0] * v2[0] + v1[1] * v2[1]
 }
 
-/** Vector magnitude
- * @function math.vecMag */
+/** Vector magnitude. */
 export function vecMag(v)
 {
 	return Math.sqrt(v[0] * v[0] + v[1] * v[1])
 }
 
-/** Normalize a vector
- * @function math.vecNormalize */
+/** Normalize a vector. */
 export function vecNormalize(v, out)
 {
 	if(!out)
@@ -135,8 +126,7 @@ export function vecNormalize(v, out)
 
 // (3x3) matrix math routines
 
-/** Create a 3x3 Identity matrix
-* @function math.matCreateIdentity */
+/** Create a 3x3 Identity matrix. */
 export function matCreateIdentity()
 {
 	const m = new Float64Array(9)
@@ -154,8 +144,7 @@ export function matCreateIdentity()
 	return m
 }
 
-/** Set a 3x3 matrix to identity
- * @function math.matSetIdentity */
+/** Set a 3x3 matrix to identity. */
 export function matSetIdentity(m)
 {
 	m[0] = 1
@@ -171,8 +160,7 @@ export function matSetIdentity(m)
 	return m
 }
 
-/** Set a 3x3 matrix's translation
- * @function math.matSetTranslation */
+/** Set a 3x3 matrix's translation. */
 export function matSetTranslation(m, dx, dy)
 {
 	m[2] = dx
@@ -180,8 +168,7 @@ export function matSetTranslation(m, dx, dy)
 	return m
 }
 
-/** Set a 3x3 matrix's scale (WARNING: disregards current rotation & scale
- * @function math.matSetScale */
+/** Set a 3x3 matrix's scale (WARNING: disregards current rotation & scale. */
 export function matSetScale(m, sx, sy)
 {
 	m[0] = sx
@@ -189,8 +176,7 @@ export function matSetScale(m, sx, sy)
 	return m
 }
 
-/** Set a 3x3 matrix's rotation (WARNING: disregards current rotation & scale
- * @function math.matSetRotation */
+/** Set a 3x3 matrix's rotation (WARNING: disregards current rotation & scale. */
 export function matSetRotation(m, theta)
 {
 	const c = Math.cos(theta)
@@ -202,8 +188,7 @@ export function matSetRotation(m, theta)
 	return m
 }
 
-/** Set a 3x3 matrix's rotation and scale (WARNING: disregards current rotation & scale
-* @function math.matSetRotationAndScale */
+/** Set a 3x3 matrix's rotation and scale (WARNING: disregards current rotation & scale. */
 export function matSetRotationAndScale(m, theta, sx, sy)
 {
 	const c = Math.cos(theta)
@@ -215,8 +200,7 @@ export function matSetRotationAndScale(m, theta, sx, sy)
 	return m
 }
 
-/** Translate a matrix
- * @function math.matTranslate */
+/** Translate a matrix. */
 export function matTranslate(m, dx, dy, out)
 {
 	if(!out)
@@ -227,8 +211,7 @@ export function matTranslate(m, dx, dy, out)
 	return out
 }
 
-/** Scale a matrix
- * @function math.matScale */
+/** Scale a matrix. */
 export function matScale(m, sx, sy, out)
 {
 	if(!out)
@@ -239,8 +222,7 @@ export function matScale(m, sx, sy, out)
 	return out
 }
 
-/** Rotate a matrix
- * @function math.matRotate */
+/** Rotate a matrix. */
 export function matRotate(m, theta, out)
 {
 	if(!out)
@@ -251,8 +233,7 @@ export function matRotate(m, theta, out)
 	return out
 }
 
-/** Matrix multiplication
-* @function math.matMul */
+/** Matrix multiplication. */
 export function matMul(m1, m2, out)
 {
 	if(!out)
@@ -282,8 +263,7 @@ export function matMul(m1, m2, out)
 	return out
 }
 
-/** Clone a matrix
-* @function math.matClone */
+/** Clone a matrix. */
 export function matClone(m)
 {
 	const m1 = new Float64Array(9)
@@ -302,8 +282,7 @@ export function matClone(m)
 	return m1
 }
 
-/** Transpose a matrix (i.e. from row-col to col-row or vice-versa)
-* @function math.matTranspose */
+/** Transpose a matrix (i.e. from row-col to col-row or vice-versa). */
 export function matTranspose(m, out)
 {
 	// If we are transposing ourselves we can skip a few steps but have to cache some values

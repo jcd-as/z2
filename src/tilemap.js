@@ -10,6 +10,10 @@
 // have scrolled out of a tile boundary (ala RENDER_OPT_PIXI_SPR)
 // -
 
+/** Tile map module.
+ * @module
+ */
+
 import zSquared from './z2.js'
 import * as ecs from './ecs.js'
 import loader from './loader.js'
@@ -36,30 +40,30 @@ const RENDER_OPT_PIXI_SPR = 3
 const RENDER_PIXI_ALL_SPR = 4
 
 let render_method
-//	let render_method = RENDER_PIXI_ALL_SPR
-//	let render_method = RENDER_OPT_PIXI_SPR
-//	let render_method = RENDER_PIXI_SPR
-//	let render_method = RENDER_OPT_PAGES
-//	let render_method = RENDER_SIMPLE
 
+/** Renderer constants.
+ * @namespace */
 export const renderers =
 {
+	/** @name module:tilemap.renderers#RENDER_SIMPLE */
 	RENDER_SIMPLE : RENDER_SIMPLE,
+	/** @name module:tilemap.renderers#RENDER_OPT_PAGES */
 	RENDER_OPT_PAGES : RENDER_OPT_PAGES,
+	/** @name module:tilemap.renderers#RENDER_PIXI_SPR */
 	RENDER_PIXI_SPR : RENDER_PIXI_SPR,
+	/** @name module:tilemap.renderers#RENDER_OPT_PIXI_SPR */
 	RENDER_OPT_PIXI_SPR : RENDER_OPT_PIXI_SPR,
+	/** @name module:tilemap.renderers#RENDER_PIXI_ALL_SPR */
 	RENDER_PIXI_ALL_SPR : RENDER_PIXI_ALL_SPR
 }
 
+/** Set the rendering method. */
 export function setRenderMethod(rm)
 {
 	render_method = rm
 }
 
-/**
-* @class TileMap
-* @classdesc Tile map class
-*/
+/** Tile map class. */
 export class TileMap
 {
 	// tiles image
@@ -126,9 +130,7 @@ export class TileMap
 		this.viewHeight = view.height
 	}
 
-	/** Load a tile map from Tiled object
-	* @method TileMap#load
-	* @memberof TileMap
+	/** Load a tile map from Tiled object.
 	* @arg {Object} map map data from a Tiled json file
 	*/
 	load(map)
@@ -251,9 +253,7 @@ export class TileMap
 		}
 	}
 
-	/** Start the scene running
-	* @method TileMap#start
-	*/
+	/** Start the Entities in this map running. */
 	start()
 	{
 		let i
@@ -274,8 +274,7 @@ export class TileMap
 		}
 	}
 
-	/** Get the tileset for a given tile index
-	* @method TileMap#getTilesetForIndex
+	/** Get the tileset for a given tile index.
 	* @arg {Number} idx Index of the tile whose tileset we want
 	* @returns {Object} The tileset object
 	*/
@@ -291,10 +290,7 @@ export class TileMap
 	}
 }
 
-/**
-* @class TileLayer
-* @classdesc Tile map layer class
-*/
+/** Tile map layer class. */
 export class TileLayer
 {
 	solid = false
@@ -425,8 +421,7 @@ export class TileLayer
 		}
 	}
 
-	/** Load a tile layer from Tiled object
-	* @method TileLayer#load
+	/** Load a tile layer from Tiled object.
 	* @arg {Object} lyr Layer data from a Tiled json file
 	*/
 	load(lyr)
@@ -514,9 +509,7 @@ export class TileLayer
 		}
 	}
 
-	/** Force the entire layer to be re-drawn in the next frame
-	* @method TileLayer#forceDirty
-	*/
+	/** Force the entire layer to be re-drawn in the next frame. */
 	forceDirty()
 	{
 		switch(render_method) {
@@ -1079,29 +1072,16 @@ export class TileLayer
 		this.doc.position.y = 0 | (vy - (vy * this.scrollFactorY))
 	}
 
-	// TODO:
 	/** Render the tilemap layer to its canvas
-	* @method TileLayer#render
+	* @name module:tilemap.TileLayer#render
+	* @function
 	* @arg {Number} viewx The x-coordinate that the view is centered on
 	* @arg {Number} viewy The y-coordinate that the view is centered on
 	*/
-//	if( render_method === RENDER_SIMPLE )
-//		TileLayer.prototype.render = TileLayer.prototype.renderCanvasNaive
-//	else if( render_method === RENDER_OPT_PAGES )
-//		TileLayer.prototype.render = TileLayer.prototype.renderCanvasOpt
-//	else if( render_method === RENDER_PIXI_SPR )
-//		TileLayer.prototype.render = TileLayer.prototype.renderPixiSpr
-//	else if( render_method === RENDER_OPT_PIXI_SPR )
-//		TileLayer.prototype.render = TileLayer.prototype.renderPixiSprOpt
-//	else if( render_method === RENDER_PIXI_ALL_SPR )
-//		TileLayer.prototype.render = TileLayer.prototype.renderPixiAllSpr
-
+	__render_placeholder__ = undefined
 }
 
-/**
-* @class ImageLayer
-* @classdesc Tile map image layer class
-*/
+/** Tile map image layer class. */
 export class ImageLayer
 {
 	/**
@@ -1145,6 +1125,7 @@ export class ImageLayer
 		map.view.add(this.sprite)
 	}
 
+	/** Render the layer. */
 	render(viewx, viewy)
 	{
 		this.sprite.visible = this.visible
@@ -1186,12 +1167,12 @@ function createObjects( layer )
 // Component factories
 /////////////////////////////////////////////////////////////////////////
 
-/** Component Factory for tile map layer */
+/** Component Factory for tile map layer. */
 export const tileLayerFactory = ecs.createComponentFactory({layer: null})
 
-/** Component Factory for image layers */
+/** Component Factory for image layers. */
 export const imageLayerFactory = ecs.createComponentFactory({layer: null})
 
-/** Component Factory for collision map */
+/** Component Factory for collision map. */
 export const collisionMapFactory = ecs.createComponentFactory({map: null, data: null})
 

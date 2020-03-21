@@ -7,6 +7,10 @@
 // (coefficient of restitution) (x)
 // -
 
+/** 2d Entities, Component Factories and Systems.
+ * @module
+ */
+
 import * as ecs from './ecs.js'
 import * as tilemap from './tilemap.js'
 import * as collision from './collision.js'
@@ -76,8 +80,7 @@ export const resistanceFactory = ecs.createComponentFactory( {x: 0, y: 0} )
 export const collisionGroupFactory = ecs.createComponentFactory( {entities:null} )
 
 
-/** @class AnimationSet
- * @classdesc Helper class for sprite animations */
+/** Helper class for sprite animations. */
 export class AnimationSet
 {
 	animations = {}
@@ -86,8 +89,8 @@ export class AnimationSet
 	_cur_frame = 0
 	_frame_time = 0
 
-	/** @property {number} currentFrame Get the index (in the sprite sheet) of
-	* the current frame to be displayed */
+	/** Get the index (in the sprite sheet) of the current frame to be displayed.
+	 * @type {number} */
 	get currentFrame()
 	{
 		if(this.cur_animation)
@@ -96,16 +99,14 @@ export class AnimationSet
 			return 0
 	}
 
-	/** @property {string} playing Get the name (key) of the current
-	* animation, null if none */
+	/** Get the name (key) of the current animation, null if none.
+	* @type {string} */
 	get playing()
 	{
 		return this._playing
 	}
 
 	/** Add an animation sequence
-	* @method AnimationSet#add
-	* @memberof AnimationSet
 	* @arg {string} name Friendly name of sequence, to be used as look-up key
 	* @arg {Array} anim An array containing the frames of the animation
 	* sequence, with each frame being a two-element array consisting of the
@@ -116,7 +117,6 @@ export class AnimationSet
 		this.animations[name] = anim
 	}
 	/** Start playing an animation sequence
-	* @method AnimationSet#play
 	* @arg {string} name The (friendly) name of the sequence to play
 	*/
 	play(name)
@@ -126,9 +126,7 @@ export class AnimationSet
 		this._cur_frame = 0
 		this._frame_time = 0
 	}
-	/** Stop playing any animation sequence
-	* @method AnimationSet#stop
-	*/
+	/** Stop playing any animation sequence */
 	stop()
 	{
 		this._playing = null
@@ -136,7 +134,6 @@ export class AnimationSet
 		this._frame_time = 0
 	}
 	/** Update the current frame given a time delta
-	* @method AnimationSet#update
 	* @arg {number} dt The time delta (elapsed time since last frame)
 	*/
 	update(dt)
@@ -177,10 +174,9 @@ export class AnimationSet
 
 /////////////////////////////////////////////////////////////////////////
 /** RenderingSystem factory function
-* requires: renderable
-* optional: image, sprite, tileLayer, size, rotation, scale, center
+* requires: renderable. 
+* optional: image, sprite, tileLayer, size, rotation, scale, center. 
 * (MUST be an image, sprite or tilelayer or nothing can be rendered)
-* @function createRenderingSystem
 * @arg {Canvas} canvas The HTML5 canvas to draw to
 * @arg {View} view The View object for this transform system
 * @arg {number} [priority] Priority of system. Override only if you need
@@ -316,11 +312,10 @@ export function createRenderingSystem(canvas, view, force_canvas_rendering, prio
 }
 
 /////////////////////////////////////////////////////////////////////////
-/** MovementSystem factory function
-* requires: position, velocity
+/** MovementSystem factory function.
+* requires: position, velocity.
 * optional: positionConstraints, collisionMap, physicsBody (*required* if
-* there is a collisionMap or Group), gravity, collisionGroup
-* @function createMovementSystem
+* there is a collisionMap or Group), gravity, collisionGroup.
 * @arg {number} priority Priority of system (lower = higher priority)
 */
 export function createMovementSystem(priority)

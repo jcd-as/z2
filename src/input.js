@@ -15,14 +15,17 @@
 // - 'gutter' between touchscreen buttons ?
 // -
 
+/** Input (keyboard, touchscreen, mouse) module.
+ * @module
+ */
+
 /////////////////////////////////////////////////////////////////////////
 // keyboard functionality
 /////////////////////////////////////////////////////////////////////////
 
-/**
-* @class kbd
-* @classdesc Keyboard object
-*/
+/** Keyboard object.
+ * @namespace
+ */
 export const kbd =
 {
 	// keys that we're interested in
@@ -32,10 +35,9 @@ export const kbd =
 	// keys triggering key-up events this frame
 	up: {},
 
-	/** Start watching keyboard events
-	* @function kbd#start
-	* @memberof kbd
-	*/
+	/** Start watching keyboard events.
+	 * @function module:input.kbd.start
+	 */
 	start: function()
 	{
 		this._onKeyDown = e => {
@@ -63,9 +65,9 @@ export const kbd =
 		document.body.addEventListener('keyup', this._onKeyUp, false)
 	},
 
-	/** Stop watching keyboard events
-	* @function kbd#stop
-	*/
+	/** Stop watching keyboard events.
+	 * @function module:input.kbd.stop
+	 */
 	stop: function()
 	{
 		document.body.removeEventListener('keydown', this._onKeyDown)
@@ -76,8 +78,8 @@ export const kbd =
 	},
 
 	/** Update the 'keyUp' status. In order for keyUp() to work, this needs
-	* to be called in the game update loop, *after* input is read
-	* @function kbd#update
+	* to be called in the game update loop, *after* input is read.
+	* @function module:input.kbd.refresh
 	*/
 	refresh: function()
 	{
@@ -85,8 +87,8 @@ export const kbd =
 		this.up = {}
 	},
 
-	/** Add a key to watch for
-	* @function kbd#addKey
+	/** Add a key to watch for.
+	* @function module:input.kbd.addKey
 	* @arg {number} keycode The keycode for the key to watch
 	*/
 	addKey: function( keycode )
@@ -94,8 +96,8 @@ export const kbd =
 		this.captured[keycode] = true
 	},
 
-	/** Remove a watched key
-	* @function kbd#removeKey
+	/** Remove a watched key.
+	* @function module:input.kbd.removeKey
 	* @arg {number} keycode The keycode for the key to not watch
 	*/
 	removeKey: function( keycode )
@@ -104,7 +106,7 @@ export const kbd =
 	},
 
 	/** Is a key currently down (pressed)?
-	* @function kbd#isDown
+	* @function module:input.kbd.isDown
 	* @arg {number} keycode The keycode for the key to check
 	*/
 	isDown: function( keycode )
@@ -113,7 +115,7 @@ export const kbd =
 	},
 
 	/** Did a key-up event happen this frame for this key?
-	* @function kbd#keyUp
+	* @function module:input.kbd.keyUp
 	* @arg {number} keycode The keycode for the key to check
 	*/
 	keyUp: function( keycode )
@@ -228,10 +230,10 @@ export const kbd =
 /////////////////////////////////////////////////////////////////////////
 
 const hasTouch = !!('ontouchstart' in window)
-/**
-/** Touchscreen controls object
-* @namespace touch
-*/
+
+/** Touchscreen controls object.
+ * @namespace
+ */
 export const touch =
 {
 	// pixi objects for buttons
@@ -241,6 +243,11 @@ export const touch =
 
 	buttonsPressed : [],
 
+	/** Start the touchscreen controls.
+	 * @function module:input.touch.start
+	 * @arg {Game} game Game object
+	 * @arg {number} num_buttons Number of on-screen buttons to support.
+	 */
 	start : function(game, num_buttons )
 	{
 		if(!hasTouch) return
@@ -316,6 +323,10 @@ export const touch =
 		this.game.canvas.addEventListener('touchcancel', this._touchHandler, false)
 	},
 
+	/** Add a button.
+	 * @function module:input.touch.addButton
+	 * @arg {Image} image Image object (as returned by loader.loadImage())
+	 */
 	addButton : function(image)
 	{
 		if(!hasTouch) return
@@ -350,12 +361,19 @@ export const touch =
 		this.buttonsPressed.push(false)
 	},
 
+	/** Is a specific button currently pressed?
+	 * @function module:input.touch.isButtonDown
+	 * @arg {number} index Numeric index of the button to check
+	 */
 	isButtonDown : function(index)
 	{
 		if(!hasTouch) return false
 		return !!this.buttonsPressed[index]
 	},
 
+	/** Hide the buttons from view.
+	 * @function module:input.touch.hideButtons
+	 */
 	hideButtons : function()
 	{
 		if(!hasTouch) return
@@ -365,6 +383,9 @@ export const touch =
 		}
 	},
 
+	/** Show the buttons.
+	 * @function module:input.touch.showButtons
+	 */
 	showButtons : function()
 	{
 		if(!hasTouch) return
@@ -374,6 +395,9 @@ export const touch =
 		}
 	},
 
+	/** Stop using the touchscreen.
+	 * @function module:input.touch.stop
+	 */
 	stop : function()
 	{
 		if(!hasTouch) return

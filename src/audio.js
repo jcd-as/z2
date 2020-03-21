@@ -5,13 +5,18 @@
 // TODO:
 // -
 
+/** Web audio module
+ * @module
+ */
+
 import time from './time.js'
 import loader from './loader.js'
 
 
-let AudioContext = window.AudioContext || window.webkitAudioContext
+const AudioContext = window.AudioContext || window.webkitAudioContext
 
-export let audioContext = new AudioContext()
+/** The HTML5 AudioContext object */
+export const audioContext = new AudioContext()
 
 const NUM_CHANNELS = 16
 
@@ -95,8 +100,7 @@ function internalPlaySound(snd, channel, key, offset, volume, loop)
 	channel_data[channel].timeout = setTimeout(() => { delete channels[channel]; resetChannelData( channel ); }, src.buffer.duration * 1000)
 }
 
-/** Play a sound
-* @method z2#playSound
+/** Play a sound.
 * @arg {string} key Key of the loader asset to play (must be loaded)
 * @arg {number} offset Offset into the sound
 * @arg {number} volume Volume for playback
@@ -121,8 +125,7 @@ export function playSound(key, offset, volume, loop)
 	return idx
 }
 
-/** Stop a sound from playing
-* @method z2#stopSound
+/** Stop a sound from playing.
 * @arg {number} channel Channel to stop playing
 */
 export function stopSound(channel)
@@ -137,8 +140,7 @@ export function stopSound(channel)
 		snd.stop()
 }
 
-/** Pause a sound
-* @method z2#pauseSound
+/** Pause a sound.
 * @arg {number} channel Channel to pause
 */
 export function pauseSound(channel)
@@ -160,8 +162,7 @@ export function pauseSound(channel)
 	}
 }
 
-/** Resume playing a sound
-* @method z2#resumeSound
+/** Resume playing a sound.
 * @arg {number} channel Channel to resume
 */
 export function resumeSound(channel)
@@ -178,9 +179,7 @@ export function resumeSound(channel)
 	}
 }
 
-/** Stop all sound from being played
-* @method z2#stopSounds
-*/
+/** Stop all sound from being played. */
 export function stopSounds()
 {
 	for(let i = 0; i < channels.length; i++) {
@@ -188,9 +187,7 @@ export function stopSounds()
 	}
 }
 
-/** Pause all sounds
-* @method z2#pauseSounds
-*/
+/** Pause all sounds. */
 export function pauseSounds()
 {
 	for(let i = 0; i < channels.length; i++) {
@@ -198,9 +195,7 @@ export function pauseSounds()
 	}
 }
 
-/** Resume all paused sounds
-* @method z2#pauseSounds
-*/
+/** Resume all paused sounds. */
 export function resumeSounds()
 {
 	for(let i = 0; i < channels.length; i++) {

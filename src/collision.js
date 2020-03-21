@@ -13,6 +13,10 @@
 // bodies, need a way to play sounds etc for those two entities ??
 // -
 
+/** Collision detection module.
+ * @module
+ */
+
 import * as math from './math.js'
 
 
@@ -88,8 +92,7 @@ let vec = [Number.NaN, Number.NaN]
 let p1minmax = [Number.NaN, Number.NaN]
 let p2minmax = [Number.NaN, Number.NaN]
 
-/** Collide two polygons
-* @function collidePolyVsPoly
+/** Collide two polygons.
 * @arg {Array} p1 (flat) Array of vertices defining polygon 1
 * @arg {Array} p2 (flat) Array of vertices defining polygon 2
 * @arg {Array} pv (out) Vector (2 element array) for returning penetration direction vector (normal)
@@ -180,8 +183,7 @@ export function collidePolyVsPoly(p1, p2, pv)
 	}
 }
 
-/** Collide two Axis-Aligned Bounding Boxes
-* @function collideAabbVsAabb
+/** Collide two Axis-Aligned Bounding Boxes.
 * @arg {Array} p1 (flat) Array of values for aabb 1: top, left, bottom, right
 * @arg {Array} p2 (flat) Array of values for aabb 2: top, left, bottom, right
 * @arg {Array} pv (out) Vector (2 element array) for returning penetration vector (direction and magnitude)
@@ -233,8 +235,7 @@ export function collideAabbVsAabb(p1, p2, pv)
 	}
 }
 
-/** Collide AABB vs a polygon
-* @function collideAabbVsPoly
+/** Collide AABB vs a polygon.
 * @arg {Array} b (flat) Array of values for aabb 1: top, left, bottom, right
 * @arg {Array} p (flat) Array of vertices defining polygon 2
 * @arg {Array} pv (out) Vector (2 element array) for returning penetration direction vector (normal)
@@ -348,8 +349,7 @@ export function collideAabbVsPoly(b, p, pv)
 	}
 }
 
-/** Collide two circles
-* @function collideCircleVsCircle
+/** Collide two circles.
 * @arg {Array} p1 Center of circle 1
 * @arg {Number} r1 Radius of circle 1
 * @arg {Array} p2 Center of circle 2
@@ -377,8 +377,7 @@ export function collideCircleVsCircle(p1, r1, p2, r2, pv)
 	return pen
 }
 
-/** Collide an AABB and a circle
-* @function collideAabbVsCircle
+/** Collide an AABB and a circle.
 * @arg {Array} p (flat) Array of values for aabb 1: top, left, bottom, right
 * @arg {Array} c Center of circle 2
 * @arg {Number} r Radius of circle 2
@@ -534,8 +533,7 @@ export function collideAabbVsCircle(p, c, r, pv)
 // collision detection-only routines
 /////////////////////////////////////////////////////////////////////////
 
-/** Test for collision between two Axis-Aligned Bounding Boxes
-* @function testAabbVsAabb
+/** Test for collision between two Axis-Aligned Bounding Boxes.
 * @arg {Array} p1 (flat) Array of values for aabb 1: top, left, bottom, right
 * @arg {Array} p2 (flat) Array of values for aabb 2: top, left, bottom, right
 * @returns {boolean} true if collision, or false if no collision
@@ -551,8 +549,7 @@ export function testAabbVsAabb(p1, p2)
 		return true
 }
 
-/** Test for collision between two circles
- * @function testCircleVsCircle
+/** Test for collision between two circles.
  * @arg {Array} p1 Center of circle 1
  * @arg {Number} r1 Radius of circle 1
  * @arg {Array} p2 Center of circle 2
@@ -572,8 +569,7 @@ export function testCircleVsCircle(p1, r1, p2, r2)
 // tile map collision routines
 /////////////////////////////////////////////////////////////////////////
 
-/** Build a collision map for a given layer & 'solid' tiles array
-* @function buildCollisionMap
+/** Build a collision map for a given layer & 'solid' tiles array.
 * @arg {Array} l TileLayer data (array of tile indices)
 * @arg {Number} w width of data array
 * @arg {Number} h width of data array
@@ -651,8 +647,7 @@ export function buildCollisionMap(l, w, h, tiles)
 	return map
 }
 
-/** Collide an Axis-Aligned Bounding Box and a Tile
-* @function collideAabbVsTile
+/** Collide an Axis-Aligned Bounding Box and a Tile.
 * @arg {Array} box (flat) Array of values for aabb 1: top, left, bottom, right
 * @arg {Array} tile (flat) Array of values for tile: top, left, bottom, right
 * @arg {Object} td Object containing the tile data for this tile (e.g.
@@ -764,8 +759,8 @@ export function collideAabbVsTile(box, tile, td, pv)
 		return false
 }
 
-/** Collide an AABB against a collision map
-* @function collideAabbVsCollisionMap
+const _v = new Float64Array( 2 )
+/** Collide an AABB against a collision map.
 * @arg {Array} b (flat) Array of values for aabb 1: top, left, bottom, right
 * @arg {Array} map collision map (Array of objects)
 * @arg {Number} w width of collision map array
@@ -775,7 +770,6 @@ export function collideAabbVsTile(box, tile, td, pv)
 * @arg {Array} pv (out) Vector (2 element array) for returning penetration (direction and magnitude)
 * @returns {boolean} true if collision, false if none
 */
-const _v = new Float64Array( 2 );
 export function collideAabbVsCollisionMap(b, map, w, h, tw, th, pv)
 {
 	// get the coordinates of the AABB,
@@ -834,7 +828,6 @@ export function collideAabbVsCollisionMap(b, map, w, h, tw, th, pv)
 }
 
 
-
 /////////////////////////////////////////////////////////////////////////
 // helper routines for testing:
 /////////////////////////////////////////////////////////////////////////
@@ -850,7 +843,7 @@ function getAngle(a, b)
 	return Math.acos(ct)
 }
 
-// sort a (SIMPLE, CONVEX) polygon's vertices into CW order
+/** Sort a (SIMPLE, CONVEX) polygon's vertices into clock-wise order. */
 export function sortVertices(vertices)
 {
 	// create a copy of the vertex array
