@@ -3,6 +3,7 @@
 // asset loader class/module for zed-squared
 //
 // TODO:
+// - Can replace this module entirely with the PIXI loader ?
 // x support 'base' URL for loading
 // x support progress indicator callback
 // - support pre-loads (?)
@@ -143,12 +144,17 @@ function loadFont(key, url, onComplete, onError)
 {
 	// use Pixi to load the font
 	url = baseUrl + fontBaseUrl + url
-	const fontsToLoad = [url]
 	// eslint-disable-next-line no-undef
-	const ldr = new PIXI.AssetLoader(fontsToLoad)
-	ldr.onComplete = onComplete
+	const ldr = new PIXI.Loader()
+	ldr.add(key, url)
+	let font = undefined
+	ldr.onComplete.add(() => {
+		onComplete(key, font)
+	})
 	ldr.onError = onError
-	ldr.load()
+	ldr.load((ldr, resources) => {
+		font = resources.key
+	})
 }
 
 // public module interface:

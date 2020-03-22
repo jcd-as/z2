@@ -161,8 +161,10 @@ class TiledScene
 		if(this.loadProgressSprite) {
 			// crop the sprite
 			const tex = this.loadProgressSprite.texture
-			tex.frame.width = tex.baseTexture.width * percent_done
-			tex.setFrame(tex.frame)
+			let fr = tex.frame
+			fr.width = tex.baseTexture.width * percent_done
+			tex.frame = fr
+			tex.updateUvs()
 			// force a render
 			this.game.renderer.render(this.game.stage)
 		}

@@ -24,20 +24,20 @@ import * as _2d from './2d-pixi.js'
 
 // different ways to render the tile maps:
 // 'naive' renderer, draws all on-screen tiles on a Canvas each frame
-const RENDER_SIMPLE = 0
+export const RENDER_SIMPLE = 0
 // optimized version of above, uses two canvases, only redraws tiles that
 // have scrolled onto the screen since last frame, copies the rest of the
 // screen
-const RENDER_OPT_PAGES = 1
+export const RENDER_OPT_PAGES = 1
 // renders using a Pixi sprite for each tile that is on-screen, collected in
-// a Pixi DisplayObjectContainer which is drawn at the appropriate offset
-const RENDER_PIXI_SPR = 2
+// a Pixi Container which is drawn at the appropriate offset
+export const RENDER_PIXI_SPR = 2
 // optimized version of above, only resets all the tile frames when we've
 // scrolled out of tile bounds
-const RENDER_OPT_PIXI_SPR = 3
+export const RENDER_OPT_PIXI_SPR = 3
 // 'brute force' WebGL method: one Pixi Sprite per tile in the entire world
 // (not just the screen), set visible flag on them if they are on-screen
-const RENDER_PIXI_ALL_SPR = 4
+export const RENDER_PIXI_ALL_SPR = 4
 
 let render_method
 
@@ -369,8 +369,8 @@ export class TileLayer
 			// eslint-disable-next-line no-undef
 			this.tileTexture = new PIXI.BaseTexture(map.tilesets[0].tiles)
 			// eslint-disable-next-line no-undef
-			this.doc = new PIXI.DisplayObjectContainer()
-//			this.doc = new PIXI.SpriteBatch()
+			this.doc = new PIXI.Container()
+//			this.doc = new PIXI.ParticleContainer()
 
 			this.tileSprites = []
 			for(let i = 0; i <= map.viewHeightInTiles; i++) {
@@ -412,8 +412,8 @@ export class TileLayer
 			// eslint-disable-next-line no-undef
 			this.tileTexture = new PIXI.BaseTexture(map.tilesets[0].tiles)
 			// eslint-disable-next-line no-undef
-			this.doc = new PIXI.SpriteBatch()
-//			this.doc = new PIXI.DisplayObjectContainer()
+			this.doc = new PIXI.ParticleContainer()
+//			this.doc = new PIXI.Container()
 
 			this.tileSprites = []
 
@@ -503,7 +503,8 @@ export class TileLayer
 					frame.y = tile_y * this.map.tileHeight
 					frame.width = this.map.tileWidth
 					frame.height = this.map.tileHeight
-					texture.setFrame(frame)
+					texture.frame = frame
+					texture.updateUvs()
 				}
 			}
 		}
@@ -592,18 +593,9 @@ export class TileLayer
 			yoffs += this.map.tileHeight
 		}
 
-		// TODO: bleh...
-		// this works in PIXI 1.3:
-//        // eslint-disable-next-line no-undef
-//		if( PIXI.gl )
-//        // eslint-disable-next-line no-undef
-//			PIXI.texturesToUpdate.push( this.baseTexture )
-		// but texturesToUpdate isn't actually updated in 1.4,
-		// so we have to update it ourselves:
-		// eslint-disable-next-line no-undef
-		if(PIXI.defaultRenderer.renderSession.gl)
-			// eslint-disable-next-line no-undef
-			PIXI.updateWebGLTexture(this.baseTexture, PIXI.defaultRenderer.renderSession.gl)
+		// TODO: only need this for webgl rendering...
+		// have to update the gl texture
+		this.baseTexture.update()
 
 		this.sprite.position.x = 0 | (viewx - this.map.viewWidth/2)
 		this.sprite.position.y = 0 | (viewy - this.map.viewHeight/2)
@@ -640,7 +632,7 @@ export class TileLayer
 		this.texture.frame.y = -yoffs
 		this.texture.frame.width = this.canvasWidth - this.texture.frame.x
 		this.texture.frame.height = this.canvasHeight - this.texture.frame.y
-		this.texture.setFrame(this.texture.frame)
+		this.texture.updateUvs()
 
 		// TODO: if there is only *one* tileset, we can optimize because we
 		// don't need to look-up which tileset this tile is in...
@@ -864,18 +856,9 @@ export class TileLayer
 		this.prev_ty = orig_ty
 		this.prev_x = x
 
-		// TODO: bleh...
-		// this works in PIXI 1.3:
-//        // eslint-disable-next-line no-undef
-//		if( PIXI.gl )
-//            // eslint-disable-next-line no-undef
-//			PIXI.texturesToUpdate.push( this.baseTexture )
-		// but texturesToUpdate isn't actually updated in 1.4,
-		// so we have to update it ourselves:
-		// eslint-disable-next-line no-undef
-		if(PIXI.defaultRenderer.renderSession.gl)
-			// eslint-disable-next-line no-undef
-			PIXI.updateWebGLTexture(this.baseTexture, PIXI.defaultRenderer.renderSession.gl)
+		// TODO: only need this for webgl rendering...
+		// have to update the gl texture
+		this.baseTexture.updateUVs()
 
 		this.sprite.position.x = 0 | (viewx - this.map.viewWidth/2)
 		this.sprite.position.y = 0 | (viewy - this.map.viewHeight/2)
@@ -928,7 +911,8 @@ export class TileLayer
 					frame.y = tile_y * this.map.tileHeight
 					frame.width = this.map.tileWidth
 					frame.height = this.map.tileHeight
-					this.tileSprites[i][j].texture.setFrame(frame)
+					this.tileSprites[i][j].texture.frame = frame
+					this.tileSprites[i][j].texture.updateUvs()
 				}
 				else {
 					this.tileSprites[i][j].visible = false
@@ -1006,7 +990,8 @@ export class TileLayer
 						let frame = tileSprite.texture.frame
 						frame.x = tile_x * tw
 						frame.y = tile_y * th
-						tileSprite.texture.setFrame( frame )
+						tileSprite.texture.frame = frame
+						tileSprite.texture.updateUvs()
 					}
 					else {
 						tileSprite.visible = false

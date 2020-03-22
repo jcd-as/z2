@@ -70,10 +70,10 @@ export let emitterFactory = ecs.createComponentFactory( {
  * @arg {PIXI.BaseTexture} basetexture The Pixi BaseTexture for the
  * Particles
  * @arg {PIXI.Texture} texture The Pixi Texture for the * Particles
- * @arb {PIXI.SpriteBatch} batch The Pixi SpriteBatch to which the Particle
+ * @arb {PIXI.ParticleContainer} container The Pixi ParticleContainer to which the Particle
  * sprites will be added
  */
-function particleFactory( basetexture, texture, batch )
+function particleFactory( basetexture, texture, container )
 {
 	/** Particle class
 	* @class z2#Particle
@@ -103,7 +103,7 @@ function particleFactory( basetexture, texture, batch )
 			// eslint-disable-next-line no-undef
 			this.sprite = new PIXI.Sprite(t)
 			this.reset()
-			batch.addChild(this.sprite)
+			container.addChild(this.sprite)
 		}
 
 		/** Reset a Particle to a default state
@@ -146,7 +146,8 @@ function particleFactory( basetexture, texture, batch )
 			fr.y = 0
 			fr.width = width
 			fr.height = this.sprite.height
-			this.sprite.texture.setFrame(fr)
+			this.sprite.texture.frame = fr
+			this.sprite.texture.updateUvs()
 
 			this.sprite.position.x = x || 0
 			this.sprite.position.y = y || 0
@@ -200,8 +201,7 @@ export function createEmitterSystem(view, key, priority)
 				this.texture = new PIXI.Texture(this.basetexture)
 
 			// eslint-disable-next-line no-undef
-			this.sb = new PIXI.SpriteBatch()
-			//this.sb = new PIXI.DisplayObjectContainer()
+			this.sb = new PIXI.ParticleContainer()
 			view.doc.addChild(this.sb)
 
 			this.particlePool = new ObjectPool(particleFactory(this.basetexture, this.texture, this.sb))

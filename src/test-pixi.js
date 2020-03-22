@@ -35,13 +35,24 @@ const HEIGHT = 384
 
 const z2 = new zSquared()
 
+// TODO: BROKEN and horribly unusably slow (~11fps), tiles not cleared
+// properly, junk shows up 'out-of-bounds'
+//tilemap.setRenderMethod(tilemap.RENDER_SIMPLE)
+// TODO: BROKEN. decent, but jumpy, frame rate, sprites, tiles not cleared
+// properly, junk shows up 'out-of-bounds'
+//tilemap.setRenderMethod(tilemap.RENDER_OPT_PAGES)
+// TODO: BROKEN. decent frame rate, sprites & tiles but tilemap not cleared
+// properly, junk shows up 'out-of-bounds'
+//tilemap.setRenderMethod(tilemap.RENDER_PIXI_SPR)
+// (default), WORKING
+//tilemap.setRenderMethod(tilemap.RENDER_OPT_PIXI_SPR)
+// TODO: BROKEN. draws garbage tile background
+//tilemap.setRenderMethod(tilemap.RENDER_PIXI_ALL_SPR)
+
 // global 'game' object
 const div = document.getElementById('canvas')
-console.log(div)
-//const canvas = zSquared.createCanvas(WIDTH, HEIGHT, null, true)
-const canvas = zSquared.createCanvas(WIDTH, HEIGHT, div, true)
-let force_canvas = false
-const game = new Game(canvas, force_canvas)
+const game = new Game(WIDTH, HEIGHT)
+div.appendChild(game.app.view)
 
 // global set-up stuff
 const visibilityChange = function(event) {

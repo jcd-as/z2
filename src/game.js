@@ -52,8 +52,6 @@ class Game
 	// private:
 	/** Are we in debug mode? */
 	debug = false
-	canvas = null
-	force_canvas = false
 	/** Are we currently paused? */
 	paused = false
 	pausedSprite = null
@@ -63,34 +61,19 @@ class Game
 
 	/**
 	* @constructor
-	* @arg {Canvas} canvas The HTML5 Canvas on which to draw the game
-	* @arg {boolean} [force_canvas] Should we force the use of the Canvas
-	* renderer (disabling WebGL)?
+	* @arg {width} number Width of the game canvas, in pixels
+	* @arg {height} number Height of the game canvas, in pixels
 	*/
-	constructor(canvas, force_canvas)
+	constructor(width, height)
 	{
-		this.canvas = canvas
-		this.force_canvas = force_canvas || false
-
+		// TODO: stop using global 'game' object
 		window.game = this
 
-		// TODO: support different widths/heights than the canvas'
-		if(force_canvas)
-			// eslint-disable-next-line no-undef
-			this.renderer = new PIXI.CanvasRenderer(canvas.width, canvas.height, canvas, true)
-		else
-			// eslint-disable-next-line no-undef
-			this.renderer = PIXI.autoDetectRenderer(canvas.width, canvas.height, canvas, true)
-
-		// create a Pixi stage for everything to be drawn on
-		// eslint-disable-next-line no-undef
-		//this.stage = new PIXI.Stage(0x800000)
-		// eslint-disable-next-line no-undef
-		this.stage = new PIXI.Stage(0x000000)
-		this.stage.interactive = false
+		// create the Pixi application object
+		this.app = new PIXI.Application({width, height})
 
 		// create a view with some default values
-		this.view = new View(this, this.canvas.width, this.canvas.height)
+		this.view = new View(this, width, height)
 
 		// setup handlers for visibility change events (pause game when focus is
 		// lost)

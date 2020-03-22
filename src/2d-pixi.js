@@ -188,8 +188,6 @@ export function createRenderingSystem(canvas, view, force_canvas_rendering, prio
 	// TODO: fix global access to 'game'
 	// eslint-disable-next-line no-undef
 	const stage = game.stage
-	// eslint-disable-next-line no-undef
-	const renderer = game.renderer
 
 	return new ecs.System(Number.MAX_VALUE, [renderableFactory], {
 		onStart: function()
@@ -278,7 +276,8 @@ export function createRenderingSystem(canvas, view, force_canvas_rendering, prio
 				anims.update(dt)
 
 			// eslint-disable-next-line no-undef
-			spr.texture.setFrame(new PIXI.Rectangle(offs, 0, w, h))
+			spr.texture.frame = new PIXI.Rectangle(offs, 0, w, h)
+			spr.texture.updateUvs()
 
 			// apply the transforms to the PIXI sprite
 
@@ -306,7 +305,8 @@ export function createRenderingSystem(canvas, view, force_canvas_rendering, prio
 		},
 		onEnd: function()
 		{
-			renderer.render(stage)
+			// TODO: fix global access to 'game'
+			game.app.render(stage)
 		}
 	})
 }
