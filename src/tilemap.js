@@ -658,10 +658,10 @@ export class TileLayer
 			// have to draw all the tiles...
 			xoffs = 0; yoffs = 0
 			for(j = 0; j <= mapViewHeight; j++, ty++) {
-				if(ty < 0 || ty > mapHeight)
+				if(ty < 0 || ty >= mapHeight)
 					continue
 				for(i = 0, tx = orig_tx; i <= mapViewWidth; i++, tx++) {
-					if(tx < 0 || tx > mapWidth)
+					if(tx < 0 || tx >= mapWidth)
 						continue
 					tile = this.data[ty * mapWidth + tx]
 					// '0' tiles in Tiled are *empty*
@@ -889,7 +889,7 @@ export class TileLayer
 		// set the frame for each tile sprite
 		for(i = 0; i <= this.map.viewHeightInTiles; i++, ty++) {
 			for(j = 0, tx = orig_tx; j <= this.map.viewWidthInTiles; j++, tx++) {
-				if(ty > this.map.heightInTiles || tx > this.map.widthInTiles) {
+				if(ty >= this.map.heightInTiles || tx >= this.map.widthInTiles) {
 					this.tileSprites[i][j].visible = false
 					continue
 				}
@@ -970,7 +970,7 @@ export class TileLayer
 					const tileSprite = this.tileSprites[i][j]
 					// if this tile is out-of-world-bounds,
 					// don't draw it
-					if(ty < 0 || ty > mapHeight || tx < 0 || tx > mapWidth) {
+					if(ty < 0 || ty >= mapHeight || tx < 0 || tx >= mapWidth) {
 						tileSprite.visible = false
 						continue
 					}
