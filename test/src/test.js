@@ -3,20 +3,19 @@
 // - improve usability of z2 & make this sample much cleaner
 //
 
-import loader from './loader.js'
-import * as input from './input.js'
-import View from './view-pixi.js'
-import Game from './game.js'
-import TiledScene from './tiledscene.js'
-import * as audio from './audio.js'
-import StateMachine from './statemachine.js'
-import * as emitter from './emitter.js'
-import zSquared from './z2.js'
-import * as collision from './collision.js'
-import * as tilemap from './tilemap.js'
-import * as ecs from './ecs.js'
-import * as _2d from './2d-pixi.js'
-//import * as math from './math.js'
+import loader from '../../js/loader.js'
+import * as input from '../../js/input.js'
+import View from '../../js/view-pixi.js'
+import Game from '../../js/game.js'
+import TiledScene from '../../js/tiledscene.js'
+import * as audio from '../../js/audio.js'
+import StateMachine from '../../js/statemachine.js'
+import * as emitter from '../../js/emitter.js'
+import zSquared from '../../js/z2.js'
+import * as collision from '../../js/collision.js'
+import * as tilemap from '../../js/tilemap.js'
+import * as ecs from '../../js/ecs.js'
+import * as _2d from '../../js/2d-pixi.js'
 
 
 (function()
@@ -35,6 +34,7 @@ const HEIGHT = 384
 
 const z2 = new zSquared()
 
+// test tilemap rendering methods:
 // TODO: BROKEN and horribly unusably slow (~11fps), tiles not cleared
 // properly, junk shows up 'out-of-bounds'
 //tilemap.setRenderMethod(tilemap.RENDER_SIMPLE)
@@ -85,23 +85,27 @@ const myScene =
 {
 	load : function()
 	{
-		loader.queueAsset('man', 'test/assets/img/stylized.png')
-		loader.queueAsset('firefly', 'test/assets/img/firefly.png', 'spritesheet', 8, 8)
-		loader.queueAsset('logo', 'test/assets/img/logo.png')
-		loader.queueAsset('field', 'test/assets/snd/field.mp3')
+//		loader.setBaseUrl('./')
+		loader.setFontBaseUrl('assets/img/')
+		loader.setImageBaseUrl('assets/img/')
+		loader.setAudioBaseUrl('assets/snd/')
+		loader.queueAsset('man', 'stylized.png')
+		loader.queueAsset('firefly', 'firefly.png', 'spritesheet', 8, 8)
+		loader.queueAsset('logo', 'logo.png')
+		loader.queueAsset('field', 'field.mp3')
 //		loader.queueAsset('field', 'field.ogg')
-		loader.queueAsset('land', 'test/assets/snd/landing.mp3')
+		loader.queueAsset('land', 'landing.mp3')
 //		loader.queueAsset('land', 'landing.ogg')
 //		loader.queueAsset('theme', 'logo.mp3')
 //		loader.queueAsset('theme', 'logo.ogg')
 
-		loader.queueAsset('font', 'test/assets/img/open_sans_italic_20.fnt')
+		loader.queueAsset('font', 'open_sans_italic_20.fnt')
 
-		loader.queueAsset('left', 'test/assets/img/button_left.png')
-//		loader.queueAsset('left', 'the_source/assets/img/button_left.png')
-//		loader.queueAsset('right', 'the_source/assets/img/button_right.png')
-//		loader.queueAsset('circle', 'the_source/assets/img/button_circle.png')
-//		loader.queueAsset('square', 'the_source/assets/img/button_square.png')
+		loader.queueAsset('left', 'button_left.png')
+//		loader.queueAsset('left', 'button_left.png')
+//		loader.queueAsset('right', 'button_right.png')
+//		loader.queueAsset('circle', 'button_circle.png')
+//		loader.queueAsset('square', 'button_square.png')
 	},
 
 	create : function() {
@@ -356,6 +360,7 @@ const myScene =
 		const sprpc = _2d.positionConstraintsFactory.create({minx: 16, maxx: this.width-16, miny: 32, maxy: this.height-32})
 		const sprbody = _2d.physicsBodyFactory.create({aabb:[-32, -15, 32, 15], restitution:1, mass:1})
 		// collision group for the player to collide against
+		let spre2
 		const pcolg = _2d.collisionGroupFactory.create({entities:[spre2]})
 		// create the entity
 		ecs.manager.get().createEntity([_2d.renderableFactory, gravc, cmc, sprbody, player, sprv, sprp, sprr, /*sprsz,*/ sprs, sprcc, sprpc, sprc, pcolg, sprres])
@@ -377,7 +382,7 @@ const myScene =
 		const sprp2 = _2d.positionFactory.create({x: 64, y: 1024-64})
 		const sprbody2 = _2d.physicsBodyFactory.create({aabb:[-32, -16, 32, 16], restitution:1, mass:1, resistance_x: 0})
 		// create the entity
-		const spre2 = ecs.manager.get().createEntity([_2d.renderableFactory, gravc, cmc, sprbody2, sprv2, sprp2, /*sprsz,*/ sprs, sprcc, sprpc, sprc2])
+		spre2 = ecs.manager.get().createEntity([_2d.renderableFactory, gravc, cmc, sprbody2, sprv2, sprp2, /*sprsz,*/ sprs, sprcc, sprpc, sprc2])
 		anims2.play('jitter')
 
 		// create a 'billboard' image
@@ -483,7 +488,7 @@ const myScene =
 
 
 // create a Tiled map scene using our scene definition object
-const scene = new TiledScene(game, 'test/assets/maps/test.json', myScene)
+const scene = new TiledScene(game, 'assets/maps/test.json', myScene)
 game.scene = scene
 
 // start the scene

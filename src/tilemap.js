@@ -1136,7 +1136,7 @@ function createObjects( layer )
 	for(let i = 0; i < layer.objects.length; i++) {
 		const obj = layer.objects[i]
 
-//        const factory = z2[obj.type]
+		// TODO: verify
 		const factory = zSquared[obj.type]
 		if(!factory) {
 			console.log("No factory method found for object type: " + obj.type)

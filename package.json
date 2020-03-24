@@ -23,11 +23,12 @@
     "javascript"
   ],
   "scripts": {
-    "clean": "rm -f js/*",
+    "clean": "rm -f js/*;rm -f test/test.bundle.*",
     "build": "babel src -d js -s",
-    "minify": "./node_modules/.bin/babel js --presets minify",
     "lint": "eslint src",
-    "docs": "rm -rf ./docs; jsdoc -d docs -P ./package.json src"
+    "docs": "rm -rf ./docs; jsdoc -d docs -P ./package.json src",
+    "webpack": "webpack",
+    "test": ""
   },
   "devDependencies": {
     "@babel/cli": "^7.8.4",
@@ -36,14 +37,16 @@
     "@babel/plugin-proposal-private-methods": "^7.8.3",
     "@babel/preset-env": "^7.8.7",
     "babel-eslint": "^10.1.0",
+    "babel-loader": "^8.1.0",
     "babel-plugin-transform-optional-chaining": "^7.0.0-beta.3",
-    "babel-preset-minify": "^0.5.1",
-    "browserify": "^16.5.0",
     "eslint": "^6.8.0",
     "eslint-plugin-babel": "^5.3.0",
-    "jsdoc": "^3.6.3"
+    "jsdoc": "^3.6.3",
+    "webpack": "^4.42.0",
+    "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@babel/polyfill": "^7.8.7"
+    "@babel/polyfill": "^7.8.7",
+    "pixi.js": "^5.2.1"
   }
 }

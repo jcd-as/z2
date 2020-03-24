@@ -4,6 +4,7 @@
 //
 // TODO:
 // - Can replace this module entirely with the PIXI loader ?
+// - or replace XMLHttpRequests with fetch()..?
 // x support 'base' URL for loading
 // x support progress indicator callback
 // - support pre-loads (?)
