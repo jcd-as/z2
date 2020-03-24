@@ -28,7 +28,7 @@
     "lint": "eslint src",
     "docs": "rm -rf ./docs; jsdoc -d docs -P ./package.json src",
     "webpack": "webpack",
-    "test": ""
+    "test": "babel src -d js -s; webpack"
   },
   "devDependencies": {
     "@babel/cli": "^7.8.4",
