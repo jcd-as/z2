@@ -70,6 +70,7 @@ class Game
 		window.game = this
 
 		// create the Pixi application object
+		// eslint-disable-next-line no-undef
 		this.app = new PIXI.Application({width, height})
 
 		// create a view with some default values

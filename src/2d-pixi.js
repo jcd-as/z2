@@ -306,6 +306,7 @@ export function createRenderingSystem(canvas, view, force_canvas_rendering, prio
 		onEnd: function()
 		{
 			// TODO: fix global access to 'game'
+			// eslint-disable-next-line no-undef
 			game.app.render(stage)
 		}
 	})
