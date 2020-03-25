@@ -558,26 +558,29 @@ export class TileLayer
 
 		for(j = 0; j <= this.map.viewHeightInTiles; j++, ty++) {
 			for(i = 0, tx = orig_tx; i <= this.map.viewWidthInTiles; i++, tx++) {
-				tile = this.data[ty * this.map.widthInTiles + tx]
-				// '0' tiles in Tiled are *empty*
-				if(tile) {
-					// get the actual tile index in the tileset
-					tileset = this.map.getTilesetForIndex(tile)
-					tile -= tileset.start
-					tile_y = 0 | (tile / tileset.widthInTiles)
-					tile_x = tile - (tile_y * tileset.widthInTiles)
-					// draw this tile to the canvas
-					this.context.drawImage(
-						tileset.tiles,				// source image
-						tile_x * this.map.tileWidth,// source x
-						tile_y *this.map.tileHeight,// source y
-						this.map.tileWidth,			// source width
-						this.map.tileHeight,		// source height
-						xoffs,						// dest x
-						yoffs,						// dest y
-						this.map.tileWidth,			// dest width
-						this.map.tileHeight			// dest height
-					)
+				// (don't bother with tiles that are out-of-bounds)
+				if(tx >= 0 && tx < this.map.widthInTiles && ty >= 0 && ty < this.map.heightInTiles) {
+					tile = this.data[ty * this.map.widthInTiles + tx]
+					// '0' tiles in Tiled are *empty*
+					if(tile) {
+						// get the actual tile index in the tileset
+						tileset = this.map.getTilesetForIndex(tile)
+						tile -= tileset.start
+						tile_y = 0 | (tile / tileset.widthInTiles)
+						tile_x = tile - (tile_y * tileset.widthInTiles)
+						// draw this tile to the canvas
+						this.context.drawImage(
+							tileset.tiles,				// source image
+							tile_x * this.map.tileWidth,// source x
+							tile_y *this.map.tileHeight,// source y
+							this.map.tileWidth,			// source width
+							this.map.tileHeight,		// source height
+							xoffs,						// dest x
+							yoffs,						// dest y
+							this.map.tileWidth,			// dest width
+							this.map.tileHeight			// dest height
+						)
+					}
 				}
 				xoffs += this.map.tileWidth
 			}
