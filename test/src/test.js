@@ -35,18 +35,25 @@ const HEIGHT = 384
 const z2 = new zSquared()
 
 // test tilemap rendering methods:
-// TODO: BROKEN and horribly unusably slow (~11fps), tiles not cleared
-// properly, junk shows up 'out-of-bounds'
+// TODO: BROKEN. tilemap is drawn off bounds or screen is not cleared...
+// (junk on all sides of map)
+// quite fast & solid with 3 layers, unusably slow (~11fps) with 50
 //tilemap.setRenderMethod(tilemap.RENDER_SIMPLE)
-// TODO: BROKEN. decent, but jumpy, frame rate, sprites, tiles not cleared
-// properly, junk shows up 'out-of-bounds'
+
+// TODO: BROKEN. tilemap is drawn off bounds or screen is not cleared...
+// (junk on all sides of map)
+// quite fast & solid with 3 layers; decent, but jumpy with 50
 //tilemap.setRenderMethod(tilemap.RENDER_OPT_PAGES)
-// TODO: BROKEN. decent frame rate, sprites & tiles but tilemap not cleared
-// properly, junk shows up 'out-of-bounds'
+//
+// TODO: BROKEN. tilemap is drawn off bounds or screen is not cleared...
+// (right & bottom of map seem correct, but top & left are not)
+// decent framerate with 50 layers
 //tilemap.setRenderMethod(tilemap.RENDER_PIXI_SPR)
-// (default), WORKING
+//
+// (default), WORKING. mostly solid & fast (~60fps) with 50 layers
 //tilemap.setRenderMethod(tilemap.RENDER_OPT_PIXI_SPR)
-// TODO: BROKEN. draws garbage tile background
+//
+// WORKING. solid & fast with 3 layers, jerky (~20-45fps) with 50
 //tilemap.setRenderMethod(tilemap.RENDER_PIXI_ALL_SPR)
 
 // global 'game' object
@@ -325,8 +332,7 @@ const myScene =
 			{solid: false}, {solid: true}
 		]
 		const collisionMap = collision.buildCollisionMap(scene.map.layers[48].data, scene.map.widthInTiles, scene.map.heightInTiles, tiles)
-//		var collisionMap = collision.buildCollisionMap(scene.map.layers[48].data, scene.map.widthInTiles, scene.map.heightInTiles, [0,1,2,3,4])
-//		var collisionMap = collision.buildCollisionMap(this.map.layers[1].data, this.map.widthInTiles, this.map.heightInTiles, [0,1,2,3,4])
+//		const collisionMap = collision.buildCollisionMap(scene.map.layers[1].data, scene.map.widthInTiles, scene.map.heightInTiles, tiles)
 
 		// create a collision map component
 		const cmc = tilemap.collisionMapFactory.create({map: this.map, data: collisionMap})

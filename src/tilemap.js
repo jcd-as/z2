@@ -341,11 +341,6 @@ export class TileLayer
 
 				this.backCanvas = zSquared.createCanvas(this.canvasWidth, this.canvasHeight)
 				this.backContext = this.backCanvas.getContext('2d')
-
-				// vars for tracking the previous frame position
-//				this._prev_x = NaN
-//				this._prev_tx = NaN
-//				this._prev_ty = NaN
 			}
 			this.canvas = zSquared.createCanvas(this.canvasWidth, this.canvasHeight)
 			this.context = this.canvas.getContext('2d')
@@ -353,7 +348,7 @@ export class TileLayer
 			// eslint-disable-next-line no-undef
 			this.baseTexture = new PIXI.BaseTexture(this.canvas)
 			// eslint-disable-next-line no-undef
-			this.frame = new PIXI.Rectangle(0, 0, this.canvas.width, this.canvas.height)
+			this.frame = new PIXI.Rectangle(0, 0, this.canvasWidth, this.canvasHeight)
 			// eslint-disable-next-line no-undef
 			this.texture = new PIXI.Texture(this.baseTexture)
 			// eslint-disable-next-line no-undef
@@ -390,15 +385,11 @@ export class TileLayer
 			}
 			map.view.add(this.doc)
 
-//			this._prevTx = -1
-//			this._prevTy = 0
 			this.prevTx = -1
 			this.prevTy = 0
 		}
 		else if(render_method === RENDER_PIXI_ALL_SPR) {
 			// vars for tracking the previous frame position
-//			this._prev_tx = NaN
-//			this._prev_ty = NaN
 			this.prev_tx = NaN
 			this.prev_ty = NaN
 
@@ -413,7 +404,6 @@ export class TileLayer
 			this.tileTexture = new PIXI.BaseTexture(map.tilesets[0].tiles)
 			// eslint-disable-next-line no-undef
 			this.doc = new PIXI.ParticleContainer()
-//			this.doc = new PIXI.Container()
 
 			this.tileSprites = []
 
@@ -443,9 +433,9 @@ export class TileLayer
 		// TODO: support more than one tileset
 		let tileset = this.map.tilesets[0]
 		// create & set-up all the tile sprites
-		for(let i = 0; i <= this.map.heightInTiles; i++) {
+		for(let i = 0; i < this.map.heightInTiles; i++) {
 			this.tileSprites.push([])
-			for(let j = 0; j <= this.map.widthInTiles; j++) {
+			for(let j = 0; j < this.map.widthInTiles; j++) {
 				let tile = this.data[i * this.map.widthInTiles + j]
 				// '0' tiles in Tiled are *empty*
 				if(tile) {
@@ -464,6 +454,7 @@ export class TileLayer
 					texture.frame.y = tile_y * this.map.tileHeight
 					texture.frame.width = this.map.tileWidth
 					texture.frame.height = this.map.tileHeight
+					texture.updateUvs()
 
 					this.tileSprites[i][j] = spr
 					this.doc.addChild(spr)
@@ -563,7 +554,8 @@ export class TileLayer
 		let i, j
 
 		// clear canvas
-		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
+		this.context.clearRect(0, 0, this.canvasWidth, this.canvasHeight)
+
 		for(j = 0; j <= this.map.viewHeightInTiles; j++, ty++) {
 			for(i = 0, tx = orig_tx; i <= this.map.viewWidthInTiles; i++, tx++) {
 				tile = this.data[ty * this.map.widthInTiles + tx]
@@ -858,7 +850,7 @@ export class TileLayer
 
 		// TODO: only need this for webgl rendering...
 		// have to update the gl texture
-		this.baseTexture.updateUVs()
+		this.baseTexture.update()
 
 		this.sprite.position.x = 0 | (viewx - this.map.viewWidth/2)
 		this.sprite.position.y = 0 | (viewy - this.map.viewHeight/2)
@@ -1025,28 +1017,38 @@ export class TileLayer
 		let tx, ty		// tile positions in the data map
 
 		// view.x/y is the *center* not upper left
-		const x = 0 | ((viewx - this.map.viewWidth/2)*this.scrollFactorX)
-		const y = 0 | ((viewy - this.map.viewHeight/2)*this.scrollFactorY)
+		let x = 0 | ((viewx - this.map.viewWidth/2)*this.scrollFactorX)
+		let y = 0 | ((viewy - this.map.viewHeight/2)*this.scrollFactorY)
 		tx = 0 | (x / this.map.tileWidth)
 		ty = 0 | (y / this.map.tileHeight)
-		const txend = tx + this.map.viewWidthInTiles
-		const tyend = ty + this.map.viewHeightInTiles
+		let txend = tx + this.map.viewWidthInTiles + 1
+		let tyend = ty + this.map.viewHeightInTiles + 1
 
-		// do we need to set all the tile's u/v values?
-		if(tx !== this.prev_tx || ty !== this.prev_ty) {
-			// set the visibility of all the tile sprites
-			for(let count = 0; count < this.tileSprites.length; count++) {
-				const spr = this.tileSprites[count]
-				if(spr) {
-					const i = spr.i
-					const j = spr.j
-					// if the sprite is on-screen
-					if(j >= tx && j <= txend && i >= ty && i <= tyend)
-						spr.visible = true
-					else
-						spr.visible = false
+		const orig_tx = tx
+		const orig_ty = ty
+
+		// only clear tiles & add visible tiles if the visible tiles has changed
+		if(orig_tx !== this.prev_tx || orig_ty !== this.prev_ty) {
+			this.doc.removeChildren()
+
+			// limit tx/ty and txend/tyend to be in the bounds of the tilemap & the view
+			tx = tx > 0 ? tx : 0
+			ty = ty > 0 ? ty : 0
+			txend = txend > this.map.widthInTiles ? this.map.widthInTiles : txend
+			tyend = tyend > this.map.heightInTiles ? this.map.heightInTiles : tyend
+
+			for(let u = ty; u < tyend; u++) {
+				for(let v= tx; v < txend; v++) {
+					const spr = this.tileSprites[u][v]
+					if(spr) {
+						this.doc.addChild(spr)
+					}
 				}
 			}
+
+			// next frame
+			this.prev_tx = orig_tx
+			this.prev_ty = orig_ty
 		}
 
 		// move the doc (group) to viewx, viewy
