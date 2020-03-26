@@ -23,14 +23,18 @@ class View
 	/** @constant */
 	static FOLLOW_MODE_OVERHEAD_SCROLLER = 'follow-mode-overhead-scroller'
 
-	scene = null
+	game = undefined
+	scene = undefined
 	width = 0
 	height = 0
-	_target = null
+	#_target = undefined
 
+	// display object container
 	doc = undefined
-	// camera space
+	// container for camera space
 	camera_doc = undefined
+	// display object container for objects 'fixed to the camera'
+	fixed = undefined
 
 	// follow-mode data
 	tbuf = 0
@@ -41,7 +45,7 @@ class View
 	boffs = 0
 	loffs = 0
 	roffs = 0
-	follow_mode = undefined
+	#_follow_mode = undefined
 
    /**
 	* @constructor
@@ -151,20 +155,20 @@ class View
 		this._follow_mode = val
 		// TODO: move these calcs to 'follow_mode' property setter
 		// horizontal and vertical "buffer spaces"
-		switch(this.follow_mode) {
+		switch(this._follow_mode) {
 			case View.FOLLOW_MODE_TIGHT:
 				this.lbuf = this.rbuf = this.width/2
-			this.tbuf = this.bbuf = this.height/2
-			break
+				this.tbuf = this.bbuf = this.height/2
+				break
 			case View.FOLLOW_MODE_PLATFORMER:
 				this.lbuf = this.rbuf = this.width/2.5
-			this.bbuf = this.height/3
-			this.tbuf = this.height/4
-			break
+				this.bbuf = this.height/3
+				this.tbuf = this.height/4
+				break
 			case View.FOLLOW_MODE_OVERHEAD_SCROLLER:
 				this.lbuf = this.rbuf = this.width/3
-			this.tbuf = this.bbuf = this.height/3
-			break
+				this.tbuf = this.bbuf = this.height/3
+				break
 		}
 
 		// horizontal and vertical offsets from center
