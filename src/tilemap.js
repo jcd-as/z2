@@ -557,6 +557,8 @@ export class TileLayer
 		this.context.clearRect(0, 0, this.canvasWidth, this.canvasHeight)
 
 		for(j = 0; j <= this.map.viewHeightInTiles; j++, ty++) {
+			// TODO: only iterate on x if y is in bounds:
+			//if(ty >= 0 && ty < this.map.heightInTiles) {
 			for(i = 0, tx = orig_tx; i <= this.map.viewWidthInTiles; i++, tx++) {
 				// (don't bother with tiles that are out-of-bounds)
 				if(tx >= 0 && tx < this.map.widthInTiles && ty >= 0 && ty < this.map.heightInTiles) {
@@ -653,33 +655,33 @@ export class TileLayer
 			// have to draw all the tiles...
 			xoffs = 0; yoffs = 0
 			for(j = 0; j <= mapViewHeight; j++, ty++) {
-				if(ty < 0 || ty >= mapHeight)
-					continue
-				for(i = 0, tx = orig_tx; i <= mapViewWidth; i++, tx++) {
-					if(tx < 0 || tx >= mapWidth)
-						continue
-					tile = this.data[ty * mapWidth + tx]
-					// '0' tiles in Tiled are *empty*
-					if(tile) {
-						// get the actual tile index in the tileset
-						tileset = this.map.getTilesetForIndex(tile)
-						tile -= tileset.start
-						tile_y = 0 | (tile / tileset.widthInTiles)
-						tile_x = tile - (tile_y * tileset.widthInTiles)
-						// draw this tile to the canvas
-						this.backContext.drawImage(
-							tileset.tiles,	// source image
-							tile_x * tw,	// source x
-							tile_y * th,	// source y
-							tw,				// source width
-							th,				// source height
-							xoffs,			// dest x
-							yoffs,			// dest y
-							tw,				// dest width
-							th				// dest height
-						)
+				if(ty >= 0 && ty < mapHeight) {
+					for(i = 0, tx = orig_tx; i <= mapViewWidth; i++, tx++) {
+						if(tx >= 0 && tx < mapWidth) {
+							tile = this.data[ty * mapWidth + tx]
+							// '0' tiles in Tiled are *empty*
+							if(tile) {
+								// get the actual tile index in the tileset
+								tileset = this.map.getTilesetForIndex(tile)
+								tile -= tileset.start
+								tile_y = 0 | (tile / tileset.widthInTiles)
+								tile_x = tile - (tile_y * tileset.widthInTiles)
+								// draw this tile to the canvas
+								this.backContext.drawImage(
+									tileset.tiles,	// source image
+									tile_x * tw,	// source x
+									tile_y * th,	// source y
+									tw,				// source width
+									th,				// source height
+									xoffs,			// dest x
+									yoffs,			// dest y
+									tw,				// dest width
+									th				// dest height
+								)
+							}
+						}
+						xoffs += tw
 					}
-					xoffs += tw
 				}
 				xoffs = 0
 				yoffs += th
@@ -781,6 +783,10 @@ export class TileLayer
 					end = mapViewWidth + 1 - numcols
 				}
 				for(col = start, tx = orig_tx + numcols; col < end; col++, tx++) {
+
+					if(tx < 0 || tx >= mapWidth || ty < 0 || ty >= mapHeight)
+						continue
+
 					tile = this.data[ty * mapWidth + tx]
 					// '0' tiles in Tiled are *empty*
 					if(tile) {
@@ -810,6 +816,10 @@ export class TileLayer
 			// columns
 			for(col = startcol, tx = orig_tx + startcol; col < endcol; col++, tx++) {
 				for(row = 0, ty = orig_ty; row <= mapViewHeight; row++, ty++) {
+
+					if(tx < 0 || tx >= mapWidth || ty < 0 || ty >= mapHeight)
+						continue
+
 					tile = this.data[ty * mapWidth + tx]
 					// '0' tiles in Tiled are *empty*
 					if(tile) {
