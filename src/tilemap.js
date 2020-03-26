@@ -894,7 +894,7 @@ export class TileLayer
 		// set the frame for each tile sprite
 		for(i = 0; i <= this.map.viewHeightInTiles; i++, ty++) {
 			for(j = 0, tx = orig_tx; j <= this.map.viewWidthInTiles; j++, tx++) {
-				if(ty >= this.map.heightInTiles || tx >= this.map.widthInTiles) {
+				if(tx < 0 || tx >= this.map.widthInTiles || ty < 0 || ty >= this.map.heightInTiles) {
 					this.tileSprites[i][j].visible = false
 					continue
 				}
