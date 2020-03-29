@@ -3,26 +3,23 @@
 // - improve usability of z2 & make this sample much cleaner
 //
 
-import loader from './loader.js'
-import * as input from './input.js'
-import View from './view-pixi.js'
-import Game from './game.js'
-import TiledScene from './tiledscene.js'
-import * as audio from './audio.js'
-import StateMachine from './statemachine.js'
-import * as emitter from './emitter.js'
-import zSquared from './z2.js'
-import * as collision from './collision.js'
-import * as tilemap from './tilemap.js'
-import * as ecs from './ecs.js'
-import * as _2d from './2d-pixi.js'
-//import * as math from './math.js'
+import loader from '../../js/loader.js'
+import * as input from '../../js/input.js'
+import View from '../../js/view-pixi.js'
+import Game from '../../js/game.js'
+import TiledScene from '../../js/tiledscene.js'
+import * as audio from '../../js/audio.js'
+import StateMachine from '../../js/statemachine.js'
+import * as emitter from '../../js/emitter.js'
+import zSquared from '../../js/z2.js'
+import * as collision from '../../js/collision.js'
+import * as tilemap from '../../js/tilemap.js'
+import * as ecs from '../../js/ecs.js'
+import * as _2d from '../../js/2d-pixi.js'
 
 
 (function()
 {
-//"use strict"
-
 // stats fps display
 // eslint-disable-next-line no-undef
 var stats = new Stats()
@@ -33,15 +30,32 @@ stats.domElement.style.top = '0px'
 const WIDTH = 512
 const HEIGHT = 384
 
+// eslint-disable-next-line no-unused-vars
 const z2 = new zSquared()
+
+// test tilemap rendering methods:
+// WORKING. fast & solid with 3 layers, unusably slow (~11fps) with 50
+//tilemap.setRenderMethod(tilemap.RENDER_SIMPLE)
+
+// (mostly) WORKING - one tile width on left/top of map shows a 'smeared' tile
+// when it first becomes visible (i.e. only when it is the only tile-width
+// visible outside of the map area)
+// quite fast & solid with 3 layers; decent, but jumpy with 50
+//tilemap.setRenderMethod(tilemap.RENDER_OPT_PAGES)
+//
+// WORKING. decent framerate with 50 layers
+//tilemap.setRenderMethod(tilemap.RENDER_PIXI_SPR)
+//
+// (default), WORKING. mostly solid & fast (~60fps) with 50 layers
+//tilemap.setRenderMethod(tilemap.RENDER_OPT_PIXI_SPR)
+//
+// WORKING. solid & fast with 3 layers, jerky (~20-45fps) with 50
+//tilemap.setRenderMethod(tilemap.RENDER_PIXI_ALL_SPR)
 
 // global 'game' object
 const div = document.getElementById('canvas')
-console.log(div)
-//const canvas = zSquared.createCanvas(WIDTH, HEIGHT, null, true)
-const canvas = zSquared.createCanvas(WIDTH, HEIGHT, div, true)
-let force_canvas = false
-const game = new Game(canvas, force_canvas)
+const game = new Game(WIDTH, HEIGHT, null /*target*/, View.FOLLOW_MODE_PLATFORMER)
+div.appendChild(game.app.view)
 
 // global set-up stuff
 const visibilityChange = function(event) {
@@ -70,27 +84,32 @@ const enemyc = ecs.createComponentFactory()
 
 // create an object defining our scene
 // (load, create and update methods)
+let scene	// we need scene defined because we need to use it in myScene.create()...
 const myScene =
 {
 	load : function()
 	{
-		loader.queueAsset('man', 'test/assets/img/stylized.png')
-		loader.queueAsset('firefly', 'test/assets/img/firefly.png', 'spritesheet', 8, 8)
-		loader.queueAsset('logo', 'test/assets/img/logo.png')
-		loader.queueAsset('field', 'test/assets/snd/field.mp3')
+//		loader.setBaseUrl('./')
+		loader.setFontBaseUrl('assets/img/')
+		loader.setImageBaseUrl('assets/img/')
+		loader.setAudioBaseUrl('assets/snd/')
+		loader.queueAsset('man', 'stylized.png')
+		loader.queueAsset('firefly', 'firefly.png', 'spritesheet', 8, 8)
+		loader.queueAsset('logo', 'logo.png')
+		loader.queueAsset('field', 'field.mp3')
 //		loader.queueAsset('field', 'field.ogg')
-		loader.queueAsset('land', 'test/assets/snd/landing.mp3')
+		loader.queueAsset('land', 'landing.mp3')
 //		loader.queueAsset('land', 'landing.ogg')
 //		loader.queueAsset('theme', 'logo.mp3')
 //		loader.queueAsset('theme', 'logo.ogg')
 
-		loader.queueAsset('font', 'test/assets/img/open_sans_italic_20.fnt')
+		loader.queueAsset('font', 'open_sans_italic_20.fnt')
 
-		loader.queueAsset('left', 'test/assets/img/button_left.png')
-//		loader.queueAsset('left', 'the_source/assets/img/button_left.png')
-//		loader.queueAsset('right', 'the_source/assets/img/button_right.png')
-//		loader.queueAsset('circle', 'the_source/assets/img/button_circle.png')
-//		loader.queueAsset('square', 'the_source/assets/img/button_square.png')
+		loader.queueAsset('left', 'button_left.png')
+//		loader.queueAsset('left', 'button_left.png')
+//		loader.queueAsset('right', 'button_right.png')
+//		loader.queueAsset('circle', 'button_circle.png')
+//		loader.queueAsset('square', 'button_square.png')
 	},
 
 	create : function() {
@@ -310,8 +329,7 @@ const myScene =
 			{solid: false}, {solid: true}
 		]
 		const collisionMap = collision.buildCollisionMap(scene.map.layers[48].data, scene.map.widthInTiles, scene.map.heightInTiles, tiles)
-//		var collisionMap = collision.buildCollisionMap(scene.map.layers[48].data, scene.map.widthInTiles, scene.map.heightInTiles, [0,1,2,3,4])
-//		var collisionMap = collision.buildCollisionMap(this.map.layers[1].data, this.map.widthInTiles, this.map.heightInTiles, [0,1,2,3,4])
+//		const collisionMap = collision.buildCollisionMap(scene.map.layers[1].data, scene.map.widthInTiles, scene.map.heightInTiles, tiles)
 
 		// create a collision map component
 		const cmc = tilemap.collisionMapFactory.create({map: this.map, data: collisionMap})
@@ -345,6 +363,7 @@ const myScene =
 		const sprpc = _2d.positionConstraintsFactory.create({minx: 16, maxx: this.width-16, miny: 32, maxy: this.height-32})
 		const sprbody = _2d.physicsBodyFactory.create({aabb:[-32, -15, 32, 15], restitution:1, mass:1})
 		// collision group for the player to collide against
+		let spre2
 		const pcolg = _2d.collisionGroupFactory.create({entities:[spre2]})
 		// create the entity
 		ecs.manager.get().createEntity([_2d.renderableFactory, gravc, cmc, sprbody, player, sprv, sprp, sprr, /*sprsz,*/ sprs, sprcc, sprpc, sprc, pcolg, sprres])
@@ -366,7 +385,7 @@ const myScene =
 		const sprp2 = _2d.positionFactory.create({x: 64, y: 1024-64})
 		const sprbody2 = _2d.physicsBodyFactory.create({aabb:[-32, -16, 32, 16], restitution:1, mass:1, resistance_x: 0})
 		// create the entity
-		const spre2 = ecs.manager.get().createEntity([_2d.renderableFactory, gravc, cmc, sprbody2, sprv2, sprp2, /*sprsz,*/ sprs, sprcc, sprpc, sprc2])
+		spre2 = ecs.manager.get().createEntity([_2d.renderableFactory, gravc, cmc, sprbody2, sprv2, sprp2, /*sprsz,*/ sprs, sprcc, sprpc, sprc2])
 		anims2.play('jitter')
 
 		// create a 'billboard' image
@@ -441,8 +460,10 @@ const myScene =
 		const es = emitter.createEmitterSystem(game.view, 'firefly')
 		ecs.manager.get().addSystem(es)
 
+		// TODO: need to pass 'scene' as the first arg to 'createMovementSystem', 
+		// BUT we can't have the scene yet without first having this object...
 		// create a movement system
-		const ms = _2d.createMovementSystem(200)
+		const ms = _2d.createMovementSystem(scene, 200)
 		ecs.manager.get().addSystem(ms)
 
 //		audio.playSound( 'field', 0, 1, true )
@@ -472,23 +493,12 @@ const myScene =
 
 
 // create a Tiled map scene using our scene definition object
-const scene = new TiledScene(game, 'test/assets/maps/test.json', myScene)
-game.scene = scene
-
+scene = new TiledScene(game, 'assets/maps/test.json', myScene)
 // start the scene
-scene.start()
+game.startScene(scene)
 
-// start the main ecs loop
-//z2.main(ecs.ecsUpdate)
-function mainloop(et)
-{
-	stats.begin()
-	// TODO: problem with this is that ecsUpdate calculates the time delta, so
-	// by intercepting here the dt doesn't get updated properly
-	if(!game.paused)
-		ecs.ecsUpdate(et)
-	stats.end()
-}
-z2.startMain(mainloop)
+// start the game running
+zSquared.stats = stats
+game.start()
 
 })()

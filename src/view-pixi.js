@@ -23,14 +23,18 @@ class View
 	/** @constant */
 	static FOLLOW_MODE_OVERHEAD_SCROLLER = 'follow-mode-overhead-scroller'
 
-	scene = null
+	game = undefined
+	scene = undefined
 	width = 0
 	height = 0
-	_target = null
+	#_target = undefined
 
+	// display object container
 	doc = undefined
-	// camera space
+	// container for camera space
 	camera_doc = undefined
+	// display object container for objects 'fixed to the camera'
+	fixed = undefined
 
 	// follow-mode data
 	tbuf = 0
@@ -41,7 +45,7 @@ class View
 	boffs = 0
 	loffs = 0
 	roffs = 0
-	follow_mode = undefined
+	#_follow_mode = undefined
 
    /**
 	* @constructor
@@ -64,16 +68,16 @@ class View
 
 		// PIXI display object container for camera / view space
 		// eslint-disable-next-line no-undef
-		this.camera_doc = new PIXI.DisplayObjectContainer()
+		this.camera_doc = new PIXI.Container()
 		// PIXI display object container for scene / world space
 		// eslint-disable-next-line no-undef
-		this.doc = new PIXI.DisplayObjectContainer()
+		this.doc = new PIXI.Container()
 		this.camera_doc.addChild(this.doc)
-		this.game.stage.addChild(this.camera_doc)
+		this.game.addChild(this.camera_doc)
 		// PIXI display object container for objects 'fixed to the camera'
 		// eslint-disable-next-line no-undef
-		this.fixed = new PIXI.DisplayObjectContainer()
-		this.game.stage.addChild(this.fixed)
+		this.fixed = new PIXI.Container()
+		this.game.addChild(this.fixed)
 		// position in scene / world space
 		const px = x || 0
 		const py = y || 0
@@ -127,14 +131,14 @@ class View
 		// clear the camera objects
 		this.camera_doc.removeChild(this.doc)
 		// eslint-disable-next-line no-undef
-		this.doc = new PIXI.DisplayObjectContainer()
+		this.doc = new PIXI.Container()
 		this.camera_doc.addChild(this.doc)
 
 		// clear the 'fixed' objects
-		this.game.stage.removeChild(this.fixed)
+		this.game.removeChild(this.fixed)
 		// eslint-disable-next-line no-undef
-		this.fixed = new PIXI.DisplayObjectContainer()
-		this.game.stage.addChild(this.fixed)
+		this.fixed = new PIXI.Container()
+		this.game.addChild(this.fixed)
 	}
 
 	/** Camera 'follow mode'. */
@@ -147,20 +151,20 @@ class View
 		this._follow_mode = val
 		// TODO: move these calcs to 'follow_mode' property setter
 		// horizontal and vertical "buffer spaces"
-		switch(this.follow_mode) {
+		switch(this._follow_mode) {
 			case View.FOLLOW_MODE_TIGHT:
 				this.lbuf = this.rbuf = this.width/2
-			this.tbuf = this.bbuf = this.height/2
-			break
+				this.tbuf = this.bbuf = this.height/2
+				break
 			case View.FOLLOW_MODE_PLATFORMER:
 				this.lbuf = this.rbuf = this.width/2.5
-			this.bbuf = this.height/3
-			this.tbuf = this.height/4
-			break
+				this.bbuf = this.height/3
+				this.tbuf = this.height/4
+				break
 			case View.FOLLOW_MODE_OVERHEAD_SCROLLER:
 				this.lbuf = this.rbuf = this.width/3
-			this.tbuf = this.bbuf = this.height/3
-			break
+				this.tbuf = this.bbuf = this.height/3
+				break
 		}
 
 		// horizontal and vertical offsets from center

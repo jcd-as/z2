@@ -17,6 +17,7 @@ import * as input from './input.js'
 /** Scene class. Represents a game scene/level/area. */
 class Scene
 {
+	#game = undefined
 	#load = undefined
 	#init = undefined
 	#create = undefined
@@ -41,8 +42,9 @@ class Scene
 	* @arg {Object} scene An object defining the functions for the scene: load,
 	* init, create, update and destroy
 	*/
-	constructor(width, height, scene)
+	constructor(game, width, height, scene)
 	{
+		this.game = game
 		this.load = scene.load || function() {}
 		this.init = scene.init || function() {}
 		this.create = scene.create || function() {}
@@ -73,9 +75,7 @@ class Scene
 		input.kbd.stop()
 
 		// clear the view (& thus Pixi)
-		// TODO: fix using global 'game' object
-		// eslint-disable-next-line no-undef
-		game.view.clear()
+		this.game.view.clear()
 
 		// reset the ecs system
 		ecs.manager.reset()

@@ -8,17 +8,19 @@
  * @module
  */
 
+
+let raf = null
+
+
 /** Main zSquared class */
 class zSquared
 {
-	raf = null
-
 	/** Main game loop helper. Starts main loop with a given function.
 	* @arg {Function} update Function to be called each frame. Takes a
 	* single parameter: the elapsed time since the loop was first started
 	* (the same param that requestAnimationFrame passes)
 	*/
-	startMain(update)
+	static startMain(update)
 	{
 		const requestAnimationFrame = window.requestAnimationFrame ||
 			window.mozRequestAnimationFrame ||
@@ -28,16 +30,16 @@ class zSquared
 		// start the main loop
 		const f = et => {
 			update( et )
-			this.raf = requestAnimationFrame(f)
+			raf = requestAnimationFrame(f)
 		}
-		this.raf = requestAnimationFrame(f)
+		raf = requestAnimationFrame(f)
 	}
 
 	/** Stop the main loop. */
-	stopMain()
+	static stopMain()
 	{
 		const cancelAnimationFrame = window.cancelAnimationFrame || window.mozCancelAnimationFrame
-		cancelAnimationFrame( this.raf )
+		cancelAnimationFrame( raf )
 	}
 
 	/** Create an HTML canvas object.

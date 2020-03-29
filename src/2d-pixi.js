@@ -177,20 +177,14 @@ export class AnimationSet
 * requires: renderable. 
 * optional: image, sprite, tileLayer, size, rotation, scale, center. 
 * (MUST be an image, sprite or tilelayer or nothing can be rendered)
-* @arg {Canvas} canvas The HTML5 canvas to draw to
 * @arg {View} view The View object for this transform system
 * @arg {number} [priority] Priority of system. Override only if you need
 * the renderer to NOT run last
 */
 // eslint-disable-next-line no-unused-vars
-export function createRenderingSystem(canvas, view, force_canvas_rendering, priority)
+export function createRenderingSystem(game, priority)
 {
-	// TODO: fix global access to 'game'
-	// eslint-disable-next-line no-undef
-	const stage = game.stage
-	// eslint-disable-next-line no-undef
-	const renderer = game.renderer
-
+	const view = game.view
 	return new ecs.System(Number.MAX_VALUE, [renderableFactory], {
 		onStart: function()
 		{
@@ -278,7 +272,8 @@ export function createRenderingSystem(canvas, view, force_canvas_rendering, prio
 				anims.update(dt)
 
 			// eslint-disable-next-line no-undef
-			spr.texture.setFrame(new PIXI.Rectangle(offs, 0, w, h))
+			spr.texture.frame = new PIXI.Rectangle(offs, 0, w, h)
+			spr.texture.updateUvs()
 
 			// apply the transforms to the PIXI sprite
 
@@ -306,7 +301,7 @@ export function createRenderingSystem(canvas, view, force_canvas_rendering, prio
 		},
 		onEnd: function()
 		{
-			renderer.render(stage)
+			game.render()
 		}
 	})
 }
@@ -318,7 +313,7 @@ export function createRenderingSystem(canvas, view, force_canvas_rendering, prio
 * there is a collisionMap or Group), gravity, collisionGroup.
 * @arg {number} priority Priority of system (lower = higher priority)
 */
-export function createMovementSystem(priority)
+export function createMovementSystem(scene, priority)
 {
 	return new ecs.System(priority, [positionFactory, velocityFactory], {
 		// define these here, access to 'this.foo' generally faster than to
@@ -364,9 +359,7 @@ export function createMovementSystem(priority)
 
 			// if the object is out of the world bounds, just bail
 			// TODO: set visible to false too? (so PIXI won't render)
-			// TODO: don't use global 'game' !!!
-			// eslint-disable-next-line no-undef
-			if(window.game && game.scene && game.scene.map) {
+			if(scene && scene.map) {
 				let width = 0, height = 0
 				// if we have a size component, use it
 				const szc = e.getComponent(sizeFactory)
@@ -380,11 +373,8 @@ export function createMovementSystem(priority)
 					height = bc.aabb[2] - bc.aabb[0]
 				}
 
-				// TODO: don't use global 'game' !!!
-				// eslint-disable-next-line no-undef
-				if(pc.x - width > game.scene.map.worldWidth ||
-					// eslint-disable-next-line no-undef
-					pc.y - height > game.scene.map.worldHeight)
+				if(pc.x - width > scene.map.worldWidth ||
+					pc.y - height > scene.map.worldHeight)
 					return
 			}
 

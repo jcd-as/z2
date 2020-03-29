@@ -79,7 +79,7 @@ class TiledScene
 			// crop the sprite
 			tex.frame.width = 0
 			this.game.view.add(this.loadProgressSprite, true)
-			this.game.renderer.render(this.game.stage)
+			this.game.render()
 		}
 
 		// start the loader
@@ -96,7 +96,7 @@ class TiledScene
 		input.kbd.stop()
 
 		// clear the view (& thus Pixi)
-		this.game.view.clear()
+		this.game.clearView()
 
 		// reset the ecs system
 		ecs.manager.reset()
@@ -120,7 +120,6 @@ class TiledScene
 		// start this tile map / level
 		this.map.start()
 
-		// TODO: call a method to setScene ?
 		this.game.view.scene = this
 	}
 
@@ -149,7 +148,7 @@ class TiledScene
 		this.create()
 
 		// create rendering system
-		this.renderer = _2d.createRenderingSystem(this.game.canvas, this.game.view, this.game.force_canvas)
+		this.renderer = _2d.createRenderingSystem(this.game)
 		ecs.manager.get().addSystem(this.renderer)
 
 		// tell the main loop that it is okay to call 'update' on us
@@ -161,10 +160,12 @@ class TiledScene
 		if(this.loadProgressSprite) {
 			// crop the sprite
 			const tex = this.loadProgressSprite.texture
-			tex.frame.width = tex.baseTexture.width * percent_done
-			tex.setFrame(tex.frame)
+			let fr = tex.frame
+			fr.width = tex.baseTexture.width * percent_done
+			tex.frame = fr
+			tex.updateUvs()
 			// force a render
-			this.game.renderer.render(this.game.stage)
+			this.game.render()
 		}
 	}
 }

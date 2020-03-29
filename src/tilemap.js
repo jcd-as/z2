@@ -24,20 +24,20 @@ import * as _2d from './2d-pixi.js'
 
 // different ways to render the tile maps:
 // 'naive' renderer, draws all on-screen tiles on a Canvas each frame
-const RENDER_SIMPLE = 0
+export const RENDER_SIMPLE = 0
 // optimized version of above, uses two canvases, only redraws tiles that
 // have scrolled onto the screen since last frame, copies the rest of the
 // screen
-const RENDER_OPT_PAGES = 1
+export const RENDER_OPT_PAGES = 1
 // renders using a Pixi sprite for each tile that is on-screen, collected in
-// a Pixi DisplayObjectContainer which is drawn at the appropriate offset
-const RENDER_PIXI_SPR = 2
+// a Pixi Container which is drawn at the appropriate offset
+export const RENDER_PIXI_SPR = 2
 // optimized version of above, only resets all the tile frames when we've
 // scrolled out of tile bounds
-const RENDER_OPT_PIXI_SPR = 3
+export const RENDER_OPT_PIXI_SPR = 3
 // 'brute force' WebGL method: one Pixi Sprite per tile in the entire world
 // (not just the screen), set visible flag on them if they are on-screen
-const RENDER_PIXI_ALL_SPR = 4
+export const RENDER_PIXI_ALL_SPR = 4
 
 let render_method
 
@@ -341,11 +341,6 @@ export class TileLayer
 
 				this.backCanvas = zSquared.createCanvas(this.canvasWidth, this.canvasHeight)
 				this.backContext = this.backCanvas.getContext('2d')
-
-				// vars for tracking the previous frame position
-//				this._prev_x = NaN
-//				this._prev_tx = NaN
-//				this._prev_ty = NaN
 			}
 			this.canvas = zSquared.createCanvas(this.canvasWidth, this.canvasHeight)
 			this.context = this.canvas.getContext('2d')
@@ -353,7 +348,7 @@ export class TileLayer
 			// eslint-disable-next-line no-undef
 			this.baseTexture = new PIXI.BaseTexture(this.canvas)
 			// eslint-disable-next-line no-undef
-			this.frame = new PIXI.Rectangle(0, 0, this.canvas.width, this.canvas.height)
+			this.frame = new PIXI.Rectangle(0, 0, this.canvasWidth, this.canvasHeight)
 			// eslint-disable-next-line no-undef
 			this.texture = new PIXI.Texture(this.baseTexture)
 			// eslint-disable-next-line no-undef
@@ -369,8 +364,8 @@ export class TileLayer
 			// eslint-disable-next-line no-undef
 			this.tileTexture = new PIXI.BaseTexture(map.tilesets[0].tiles)
 			// eslint-disable-next-line no-undef
-			this.doc = new PIXI.DisplayObjectContainer()
-//			this.doc = new PIXI.SpriteBatch()
+			this.doc = new PIXI.Container()
+//			this.doc = new PIXI.ParticleContainer()
 
 			this.tileSprites = []
 			for(let i = 0; i <= map.viewHeightInTiles; i++) {
@@ -390,15 +385,11 @@ export class TileLayer
 			}
 			map.view.add(this.doc)
 
-//			this._prevTx = -1
-//			this._prevTy = 0
 			this.prevTx = -1
 			this.prevTy = 0
 		}
 		else if(render_method === RENDER_PIXI_ALL_SPR) {
 			// vars for tracking the previous frame position
-//			this._prev_tx = NaN
-//			this._prev_ty = NaN
 			this.prev_tx = NaN
 			this.prev_ty = NaN
 
@@ -412,8 +403,7 @@ export class TileLayer
 			// eslint-disable-next-line no-undef
 			this.tileTexture = new PIXI.BaseTexture(map.tilesets[0].tiles)
 			// eslint-disable-next-line no-undef
-			this.doc = new PIXI.SpriteBatch()
-//			this.doc = new PIXI.DisplayObjectContainer()
+			this.doc = new PIXI.ParticleContainer()
 
 			this.tileSprites = []
 
@@ -443,9 +433,9 @@ export class TileLayer
 		// TODO: support more than one tileset
 		let tileset = this.map.tilesets[0]
 		// create & set-up all the tile sprites
-		for(let i = 0; i <= this.map.heightInTiles; i++) {
+		for(let i = 0; i < this.map.heightInTiles; i++) {
 			this.tileSprites.push([])
-			for(let j = 0; j <= this.map.widthInTiles; j++) {
+			for(let j = 0; j < this.map.widthInTiles; j++) {
 				let tile = this.data[i * this.map.widthInTiles + j]
 				// '0' tiles in Tiled are *empty*
 				if(tile) {
@@ -464,6 +454,7 @@ export class TileLayer
 					texture.frame.y = tile_y * this.map.tileHeight
 					texture.frame.width = this.map.tileWidth
 					texture.frame.height = this.map.tileHeight
+					texture.updateUvs()
 
 					this.tileSprites[i][j] = spr
 					this.doc.addChild(spr)
@@ -503,7 +494,8 @@ export class TileLayer
 					frame.y = tile_y * this.map.tileHeight
 					frame.width = this.map.tileWidth
 					frame.height = this.map.tileHeight
-					texture.setFrame(frame)
+					texture.frame = frame
+					texture.updateUvs()
 				}
 			}
 		}
@@ -562,29 +554,35 @@ export class TileLayer
 		let i, j
 
 		// clear canvas
-		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
+		this.context.clearRect(0, 0, this.canvasWidth, this.canvasHeight)
+
 		for(j = 0; j <= this.map.viewHeightInTiles; j++, ty++) {
+			// TODO: only iterate on x if y is in bounds:
+			//if(ty >= 0 && ty < this.map.heightInTiles) {
 			for(i = 0, tx = orig_tx; i <= this.map.viewWidthInTiles; i++, tx++) {
-				tile = this.data[ty * this.map.widthInTiles + tx]
-				// '0' tiles in Tiled are *empty*
-				if(tile) {
-					// get the actual tile index in the tileset
-					tileset = this.map.getTilesetForIndex(tile)
-					tile -= tileset.start
-					tile_y = 0 | (tile / tileset.widthInTiles)
-					tile_x = tile - (tile_y * tileset.widthInTiles)
-					// draw this tile to the canvas
-					this.context.drawImage(
-						tileset.tiles,				// source image
-						tile_x * this.map.tileWidth,// source x
-						tile_y *this.map.tileHeight,// source y
-						this.map.tileWidth,			// source width
-						this.map.tileHeight,		// source height
-						xoffs,						// dest x
-						yoffs,						// dest y
-						this.map.tileWidth,			// dest width
-						this.map.tileHeight			// dest height
-					)
+				// (don't bother with tiles that are out-of-bounds)
+				if(tx >= 0 && tx < this.map.widthInTiles && ty >= 0 && ty < this.map.heightInTiles) {
+					tile = this.data[ty * this.map.widthInTiles + tx]
+					// '0' tiles in Tiled are *empty*
+					if(tile) {
+						// get the actual tile index in the tileset
+						tileset = this.map.getTilesetForIndex(tile)
+						tile -= tileset.start
+						tile_y = 0 | (tile / tileset.widthInTiles)
+						tile_x = tile - (tile_y * tileset.widthInTiles)
+						// draw this tile to the canvas
+						this.context.drawImage(
+							tileset.tiles,				// source image
+							tile_x * this.map.tileWidth,// source x
+							tile_y *this.map.tileHeight,// source y
+							this.map.tileWidth,			// source width
+							this.map.tileHeight,		// source height
+							xoffs,						// dest x
+							yoffs,						// dest y
+							this.map.tileWidth,			// dest width
+							this.map.tileHeight			// dest height
+						)
+					}
 				}
 				xoffs += this.map.tileWidth
 			}
@@ -592,18 +590,9 @@ export class TileLayer
 			yoffs += this.map.tileHeight
 		}
 
-		// TODO: bleh...
-		// this works in PIXI 1.3:
-//        // eslint-disable-next-line no-undef
-//		if( PIXI.gl )
-//        // eslint-disable-next-line no-undef
-//			PIXI.texturesToUpdate.push( this.baseTexture )
-		// but texturesToUpdate isn't actually updated in 1.4,
-		// so we have to update it ourselves:
-		// eslint-disable-next-line no-undef
-		if(PIXI.defaultRenderer.renderSession.gl)
-			// eslint-disable-next-line no-undef
-			PIXI.updateWebGLTexture(this.baseTexture, PIXI.defaultRenderer.renderSession.gl)
+		// TODO: only need this for webgl rendering...
+		// have to update the gl texture
+		this.baseTexture.update()
 
 		this.sprite.position.x = 0 | (viewx - this.map.viewWidth/2)
 		this.sprite.position.y = 0 | (viewy - this.map.viewHeight/2)
@@ -640,7 +629,7 @@ export class TileLayer
 		this.texture.frame.y = -yoffs
 		this.texture.frame.width = this.canvasWidth - this.texture.frame.x
 		this.texture.frame.height = this.canvasHeight - this.texture.frame.y
-		this.texture.setFrame(this.texture.frame)
+		this.texture.updateUvs()
 
 		// TODO: if there is only *one* tileset, we can optimize because we
 		// don't need to look-up which tileset this tile is in...
@@ -666,33 +655,33 @@ export class TileLayer
 			// have to draw all the tiles...
 			xoffs = 0; yoffs = 0
 			for(j = 0; j <= mapViewHeight; j++, ty++) {
-				if(ty < 0 || ty > mapHeight)
-					continue
-				for(i = 0, tx = orig_tx; i <= mapViewWidth; i++, tx++) {
-					if(tx < 0 || tx > mapWidth)
-						continue
-					tile = this.data[ty * mapWidth + tx]
-					// '0' tiles in Tiled are *empty*
-					if(tile) {
-						// get the actual tile index in the tileset
-						tileset = this.map.getTilesetForIndex(tile)
-						tile -= tileset.start
-						tile_y = 0 | (tile / tileset.widthInTiles)
-						tile_x = tile - (tile_y * tileset.widthInTiles)
-						// draw this tile to the canvas
-						this.backContext.drawImage(
-							tileset.tiles,	// source image
-							tile_x * tw,	// source x
-							tile_y * th,	// source y
-							tw,				// source width
-							th,				// source height
-							xoffs,			// dest x
-							yoffs,			// dest y
-							tw,				// dest width
-							th				// dest height
-						)
+				if(ty >= 0 && ty < mapHeight) {
+					for(i = 0, tx = orig_tx; i <= mapViewWidth; i++, tx++) {
+						if(tx >= 0 && tx < mapWidth) {
+							tile = this.data[ty * mapWidth + tx]
+							// '0' tiles in Tiled are *empty*
+							if(tile) {
+								// get the actual tile index in the tileset
+								tileset = this.map.getTilesetForIndex(tile)
+								tile -= tileset.start
+								tile_y = 0 | (tile / tileset.widthInTiles)
+								tile_x = tile - (tile_y * tileset.widthInTiles)
+								// draw this tile to the canvas
+								this.backContext.drawImage(
+									tileset.tiles,	// source image
+									tile_x * tw,	// source x
+									tile_y * th,	// source y
+									tw,				// source width
+									th,				// source height
+									xoffs,			// dest x
+									yoffs,			// dest y
+									tw,				// dest width
+									th				// dest height
+								)
+							}
+						}
+						xoffs += tw
 					}
-					xoffs += tw
 				}
 				xoffs = 0
 				yoffs += th
@@ -794,6 +783,10 @@ export class TileLayer
 					end = mapViewWidth + 1 - numcols
 				}
 				for(col = start, tx = orig_tx + numcols; col < end; col++, tx++) {
+
+					if(tx < 0 || tx >= mapWidth || ty < 0 || ty >= mapHeight)
+						continue
+
 					tile = this.data[ty * mapWidth + tx]
 					// '0' tiles in Tiled are *empty*
 					if(tile) {
@@ -823,6 +816,10 @@ export class TileLayer
 			// columns
 			for(col = startcol, tx = orig_tx + startcol; col < endcol; col++, tx++) {
 				for(row = 0, ty = orig_ty; row <= mapViewHeight; row++, ty++) {
+
+					if(tx < 0 || tx >= mapWidth || ty < 0 || ty >= mapHeight)
+						continue
+
 					tile = this.data[ty * mapWidth + tx]
 					// '0' tiles in Tiled are *empty*
 					if(tile) {
@@ -864,18 +861,9 @@ export class TileLayer
 		this.prev_ty = orig_ty
 		this.prev_x = x
 
-		// TODO: bleh...
-		// this works in PIXI 1.3:
-//        // eslint-disable-next-line no-undef
-//		if( PIXI.gl )
-//            // eslint-disable-next-line no-undef
-//			PIXI.texturesToUpdate.push( this.baseTexture )
-		// but texturesToUpdate isn't actually updated in 1.4,
-		// so we have to update it ourselves:
-		// eslint-disable-next-line no-undef
-		if(PIXI.defaultRenderer.renderSession.gl)
-			// eslint-disable-next-line no-undef
-			PIXI.updateWebGLTexture(this.baseTexture, PIXI.defaultRenderer.renderSession.gl)
+		// TODO: only need this for webgl rendering...
+		// have to update the gl texture
+		this.baseTexture.update()
 
 		this.sprite.position.x = 0 | (viewx - this.map.viewWidth/2)
 		this.sprite.position.y = 0 | (viewy - this.map.viewHeight/2)
@@ -906,7 +894,7 @@ export class TileLayer
 		// set the frame for each tile sprite
 		for(i = 0; i <= this.map.viewHeightInTiles; i++, ty++) {
 			for(j = 0, tx = orig_tx; j <= this.map.viewWidthInTiles; j++, tx++) {
-				if(ty > this.map.heightInTiles || tx > this.map.widthInTiles) {
+				if(tx < 0 || tx >= this.map.widthInTiles || ty < 0 || ty >= this.map.heightInTiles) {
 					this.tileSprites[i][j].visible = false
 					continue
 				}
@@ -928,7 +916,8 @@ export class TileLayer
 					frame.y = tile_y * this.map.tileHeight
 					frame.width = this.map.tileWidth
 					frame.height = this.map.tileHeight
-					this.tileSprites[i][j].texture.setFrame(frame)
+					this.tileSprites[i][j].texture.frame = frame
+					this.tileSprites[i][j].texture.updateUvs()
 				}
 				else {
 					this.tileSprites[i][j].visible = false
@@ -986,7 +975,7 @@ export class TileLayer
 					const tileSprite = this.tileSprites[i][j]
 					// if this tile is out-of-world-bounds,
 					// don't draw it
-					if(ty < 0 || ty > mapHeight || tx < 0 || tx > mapWidth) {
+					if(ty < 0 || ty >= mapHeight || tx < 0 || tx >= mapWidth) {
 						tileSprite.visible = false
 						continue
 					}
@@ -1006,7 +995,8 @@ export class TileLayer
 						let frame = tileSprite.texture.frame
 						frame.x = tile_x * tw
 						frame.y = tile_y * th
-						tileSprite.texture.setFrame( frame )
+						tileSprite.texture.frame = frame
+						tileSprite.texture.updateUvs()
 					}
 					else {
 						tileSprite.visible = false
@@ -1040,28 +1030,38 @@ export class TileLayer
 		let tx, ty		// tile positions in the data map
 
 		// view.x/y is the *center* not upper left
-		const x = 0 | ((viewx - this.map.viewWidth/2)*this.scrollFactorX)
-		const y = 0 | ((viewy - this.map.viewHeight/2)*this.scrollFactorY)
+		let x = 0 | ((viewx - this.map.viewWidth/2)*this.scrollFactorX)
+		let y = 0 | ((viewy - this.map.viewHeight/2)*this.scrollFactorY)
 		tx = 0 | (x / this.map.tileWidth)
 		ty = 0 | (y / this.map.tileHeight)
-		const txend = tx + this.map.viewWidthInTiles
-		const tyend = ty + this.map.viewHeightInTiles
+		let txend = tx + this.map.viewWidthInTiles + 1
+		let tyend = ty + this.map.viewHeightInTiles + 1
 
-		// do we need to set all the tile's u/v values?
-		if(tx !== this.prev_tx || ty !== this.prev_ty) {
-			// set the visibility of all the tile sprites
-			for(let count = 0; count < this.tileSprites.length; count++) {
-				const spr = this.tileSprites[count]
-				if(spr) {
-					const i = spr.i
-					const j = spr.j
-					// if the sprite is on-screen
-					if(j >= tx && j <= txend && i >= ty && i <= tyend)
-						spr.visible = true
-					else
-						spr.visible = false
+		const orig_tx = tx
+		const orig_ty = ty
+
+		// only clear tiles & add visible tiles if the visible tiles has changed
+		if(orig_tx !== this.prev_tx || orig_ty !== this.prev_ty) {
+			this.doc.removeChildren()
+
+			// limit tx/ty and txend/tyend to be in the bounds of the tilemap & the view
+			tx = tx > 0 ? tx : 0
+			ty = ty > 0 ? ty : 0
+			txend = txend > this.map.widthInTiles ? this.map.widthInTiles : txend
+			tyend = tyend > this.map.heightInTiles ? this.map.heightInTiles : tyend
+
+			for(let u = ty; u < tyend; u++) {
+				for(let v= tx; v < txend; v++) {
+					const spr = this.tileSprites[u][v]
+					if(spr) {
+						this.doc.addChild(spr)
+					}
 				}
 			}
+
+			// next frame
+			this.prev_tx = orig_tx
+			this.prev_ty = orig_ty
 		}
 
 		// move the doc (group) to viewx, viewy
@@ -1151,7 +1151,7 @@ function createObjects( layer )
 	for(let i = 0; i < layer.objects.length; i++) {
 		const obj = layer.objects[i]
 
-//        const factory = z2[obj.type]
+		// TODO: verify
 		const factory = zSquared[obj.type]
 		if(!factory) {
 			console.log("No factory method found for object type: " + obj.type)
