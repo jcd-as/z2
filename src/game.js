@@ -9,55 +9,31 @@ import View from './view-pixi.js'
 import time from './time.js'
 import * as audio from './audio.js'
 import loader from './loader.js'
+import * as ecs from './ecs.js'
+import zSquared from './z2.js'
+
 
 /** Game object module.
  * @module
  */
 
 
-// TODO: not yet used
-// the main ecs loop
-//function mainloop(et)
-//const mainloop = (et) =>
-//{
-//    if(game.debug && z2.stats)
-//	if(this.debug && z2.stats)
-//		z2.stats.begin()
-//
-//	// TODO: problem with this is that ecsUpdate calculates the time delta, so
-//	// by intercepting here the dt doesn't get updated properly
-////	if(!game.paused) {
-//	if(!this.paused) {
-//		// update the scene
-//		// (lets it implement any non-ECS behaviour it wants)
-////		if(game.scene && game.scene.ready) {
-//		if(this.scene && this.scene.ready) {
-//			// let the scene do any specific updating that it needs
-////			game.scene.update()
-//			this.scene.update()
-//
-//			// update the ECS system
-//			ecs.ecsUpdate(et)
-//		}
-//	}
-//
-//	if(game.debug && z2.stats)
-//		z2.stats.end()
-//}
-
 /** Game class - this is where it all starts. */
 class Game
 {
+	// TODO: make this private and get rid of all outside access
+	#app = null
+
 	// TODO: once we start using the start()/startScene() methods, make these
 	// private:
 	/** Are we in debug mode? */
-	debug = false
+	#debug = false
 	/** Are we currently paused? */
-	paused = false
-	pausedSprite = null
-	pausedBg = null
+	#paused = false
+	#pausedSprite = null
+	#pausedBg = null
 	/** The current game scene. */
-	scene = null
+	#_scene = null
 
 	/**
 	* @constructor
@@ -66,9 +42,6 @@ class Game
 	*/
 	constructor(width, height)
 	{
-		// TODO: stop using global 'game' object
-		window.game = this
-
 		// create the Pixi application object
 		// eslint-disable-next-line no-undef
 		this.app = new PIXI.Application({width, height})
@@ -93,6 +66,31 @@ class Game
 		window.onfocus = visibilityChange
 	}
 
+	get scene()
+	{
+		return this._scene
+	}
+
+	render()
+	{
+		this.app.render(this.app.stage)
+	}
+
+	addChild(child)
+	{
+		this.app.stage.addChild(child)
+	}
+
+	removeChild(child)
+	{
+		this.app.stage.removeChild(child)
+	}
+
+	clearView()
+	{
+		this.view.clear()
+	}
+
 	pause()
 	{
 		if(this.paused)
@@ -107,7 +105,7 @@ class Game
 		if(this.pausedSprite) {
 			this.view.add(this.pausedBg, true)
 			this.view.add(this.pausedSprite, true)
-			this.renderer.render(this.stage)
+			this.render()
 		}
 		else {
 			const img = loader.getAsset('paused-image')
@@ -128,7 +126,7 @@ class Game
 
 				this.view.add(this.pausedBg, true)
 				this.view.add(this.pausedSprite, true)
-				this.renderer.render(this.stage)
+				this.render()
 			}
 		}
 	}
@@ -146,53 +144,79 @@ class Game
 		if(this.pausedSprite) {
 			this.view.remove(this.pausedBg, true)
 			this.view.remove(this.pausedSprite, true)
-			this.renderer.render(this.stage)
+			this.render()
 		}
 	}
 
-	// TODO: not yet used
-	/** Start the main loop
-	* @function Game#start
-	*/
-//	start()
-//	{
-//		// start the main game loop
-//		zSquared.main(mainloop)
-//	}
-
-	// TODO: not yet used
 	/** Start a scene by name or object
 	* @function Game#startScene
 	* @arg {Scene|Function} scene The Scene object or the function to create
 	* the Scene object which to start. If it is a function, any remaining args
 	* will be passed to the function
 	*/
-//	startScene(scene)
-//	{
-//		let new_scene
-//		if(typeof scene === 'object') {
-//			new_scene = scene
-//		}
-//		else if(typeof scene === 'function') {
-//			const extras = Array.prototype.slice.call(arguments, 1)
-//			if( extras )
-//				new_scene = scene.apply(null, extras)
-//			else
-//				new_scene = scene()
-//		}
-//		else
-//			throw new Error("Scene object passed to Game.startScene() is neither an object nor a function")
-//
-//		// if we have a scene running, stop it first
-//		if(this.scene) {
-//			this.scene.stop()
-//			// then delete it
-//			this.scene.destroy()
-//		}
-//		// then start the new scene
-//		this.scene = new_scene
-//		this.scene.start()
-//	}
+	startScene(scene)
+	{
+		let new_scene
+		if(typeof scene === 'object') {
+			new_scene = scene
+		}
+		else if(typeof scene === 'function') {
+			const extras = Array.prototype.slice.call(arguments, 1)
+			if( extras )
+				new_scene = scene.apply(null, extras)
+			else
+				new_scene = scene()
+		}
+		else
+			throw new Error("Scene object passed to Game.startScene() is neither an object nor a function")
+
+		// if we have a scene running, stop it first
+		if(this._scene) {
+			this._scene.stop()
+			// then delete it
+			this._scene.destroy()
+		}
+		// then start the new scene
+		this._scene = new_scene
+		this._scene.start()
+	}
+
+	// return the function to use to update the game inside the main loop
+	_getMainloopUpdateFn()
+	{
+		const that = this
+		return (et) => {
+			if(that.debug && zSquared.stats)
+				zSquared.stats.begin()
+
+			// TODO: problem with this is that ecsUpdate calculates the time delta, so
+			// by intercepting here the dt doesn't get updated properly
+			if(!that.paused) {
+				// update the scene
+				// (lets it implement any non-ECS behaviour it wants)
+				if(that.scene && that.scene.ready) {
+					// let the scene do any specific updating that it needs
+					that.scene.update()
+
+					// update the ECS system
+					ecs.ecsUpdate(et)
+				}
+			}
+
+			if(that.debug && zSquared.stats)
+				zSquared.stats.end()
+		}
+	}
+
+	/** Start the main loop
+	* @function Game#start
+	*/
+	start()
+	{
+		// start the main game loop
+		zSquared.startMain(this._getMainloopUpdateFn())
+	}
+
 }
 export default Game
 

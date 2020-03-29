@@ -73,13 +73,11 @@ class View
 		// eslint-disable-next-line no-undef
 		this.doc = new PIXI.Container()
 		this.camera_doc.addChild(this.doc)
-		// TODO: avoid accessing PIXI internals from here (app.stage)
-		this.game.app.stage.addChild(this.camera_doc)
+		this.game.addChild(this.camera_doc)
 		// PIXI display object container for objects 'fixed to the camera'
 		// eslint-disable-next-line no-undef
 		this.fixed = new PIXI.Container()
-		// TODO: avoid accessing PIXI internals from here (app.stage)
-		this.game.app.stage.addChild(this.fixed)
+		this.game.addChild(this.fixed)
 		// position in scene / world space
 		const px = x || 0
 		const py = y || 0
@@ -137,12 +135,10 @@ class View
 		this.camera_doc.addChild(this.doc)
 
 		// clear the 'fixed' objects
-		// TODO: avoid accessing PIXI internals from here (app.stage)
-		this.game.app.stage.removeChild(this.fixed)
+		this.game.removeChild(this.fixed)
 		// eslint-disable-next-line no-undef
 		this.fixed = new PIXI.Container()
-		// TODO: avoid accessing PIXI internals from here (app.stage)
-		this.game.app.stage.addChild(this.fixed)
+		this.game.addChild(this.fixed)
 	}
 
 	/** Camera 'follow mode'. */

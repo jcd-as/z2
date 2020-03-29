@@ -20,8 +20,6 @@ import * as _2d from '../../js/2d-pixi.js'
 
 (function()
 {
-//"use strict"
-
 // stats fps display
 // eslint-disable-next-line no-undef
 var stats = new Stats()
@@ -32,6 +30,7 @@ stats.domElement.style.top = '0px'
 const WIDTH = 512
 const HEIGHT = 384
 
+// eslint-disable-next-line no-unused-vars
 const z2 = new zSquared()
 
 // test tilemap rendering methods:
@@ -85,6 +84,7 @@ const enemyc = ecs.createComponentFactory()
 
 // create an object defining our scene
 // (load, create and update methods)
+let scene	// we need scene defined because we need to use it in myScene.create()...
 const myScene =
 {
 	load : function()
@@ -460,8 +460,10 @@ const myScene =
 		const es = emitter.createEmitterSystem(game.view, 'firefly')
 		ecs.manager.get().addSystem(es)
 
+		// TODO: need to pass 'scene' as the first arg to 'createMovementSystem', 
+		// BUT we can't have the scene yet without first having this object...
 		// create a movement system
-		const ms = _2d.createMovementSystem(200)
+		const ms = _2d.createMovementSystem(scene, 200)
 		ecs.manager.get().addSystem(ms)
 
 //		audio.playSound( 'field', 0, 1, true )
@@ -491,23 +493,12 @@ const myScene =
 
 
 // create a Tiled map scene using our scene definition object
-const scene = new TiledScene(game, 'assets/maps/test.json', myScene)
-game.scene = scene
-
+scene = new TiledScene(game, 'assets/maps/test.json', myScene)
 // start the scene
-scene.start()
+game.startScene(scene)
 
-// start the main ecs loop
-//z2.main(ecs.ecsUpdate)
-function mainloop(et)
-{
-	stats.begin()
-	// TODO: problem with this is that ecsUpdate calculates the time delta, so
-	// by intercepting here the dt doesn't get updated properly
-	if(!game.paused)
-		ecs.ecsUpdate(et)
-	stats.end()
-}
-z2.startMain(mainloop)
+// start the game running
+zSquared.stats = stats
+game.start()
 
 })()
