@@ -3,7 +3,9 @@
 		"console",
 		"document",
 		"window",
-		"zSquared"
+		"zSquared",
+		"PIXI",
+		"Float64Array"
 	]
 
 }

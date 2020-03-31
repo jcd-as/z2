@@ -63,7 +63,6 @@ export function setRenderMethod(rm)
 	render_method = rm
 }
 
-
 // helper method to convert the .properties object on a Tiled object
 // (map, layer, tileset)
 // returns the new, converted properties object

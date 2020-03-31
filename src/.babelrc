@@ -1,0 +1,3 @@
+{
+  "plugins": ["transform-optional-chaining", "@babel/proposal-class-properties", "@babel/proposal-private-methods"]
+}
