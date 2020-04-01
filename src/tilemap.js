@@ -76,14 +76,10 @@ function _readProperties(props)
 				throw Error('Custom Tiled property is not a javascript object')
 			switch(prop.type) {
 				case 'string':
-					p[prop.name] = prop.value
-					break
 				case 'float':
 				case 'int':
-					p[prop.name] = Number(prop.value)
-					break
 				case 'bool':
-					p[prop.name] = prop.value === 'true' ? true : false
+					p[prop.name] = prop.value
 					break
 				default:
 					console.warn(`Unsupported type '${prop.type}' in Tiled custom property '${prop.name}'`)
