@@ -76,8 +76,10 @@ document.addEventListener('pageshow', visibilityChange, false)
 window.onblur = visibilityChange
 window.onfocus = visibilityChange
 
-// create a "player control" component
+// create a "player control" component...
 const player = ecs.createComponentFactory()
+// ...and (important!) add it to the game object
+game.player = player
 
 // create an 'enemy' component, for enemy 'AI'
 const enemyc = ecs.createComponentFactory()

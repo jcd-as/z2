@@ -102,11 +102,7 @@ class zSquared
 	*/
 	static findByName(array, name)
 	{
-		for(let i = 0; i < array.length; i++) {
-			if(array[i].name && array[i].name === name)
-				return array[i]
-		}
-		return null
+		return array.find(i => i.name === name)
 	}
 
 	/** Toggle fullscreen mode, when available. */

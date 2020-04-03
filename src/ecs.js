@@ -380,9 +380,9 @@ export const manager = (function() {
 			for(let i = 0; i < this.living.length; i++) {
 				// check for a name component
 				const e = this.entities[this.living[i]]
-					const nc = e.getComponent(nameFactory)
-					if(nc && nc.name === name)
-						return e
+				const nc = e.getComponent(nameFactory)
+				if(nc && nc.name === name)
+					return e
 			}
 			return null
 		}
@@ -398,21 +398,21 @@ export const manager = (function() {
 				let idx = this.systems.length-1
 				while(idx) {
 					i = idx
-						j = --idx
-						if(this.systems[i].priority < this.systems[j].priority) {
-							temp = this.systems[i]
-								this.systems[i] = this.systems[j]
-								this.systems[j] = temp
-						}
+					j = --idx
+					if(this.systems[i].priority < this.systems[j].priority) {
+						temp = this.systems[i]
+						this.systems[i] = this.systems[j]
+						this.systems[j] = temp
+					}
 				}
 
 			if(sys.init && typeof( sys.init ) === 'function')
 				sys.init()
-					// TODO: find all the entities with matching masks and
-					// assign them to the System
-					for(i = 0; i < this.living.length; i++) {
-						sys.addEntityIfMatch(this.entities[this.living[i]])
-					}
+				// find all the entities with matching masks and
+				// assign them to the System
+				for(i = 0; i < this.living.length; i++) {
+					sys.addEntityIfMatch(this.entities[this.living[i]])
+				}
 		}
 
 		/** Update all Systems for an Entities current Component set.
@@ -423,8 +423,8 @@ export const manager = (function() {
 			for(let i = 0; i < this.systems.length; i++) {
 				// if the Entity no longer matches the system, remove it
 				this.systems[i].removeEntityIfNotMatch(e)
-					// if the Entity does match the system, add it
-					this.systems[i].addEntityIfMatch(e)
+				// if the Entity does match the system, add it
+				this.systems[i].addEntityIfMatch(e)
 			}
 		}
 

@@ -16,6 +16,7 @@ import * as tilemap from './tilemap.js'
 import * as ecs from './ecs.js'
 import * as input from './input.js'
 import * as _2d from './2d-pixi.js'
+import zSquared from './z2.js'
 
 
 /** Scene class which loads from a Tiled (json) map file. Represents a game scene/level/area. */
@@ -109,6 +110,24 @@ class TiledScene
 		this.game.view.scene = null
 		this._start()
 	}
+
+	/** Resolve a game object, by name.
+	* @arg {string} name
+	* @returns entity object with the given name, or null if none
+	*/
+	resolveObject(name)
+	{
+		if(name === 'player')
+			// eslint-disable-next-line no-undef
+			return game.player
+
+		for(const grp of this.map.objectGroups) {
+			const o = zSquared.findByName(grp, name)
+			if(o)
+				return o
+		}
+		return null
+   }
 
 	_loadMap(tiled)
 	{

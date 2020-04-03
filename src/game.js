@@ -34,6 +34,8 @@ class Game
 	#pausedBg = null
 	/** The current game scene. */
 	#_scene = null
+	/** The player entity - must be set by the game code */
+	player = null
 
 	/**
 	* @constructor
@@ -110,6 +112,9 @@ class Game
 		else {
 			const img = loader.getAsset('paused-image')
 			if(img) {
+				// TODO: this potentially leaks (see Pixi.js docs)
+				// need to call .destroy() on a PIXI.Graphics object when
+				// finished with it
 				// eslint-disable-next-line no-undef
 				this.pausedBg = new PIXI.Graphics()
 				this.pausedBg.beginFill(0x000000)
