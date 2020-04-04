@@ -68,6 +68,10 @@ export function setRenderMethod(rm)
 // returns the new, converted properties object
 function _readProperties(props)
 {
+	// only convert on the first read
+	if(!Array.isArray(props))
+		return props
+
 	const p = {}
 	if(props) {
 		for(let prop of props) {
@@ -248,6 +252,7 @@ export class TileMap
 	{
 		// TODO: support multiple tilesets
 		for(const tile of tileset.tiles) {
+			// convert the tile properties
 			tile.properties = _readProperties(tile.properties)
 
 			let solid = false
@@ -1181,6 +1186,7 @@ function createObjects( layer )
 	// create an entity for each object
 	for(let i = 0; i < layer.objects.length; i++) {
 		const obj = layer.objects[i]
+		// convert the object properties
 		obj.properties = _readProperties(obj.properties)
 
 		// TODO: verify
