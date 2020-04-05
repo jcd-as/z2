@@ -596,6 +596,7 @@ export function buildCollisionMap(l, w, h, tiles)
 			t = l[k]
 			// in Tiled, tile indices of 0 indicate 'empty tile'
 			if(t !== 0) {
+				t--
 				// tile is 'slopeDownLeft'
 				if(tiles[t] && tiles[t].slope === 1)
 					map[k] = {left:-1, right:1, top:-1, bottom:1, slope:1}
