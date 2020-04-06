@@ -59,7 +59,7 @@ export let emitterFactory = ecs.createComponentFactory( {
 	// min/max particle lifespan (in ms)
 	minLifespan: 0, maxLifespan: 0,
 	// maximum number of particles (pool size)
-	maxParticles: 100
+	maxParticles: 4096
 })
 
 /////////////////////////////////////////////////////////////////////////

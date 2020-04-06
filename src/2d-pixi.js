@@ -495,12 +495,12 @@ export function createMovementSystem(scene, priority)
 								// call collision callback, if it exists
 								if(bc.collisionCallback && typeof(bc.collisionCallback) == 'function') {
 									// call it. if it returns 'true', don't separate
-									if(bc.collisionCallback(e, ent))
+									if(bc.collisionCallback(e, ent, this.pv))
 										continue
 								}
 								else if(body.collisionCallback && typeof(body.collisionCallback) == 'function') {
 									// call it. if it returns 'true', don't separate
-									if(body.collisionCallback(ent, e))
+									if(body.collisionCallback(ent, e, this.pv))
 										continue
 								}
 
