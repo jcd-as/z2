@@ -118,8 +118,7 @@ class TiledScene
 	resolveObject(name)
 	{
 		if(name === 'player')
-			// eslint-disable-next-line no-undef
-			return game.player
+			return this.game.player
 
 		for(const grp of this.map.objectGroups) {
 			const o = zSquared.findByName(grp, name)
