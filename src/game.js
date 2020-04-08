@@ -21,21 +21,16 @@ import zSquared from './z2.js'
 /** Game class - this is where it all starts. */
 class Game
 {
-	// TODO: make this private and get rid of all outside access
 	#app = null
 
-	// TODO: once we start using the start()/startScene() methods, make these
-	// private:
 	/** Are we in debug mode? */
 	#debug = false
-	/** Are we currently paused? */
-	#paused = false
-	#pausedSprite = null
-	#pausedBg = null
-	/** The current game scene. */
+
+	#_paused = false
+	#_pausedSprite = null
+	#_pausedBg = null
 	#_scene = null
-	/** The player entity - must be set by the game code */
-	player = null
+	#_player = null
 
 	/**
 	* @constructor
@@ -53,9 +48,9 @@ class Game
 
 		// setup handlers for visibility change events (pause game when focus is
 		// lost)
-		this.paused = false
+		this._paused = false
 		const visibilityChange = event => {
-			if(this.paused === false && (event.type === 'pagehide' || event.type === 'blur' || document.hidden === true || document.webkitHidden === true))
+			if(this._paused === false && (event.type === 'pagehide' || event.type === 'blur' || document.hidden === true || document.webkitHidden === true))
 				this.pause()
 			else
 				this.resume()
@@ -68,45 +63,66 @@ class Game
 		window.onfocus = visibilityChange
 	}
 
+	/** Are we currently paused? */
+	get paused()
+	{
+		return this._paused
+	}
+
+	/** The player entity - must be set by the game code */
+	get player()
+	{
+		return this._player
+	}
+	set player(val)
+	{
+		this._player = val
+	}
+
+	/** The current game scene. */
 	get scene()
 	{
 		return this._scene
 	}
 
+	/** Render the current scene. */
 	render()
 	{
 		this.app.render(this.app.stage)
 	}
 
+	/** Add a child to the current scene. */
 	addChild(child)
 	{
 		this.app.stage.addChild(child)
 	}
 
+	/** Remove a child from the current scene. */
 	removeChild(child)
 	{
 		this.app.stage.removeChild(child)
 	}
 
+	/** Clear the view. */
 	clearView()
 	{
 		this.view.clear()
 	}
 
+	/** Pause the game. */
 	pause()
 	{
-		if(this.paused)
+		if(this._paused)
 			return
 
-		this.paused = true
+		this._paused = true
 		time.pause()
 		audio.pauseSounds()
 
-		// TODO: black background too, like msgs
 		// display paused graphic, if we have one
-		if(this.pausedSprite) {
-			this.view.add(this.pausedBg, true)
-			this.view.add(this.pausedSprite, true)
+		if(this._pausedSprite) {
+			this.view.add(this._pausedBg, true)
+			this.view.add(this._pausedSprite, true)
 			this.render()
 		}
 		else {
@@ -116,45 +132,45 @@ class Game
 				// need to call .destroy() on a PIXI.Graphics object when
 				// finished with it
 				// eslint-disable-next-line no-undef
-				this.pausedBg = new PIXI.Graphics()
-				this.pausedBg.beginFill(0x000000)
-				this.pausedBg.alpha = 0.85
-				this.pausedBg.drawRect(0, 0, this.view.width, this.view.height)
-				this.pausedBg.endFill()
+				this._pausedBg = new PIXI.Graphics()
+				this._pausedBg.beginFill(0x000000)
+				this._pausedBg.alpha = 0.85
+				this._pausedBg.drawRect(0, 0, this.view.width, this.view.height)
+				this._pausedBg.endFill()
 
 				// eslint-disable-next-line no-undef
 				const bt = new PIXI.BaseTexture(img)
 				// eslint-disable-next-line no-undef
 				const t = new PIXI.Texture(bt)
 				// eslint-disable-next-line no-undef
-				this.pausedSprite = new PIXI.Sprite(t)
+				this._pausedSprite = new PIXI.Sprite(t)
 
-				this.view.add(this.pausedBg, true)
-				this.view.add(this.pausedSprite, true)
+				this.view.add(this._pausedBg, true)
+				this.view.add(this._pausedSprite, true)
 				this.render()
 			}
 		}
 	}
 
+	/** Resume a paused game. */
 	resume()
 	{
-		if(!this.paused)
+		if(!this._paused)
 			return
 
-		this.paused = false
+		this._paused = false
 		audio.resumeSounds()
 		time.resume()
 
 		// hide paused graphic, if we have one
-		if(this.pausedSprite) {
-			this.view.remove(this.pausedBg, true)
-			this.view.remove(this.pausedSprite, true)
+		if(this._pausedSprite) {
+			this.view.remove(this._pausedBg, true)
+			this.view.remove(this._pausedSprite, true)
 			this.render()
 		}
 	}
 
 	/** Start a scene by name or object
-	* @function Game#startScene
 	* @arg {Scene|Function} scene The Scene object or the function to create
 	* the Scene object which to start. If it is a function, any remaining args
 	* will be passed to the function
@@ -189,33 +205,30 @@ class Game
 	// return the function to use to update the game inside the main loop
 	_getMainloopUpdateFn()
 	{
-		const that = this
 		return (et) => {
-			if(that.debug && zSquared.stats)
+			if(this.debug && zSquared.stats)
 				zSquared.stats.begin()
 
 			// TODO: problem with this is that ecsUpdate calculates the time delta, so
 			// by intercepting here the dt doesn't get updated properly
-			if(!that.paused) {
+			if(!this._paused) {
 				// update the scene
 				// (lets it implement any non-ECS behaviour it wants)
-				if(that.scene && that.scene.ready) {
+				if(this.scene && this.scene.ready) {
 					// let the scene do any specific updating that it needs
-					that.scene.update()
+					this.scene.update()
 
 					// update the ECS system
 					ecs.ecsUpdate(et)
 				}
 			}
 
-			if(that.debug && zSquared.stats)
+			if(this.debug && zSquared.stats)
 				zSquared.stats.end()
 		}
 	}
 
-	/** Start the main loop
-	* @function Game#start
-	*/
+	/** Start the main loop. */
 	start()
 	{
 		// start the main game loop
