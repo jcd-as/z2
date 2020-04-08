@@ -149,7 +149,6 @@ class View
 	set follow_mode(val)
 	{
 		this._follow_mode = val
-		// TODO: move these calcs to 'follow_mode' property setter
 		// horizontal and vertical "buffer spaces"
 		switch(this._follow_mode) {
 			case View.FOLLOW_MODE_TIGHT:
