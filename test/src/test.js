@@ -60,14 +60,9 @@ div.appendChild(game.app.view)
 // global set-up stuff
 const visibilityChange = function(event) {
 	if(game.paused === false && (event.type == 'pagehide' || event.type == 'blur' || document.hidden === true || document.webkitHidden === true))
-		game.paused = true
+		game.pause()
 	else
-		game.paused = false
-
-	if(game.paused)
-		audio.pauseSounds()
-	else
-		audio.resumeSounds()
+		game.resume()
 }
 document.addEventListener('visibilitychange', visibilityChange, false)
 document.addEventListener('webkitvisibilitychange', visibilityChange, false)
@@ -324,17 +319,8 @@ const myScene =
 		})
 		ecs.manager.get().addSystem(input_sys)
 
-		// TODO: shouldn't the TileMap (via TiledScene) be doing this??
-		// create a collision map
-		// (for 50-layer perf test:)
-		let tiles = [
-			{solid: false}, {solid: true}
-		]
-		const collisionMap = collision.buildCollisionMap(scene.map.layers[48].data, scene.map.widthInTiles, scene.map.heightInTiles, tiles)
-//		const collisionMap = collision.buildCollisionMap(scene.map.layers[1].data, scene.map.widthInTiles, scene.map.heightInTiles, tiles)
-
 		// create a collision map component
-		const cmc = tilemap.collisionMapFactory.create({map: this.map, data: collisionMap})
+		const cmc = tilemap.collisionMapFactory.create({map: this.map, data: this.map.collisionMap})
 
 		// gravity component
 		const gravc = _2d.gravityFactory.create({x: 0, y: 1000})
@@ -368,7 +354,7 @@ const myScene =
 		let spre2
 		const pcolg = _2d.collisionGroupFactory.create({entities:[spre2]})
 		// create the entity
-		ecs.manager.get().createEntity([_2d.renderableFactory, gravc, cmc, sprbody, player, sprv, sprp, sprr, /*sprsz,*/ sprs, sprcc, sprpc, sprc, pcolg, sprres])
+		const spre = ecs.manager.get().createEntity([_2d.renderableFactory, gravc, cmc, sprbody, player, sprv, sprp, sprr, /*sprsz,*/ sprs, sprcc, sprpc, sprc, pcolg, sprres])
 
 		anims.play('walk')
 
@@ -488,6 +474,9 @@ const myScene =
 		window.updateGravity = function(value) {
 			gravc.y = value
 		}
+
+		this.map.objectGroups.push([spre, spre2])
+		this.map.updateObjectCollisionMaps()
 	},
 
 	destroy : function() { }
