@@ -228,13 +228,7 @@ export class TileMap
 				l.load(lyr)
 				if(lyr.name === main_layer)
 					this.mainLayer = l
-				l.visible = lyr.visible
 				this.layers.push(l)
-				// if the layer is solid, create the collision map from it
-				if(lyr.properties && lyr.properties.solid) {
-					l.solid = true
-					this.buildCollisionMap(lyr.data)
-				}
 			}
 			// load image layers
 			else if(lyr.type === 'imagelayer') {
@@ -246,6 +240,45 @@ export class TileMap
 				this.objectGroups.push(createObjects(lyr))
 			}
 		}
+		// build the collision map based on the map layers
+		this._buildCollisionMap()
+	}
+
+	_mergeCollisionLayer(l)
+	{
+		// TODO: ensure layers have the same dimensions (& same dims as 'main' layer)
+
+		if(!this.collisionMap)
+			this.collisionMap = collision.buildCollisionMap(l.data, this.widthInTiles, this.heightInTiles, this.tileCharacterstics)
+		else {
+			const cm = collision.buildCollisionMap(l.data, this.widthInTiles, this.heightInTiles, this.tileCharacterstics)
+			// merge cm with this.collisionMap
+			// for each tile in the layer
+			for(let i = 0; i < this.heightInTiles; i++) {
+				for(let j = 0; j < this.widthInTiles; j++) {
+					const k = i * this.widthInTiles + j
+					const c = cm[k]
+					// new data overrides old data, unless new is empty
+					if(c)
+						this.collisionMap[k] = c
+				}
+			}
+		}
+	}
+
+	_buildCollisionMap()
+	{
+		for(const l of this.layers) {
+			if(l.solid)
+				this._mergeCollisionLayer(l)
+		}
+	}
+
+	rebuildCollisionMap()
+	{
+		this.collisionMap = null
+		this._buildCollisionMap()
+		this.updateObjectCollisionMaps()
 	}
 
 	_buildTileCharacteristics(tileset)
@@ -267,11 +300,6 @@ export class TileMap
 				this.tileCharacterstics[tile.id] = {solid: solid, slope: slope}
 			}
 		}
-	}
-
-	buildCollisionMap(data)
-	{
-		this.collisionMap = collision.buildCollisionMap(data, this.widthInTiles, this.heightInTiles, this.tileCharacterstics)
 	}
 
 	updateObjectCollisionMaps()
@@ -452,10 +480,12 @@ export class TileLayer
 	*/
 	load(lyr)
 	{
+		this.visible = lyr.visible
 		// tiles data
 		this.data = lyr.data.slice()
 		this.name = lyr.name
 		if(lyr.properties) {
+			this.solid = lyr.properties.solid
 			this.scrollFactorX = lyr.properties.scrollFactorX ? +lyr.properties.scrollFactorX : 1
 			this.scrollFactorY = lyr.properties.scrollFactorY ? +lyr.properties.scrollFactorY : 1
 		}
