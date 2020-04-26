@@ -3,6 +3,7 @@
 // input module for zed-squared
 //
 // TODO:
+// - use pixi.js for touch handling??
 // x keyboard
 // ? events on keypress ?
 // ? track time keys are down
@@ -14,6 +15,9 @@
 // - 'down' images for touchscreen buttons
 // - 'gutter' between touchscreen buttons ?
 // -
+
+import zSquared from './z2.js'
+
 
 /** Input (keyboard, touchscreen, mouse) module.
  * @module
@@ -245,15 +249,14 @@ export const touch =
 
 	/** Start the touchscreen controls.
 	 * @function module:input.touch.start
-	 * @arg {Game} game Game object
 	 * @arg {number} num_buttons Number of on-screen buttons to support.
 	 */
-	start : function(game, num_buttons )
+	start : function(num_buttons)
 	{
 		if(!hasTouch) return
-			this.game = game
+		// TODO: dimension handling doesn't work well for small numbers of buttons (1-2)
 		this.numbuttons = num_buttons
-		this.buttonDim = this.game.view.width / num_buttons
+		this.buttonDim = zSquared.game.view.width / num_buttons
 
 		// our own touch event handling
 		this._touchHandler = e => {
@@ -264,7 +267,7 @@ export const touch =
 				return
 
 			// get x & y offsets of our canvas
-			// TODO: offsetY ???
+			// TODO: offsetY isn't used...
 			// eslint-disable-next-line no-unused-vars
 			let offsetX, offsetY
 			if(touches.length > 0) {
@@ -273,7 +276,7 @@ export const touch =
 				if(offsetX === undefined) {
 					let tox = 0
 					let toy = 0
-					let curElem = this.game.canvas
+					let curElem = zSquared.game.app.view
 					do {
 						tox += curElem.offsetLeft
 						toy += curElem.offsetTop
@@ -306,9 +309,13 @@ export const touch =
 		this._getButton = (touch, offsetX) => {
 			// was this touch inside one of our buttons?
 			for(let i = 0; i < this.buttons.length; i++) {
+				let d = 1
+				const cssws = zSquared.game.app.view.style.width
 				// strip the 'px;' off of the css width & convert to number
-				const cssw = +this.game.canvas.style.width.slice(0,-2)
-				const d = this.game.canvas.width / cssw
+				if(cssws) {
+					const cssw = +cssws.slice(0,-2)
+					d = zSquared.game.app.view.width / cssw
+				}
 				const px = (touch.pageX - offsetX) * d
 				if(px < (i+1) * this.buttonDim)
 					return i
@@ -317,10 +324,10 @@ export const touch =
 		}
 
 		// add event listeners
-		this.game.canvas.addEventListener('touchstart', this._touchHandler, false)
-		this.game.canvas.addEventListener('touchend', this._touchHandler, false)
-		this.game.canvas.addEventListener('touchmove', this._touchHandler, false)
-		this.game.canvas.addEventListener('touchcancel', this._touchHandler, false)
+		zSquared.game.app.view.addEventListener('touchstart', this._touchHandler, false)
+		zSquared.game.app.view.addEventListener('touchend', this._touchHandler, false)
+		zSquared.game.app.view.addEventListener('touchmove', this._touchHandler, false)
+		zSquared.game.app.view.addEventListener('touchcancel', this._touchHandler, false)
 	},
 
 	/** Add a button.
@@ -348,14 +355,14 @@ export const touch =
 		const button = new PIXI.Sprite(texture)
 
 		button.position.x = idx * this.buttonDim
-		button.position.y = this.game.view.height - this.buttonDim
+		button.position.y = zSquared.game.view.height - this.buttonDim
 		button.width = this.buttonDim
 		button.height = this.buttonDim
 
-		button.alpha = 0.25
+		button.alpha = 0.4
 
 		// add it to the view
-		this.game.view.add(button, true)
+		zSquared.game.view.add(button, true)
 
 		this.buttons.push(button)
 		this.buttonsPressed.push(false)
@@ -391,7 +398,7 @@ export const touch =
 		if(!hasTouch) return
 
 		for(let i = 0; i < this.buttons.length; i++) {
-			this.buttons[i].visible = false
+			this.buttons[i].visible = true
 		}
 	},
 
@@ -403,15 +410,15 @@ export const touch =
 		if(!hasTouch) return
 
 		// remove event listeners
-		this.game.canvas.removeEventListener('touchstart', this._touchHandler)
-		this.game.canvas.removeEventListener('touchend', this._touchHandler)
-		this.game.canvas.removeEventListener('touchmove', this._touchHandler)
-		this.game.canvas.removeEventListener('touchcancel', this._touchHandler)
+		zSquared.game.app.view.removeEventListener('touchstart', this._touchHandler)
+		zSquared.game.app.view.removeEventListener('touchend', this._touchHandler)
+		zSquared.game.app.view.removeEventListener('touchmove', this._touchHandler)
+		zSquared.game.app.view.removeEventListener('touchcancel', this._touchHandler)
 
 		// remove all the Pixi items
 		for(let i = 0; i < this.buttons.length; i++)
 			if(this.buttons[i])
-				this.game.view.remove(this.buttons[i], true)
+				zSquared.game.view.remove(this.buttons[i], true)
 
 		// reset fields
 		this.buttons = []
