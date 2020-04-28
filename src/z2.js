@@ -8,6 +8,8 @@
  * @module
  */
 
+import device from './device.js'
+
 
 let raf = null
 
@@ -61,6 +63,70 @@ class zSquared
 				document.body.appendChild(canvas)
 		}
 		return canvas
+	}
+
+	static _calcDims(cw, ch, ww, wh)
+	{
+
+		// return the css window width & height to use, given
+		// the canvas width & height and the window width & height
+		const aspect = ch / cw
+
+		// window in portrait
+		if(wh > ww) {
+			// enforce maximum size (twice the canvas size?)
+			if(ww > cw*2)
+				ww = cw*2
+			return {w: ww, h: ww * aspect}
+		}
+		// window in landscape
+		else {
+			// enforce maximum size (twice the canvas size?)
+			if(wh > ch*2)
+				wh = ch*2
+			return {w: wh / aspect, h: wh}
+		}
+	}
+
+	/** Setup the screen for game, detecting mobile and setting up appropriately.
+	 * This *MUST* be called in response to a user action (e.g. in a click event
+	 * listener).
+	* @arg {DOMElement} The HTML element that contains the main game canvas
+	* @arg {Canvas} The main game HTML canvas
+	*/
+	static setupScreen(container, canvas)
+	{
+		const width = canvas.width
+		const height = canvas.height
+
+		let w = window.innerWidth, h = window.innerHeight
+
+		// if we're on mobile and have browser support for full-screen
+		if(device.mobile && 'orientation' in screen) {
+			// request full-screen mode
+			container.requestFullscreen()
+			screen.orientation.lock('landscape')
+			w = screen.width
+			h = screen.height
+		}
+
+		window.scrollTo(0,1)
+		h += 2
+
+		const dims = zSquared._calcDims(width, height, w, h)
+		w = dims.w
+		h = dims.h
+
+		container.style.height = h + 'px'
+		container.style.width = w + 'px'
+
+		canvas.style.position = 'absolute'
+		canvas.style.top = '50%'
+		canvas.style.left = '50%'
+		canvas.style.width = w + 'px'
+		canvas.style.height = h + 'px'
+		canvas.style['margin-left'] = (-w/2) + 'px'
+		canvas.style['margin-top'] = (-h/2) + 'px'
 	}
 
 	/** Wrap text at 'width' columns.
