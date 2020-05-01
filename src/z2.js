@@ -101,11 +101,19 @@ class zSquared
 
 		let w = window.innerWidth, h = window.innerHeight
 
-		// if we're on mobile and have browser support for full-screen
-		if(device.mobile && 'orientation' in screen) {
+		// if we're on mobile
+		if(device.mobile) {
 			// request full-screen mode
-			container.requestFullscreen()
-			screen.orientation.lock('landscape')
+			if(container.requestFullscreen)
+				container.requestFullscreen()
+			else if(container.mozRequestFullScreen)
+				container.mozRequestFullScreen()
+			else if(container.webitRequestFullScreen)
+				container.webkitRequestFullScreen()
+			else if(container.msRequestFullScreen)
+				container.msRequestFullScreen()
+			if('orientation' in screen)
+				screen.orientation.lock('landscape')
 			w = screen.width
 			h = screen.height
 		}
