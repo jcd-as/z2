@@ -16,7 +16,8 @@ import loader from './loader.js'
 const AudioContext = window.AudioContext || window.webkitAudioContext
 
 /** The HTML5 AudioContext object */
-export const audioContext = new AudioContext()
+//export const audioContext = new AudioContext()
+export let audioContext
 
 const NUM_CHANNELS = 16
 
@@ -36,6 +37,43 @@ for(let i = 0; i < NUM_CHANNELS; i++) {
 		timeout : null
 	}
 }
+
+export function init()
+{
+	audioContext = new AudioContext()
+
+	// initialize channel data
+	for(let i = 0; i < NUM_CHANNELS; i++) {
+		channel_data[i] = {
+			key: null,
+			volume: 1,
+			loop: false,
+			start : 0,
+			paused : 0,
+			timeout : null
+		}
+	}
+
+	// "warm up" audio output
+	// (necessary on iOS)
+	// Create empty buffer
+	var buffer = audioContext.createBuffer(1, 1, 22050)
+	var src = audioContext.createBufferSource()
+	src.buffer = buffer
+	// Connect to output (speakers)
+	src.connect(audioContext.destination)
+	// Play sound
+	if(src.start) {
+		src.start(0)
+	}
+	else if(src.play) {
+		src.play(0)
+	}
+	else if(src.noteOn) {
+		src.noteOn(0)
+	}
+}
+
 
 function resetChannelData(idx)
 {
@@ -94,7 +132,15 @@ function internalPlaySound(snd, channel, key, offset, volume, loop)
 	cd.paused = 0
 
 	// play
-	src.start(0, offset)
+	if(src.start) {
+		src.start(0, offset)
+	}
+	else if(src.play) {
+		src.play(0, offset)
+	}
+	else if(src.noteOn) {
+		src.noteOn(0, offset)
+	}
 
 	// set a timeout to remove from this channel
 	channel_data[channel].timeout = setTimeout(() => { delete channels[channel]; resetChannelData( channel ); }, src.buffer.duration * 1000)

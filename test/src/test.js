@@ -417,6 +417,8 @@ function createScene(game, player)
 	// ...and (important!) add it to the game object
 	game.player = player
 
+	audio.init()
+
 	// create a scene and start it
 	const scene = createScene(game, player)
 	game.startScene(scene)
